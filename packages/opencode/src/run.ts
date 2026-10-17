@@ -87,7 +87,7 @@ export async function runOpenCode(
         }
       })
       child.on('error', reject)
-      child.on('exit', code => {
+      child.on('close', code => {
         if (killed) reject(new Error('OpenCode 请求已取消'))
         else if (code === 0) resolve()
         else reject(new Error(`OpenCode 退出码 ${code}${stderr === '' ? '' : `：${stderr.trim().slice(-500)}`}`))
