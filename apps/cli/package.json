@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/cli",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "type": "module",
   "description": "无界面启动器：只运行网关与模型服务，便于调试与脚本化",

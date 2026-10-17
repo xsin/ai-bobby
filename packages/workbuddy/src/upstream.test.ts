@@ -72,7 +72,7 @@ describe('WorkBuddy HTTP client', () => {
       model: 'hy3',
       messages: [{ role: 'user', content: 'hi' }],
       stream: true,
-    })
+    }, new AbortController().signal)
     const events = []
     for await (const event of parseUpstreamSse(response, 'cmpl_test')) events.push(event)
     expect(events).toEqual(expect.arrayContaining([

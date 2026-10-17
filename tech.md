@@ -1377,7 +1377,7 @@ experimental_bearer_token = "<key>"
 {
   "pid": 12345,
   "startedAtMs": 1759990000000,
-  "gateway": { "state": "ready", "port": 46890, "version": "0.2.0" },
+  "gateway": { "state": "ready", "port": 46890, "version": "0.2.1" },
   "providers": {
     "opencode": { "state": "ready", "models": 10, "available": 7, "pending": 0 },
     "workbuddy": { "state": "ready", "accounts": 2, "models": 12 },
@@ -1493,12 +1493,12 @@ src/shared/update.ts       # 主/渲染共享类型
 
 ```json
 {
-  "version": "0.2.0",
+  "version": "0.2.1",
   "notes": "本次更新要点",
   "pub_date": "2026-10-18T09:00:00Z",
   "platforms": {
     "darwin-aarch64": {
-      "url": "https://xsin.github.io/ai-bobby/releases/0.2.0/AI-Bobby-0.2.0-arm64.zip",
+      "url": "https://xsin.github.io/ai-bobby/releases/0.2.1/AI-Bobby-0.2.1-arm64.zip",
       "sha256": "<64 hex>",
       "size": 12345678
     },
@@ -1916,7 +1916,7 @@ curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh -o install
 less install.sh && bash install.sh
 
 # 手动指定版本 / 目录
-bash install.sh --version 0.2.0 --install-dir ~/Applications
+bash install.sh --version 0.2.1 --install-dir ~/Applications
 ```
 
 更新清单：

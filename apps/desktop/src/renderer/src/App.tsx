@@ -715,6 +715,8 @@ function AppInner() {
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
         appInfo={appInfo}
+        status={realStatus}
+        onCopyApiKey={() => void copyKey()}
         autoCheck={autoCheck}
         onAutoCheckChange={setAutoCheck}
         checking={checking}

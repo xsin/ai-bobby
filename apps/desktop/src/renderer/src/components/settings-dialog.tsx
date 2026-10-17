@@ -12,12 +12,14 @@ import { Separator } from '@/components/ui/separator'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme'
-import type { AppInfo, ThemeChoice } from '@shared/api'
+import type { AppInfo, GatewayStatus, ThemeChoice } from '@shared/api'
 
 interface SettingsDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   appInfo: AppInfo | null
+  status: GatewayStatus | null
+  onCopyApiKey: () => void
   autoCheck: boolean
   onAutoCheckChange: (value: boolean) => void
   checking: boolean
@@ -36,6 +38,8 @@ export function SettingsDialog({
   open,
   onOpenChange,
   appInfo,
+  status,
+  onCopyApiKey,
   autoCheck,
   onAutoCheckChange,
   checking,
@@ -52,7 +56,7 @@ export function SettingsDialog({
         <DialogHeader className="border-b border-line px-5 py-4 text-left">
           <DialogTitle className="text-[15px] font-semibold text-text">设置</DialogTitle>
           <DialogDescription className="text-[11px] text-muted-foreground">
-            版本、更新与界面偏好。更多开关会在网关接入后补齐。
+            版本、更新与界面偏好；网关与 Key 均来自本机真实状态。
           </DialogDescription>
         </DialogHeader>
 
@@ -146,17 +150,35 @@ export function SettingsDialog({
               type="button"
               className="flex w-full appearance-none items-center justify-between rounded-md border border-line-soft bg-surface-2 px-3 py-2 text-left"
               onClick={() => {
-                void navigator.clipboard.writeText('http://127.0.0.1:46890/v1').then(() => setCopied(true))
+                const endpoint = `http://127.0.0.1:${status?.gateway.port ?? 46890}/v1`
+                void navigator.clipboard.writeText(endpoint).then(() => setCopied(true))
               }}
             >
               <span>
                 <span className="block text-[11px] font-medium text-text">转发口</span>
-                <span className="block font-mono text-[10px] text-muted-foreground">http://127.0.0.1:46890/v1</span>
+                <span className="block font-mono text-[10px] text-muted-foreground">
+                  http://127.0.0.1:{status?.gateway.port ?? 46890}/v1
+                </span>
               </span>
               <span className="text-[10px] text-primary">{copied ? '已复制' : '复制'}</span>
             </button>
+            <div className="flex items-center justify-between rounded-md border border-line-soft bg-surface-2 px-3 py-2">
+              <span>
+                <span className="block text-[11px] font-medium text-text">API Key</span>
+                <span className="block font-mono text-[10px] text-muted-foreground">{status?.apiKeyMasked ?? '读取中…'}</span>
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-6 px-1.5 text-[10px] text-primary"
+                onClick={onCopyApiKey}
+              >
+                复制
+              </Button>
+            </div>
             <p className="px-1 text-[9px] leading-relaxed text-faint">
-              AI Bobby 只监听本机回环地址；所有 /v1 请求需要 API Key。端口与网关设置会在 P1.1 接入。
+              AI Bobby 只监听本机回环地址；所有 /v1 请求需要 API Key。
             </p>
           </section>
         </div>

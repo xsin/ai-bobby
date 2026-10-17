@@ -9,7 +9,7 @@
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：`https://github.com/xsin/ai-bobby`（public，已推送）
 - 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`（Pages 已开启）
-- 当前 release：`v0.2.0`（三协议网关 / OpenCode / WorkBuddy provider / 四 importer；二进制在 GitHub Release）
+- 当前 release：`v0.2.1`（三协议网关 / OpenCode / WorkBuddy provider / 四 importer；二进制在 GitHub Release）
 - 持久目标：`goal-15734299-f955-4979-8342-639ef4809b84`（自动连续推进 v1：网关 / provider / importer）
 - 工具链：Node v26.3.0、pnpm 10.15.1（本机已装）
 
@@ -569,7 +569,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] `AI-Bobby-<version>-<arch>.zip` + `.sha256` + `checksums.txt` + `VERSION.txt`
 - [x] `releases/latest/install.sh`：架构检测、下载、SHA256、`ditto`、`~/Applications`、清 quarantine；
   已用真实 `curl` 从 Pages + GitHub Release 全链路安装成功（arm64）
-- [x] gh-pages + GitHub Release 工作流（`.github/workflows/release.yml`，已推送；Pages 已开启；v0.2.0 已发布）
+- [x] gh-pages + GitHub Release 工作流（`.github/workflows/release.yml`，已推送；Pages 已开启；v0.2.1 已发布）
 - [x] `latest.json`（platforms / url / sha256 / size；可选 Ed25519 代码就绪）
 - [x] 应用内更新：检查、更新条、下载进度、SHA256、解压、重签、替换、重启/回滚脚本
 - [ ] 首次启动向导、权限/防火墙提示
@@ -643,7 +643,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - 更新器：manifest/semver/SHA256/可选 Ed25519、下载、解压、重签、替换脚本、IPC、更新条；
   12 项 core 单测通过；本地 manifest 烟测能弹出更新条。
 - 分发：`install.sh` 本地 HTTP 源全链路跑通；GitHub 仓库创建并推送；Pages 开启；
-  `v0.2.0` release 发布；真实 `curl` 安装成功（arm64），安装版启动后 `/health` 返回 0.2.0 / 10 个 OpenCode 模型；v0.1.0 → v0.2.0 更新检查返回正确资产与 SHA256。
+  `v0.2.1` release 发布；真实 `curl` 安装成功（arm64），安装版启动后 `/health` 返回 0.2.1 / 10 个 OpenCode 模型；v0.1.0 → v0.2.1 更新检查返回正确资产与 SHA256。
 - **踩坑**：Electron zip 123–135MB，超过 GitHub Git 文件 100MB 限制，不能放 gh-pages；
   改为 GitHub Release 托管二进制、gh-pages 只放 install.sh/VERSION/checksums/latest.json。
   `install.sh` 默认 base 改为 GitHub Releases，`latest.json` URL 指向 Release 资产。
@@ -680,13 +680,14 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - 全量测试仍通过（gateway 9 / workbuddy 13 / importers 4 / opencode 4 / updater 12）。
 
 
-### 2026-10-18（Round 3：v0.2.0 发布）
+### 2026-10-18（Round 3：v0.2.1 发布）
 
-- 版本 0.2.0；CI 修复了 `release/` 误忽略 `scripts/release/` 的问题，发布脚本已入库。
+- 版本 0.2.1；CI 修复了 `release/` 误忽略 `scripts/release/` 的问题，发布脚本已入库。
 - CI arm64/x64 构建、签名校验、manifest 校验、Pages 更新、GitHub Release 全部通过。
-- 真实 `curl -fsSL .../install.sh | bash` 安装到 `/tmp/aibobby-install`；安装版 `/health` 为 0.2.0，
+- 真实 `curl -fsSL .../install.sh | bash` 安装到 `/tmp/aibobby-install`；安装版 `/health` 为 0.2.1，
   `/v1/models` 返回 10 个 OpenCode 免费模型。
-- v0.1.0 安装实例的 `checkForUpdates(true)` 返回 v0.2.0、arm64 资产 URL 与 SHA256。
+- v0.1.0 安装实例的 `checkForUpdates(true)` 返回 v0.2.1、arm64 资产 URL 与 SHA256；
+  实际执行 download → install → 替换/重启后，`Info.plist` 版本变为 0.2.1（自动更新闭环验证）。
 - 已知：旧 v0.1.0 没有网关（UI shell），更新后才有；WorkBuddy 真实登录仍需人工。
 
 ---
