@@ -1377,7 +1377,7 @@ experimental_bearer_token = "<key>"
 {
   "pid": 12345,
   "startedAtMs": 1759990000000,
-  "gateway": { "state": "ready", "port": 46890, "version": "0.1.0" },
+  "gateway": { "state": "ready", "port": 46890, "version": "0.2.0" },
   "providers": {
     "opencode": { "state": "ready", "models": 10, "available": 7, "pending": 0 },
     "workbuddy": { "state": "ready", "accounts": 2, "models": 12 },

@@ -31,7 +31,7 @@
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - Pages：`gh-pages` 分支，`https://xsin.github.io/ai-bobby/`
 - 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`
-- 首个 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.1.0>
+- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.0>
 - Agent 已用真实 `curl` 验证：下载 → SHA256 → ditto → 安装到 `~/Applications`（arm64）。
 - **重要**：Electron zip 约 123–135MB，超过 GitHub Git 文件 100MB 限制，因此：
   - **gh-pages 只放** `install.sh` / `VERSION.txt` / `checksums.txt` / `latest.json` / index；

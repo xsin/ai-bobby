@@ -7,8 +7,8 @@
 > **状态（2026-10-18）**：源码已包含 46890 网关（Chat / Responses / Messages）、
 > WorkBuddy 官方登录 + 多账号 provider、四个客户端 importer、桌面真实状态与更新/分发链路。
 > OpenCode 免费模型、真实 Codex 0.154 与 Claude Code 2.1 已在本机跑通；
-> **WorkBuddy 真实账号联调**仍需要你登录一次。已发布的 `v0.1.0` 安装包是较早的 UI shell preview，
-> 新功能会随下一版发布。详见 [handsoff.md](./handsoff.md)。
+> **WorkBuddy 真实账号联调**仍需要你登录一次；OpenCode、Codex、Claude Code 与四个
+> importer 已在本机验证。`v0.2.0` 已发布，安装/更新通道指向它。详见 [handsoff.md](./handsoff.md)。
 
 ![OpenCode tab](docs/screenshots/01-opencode-dark.png)
 
@@ -27,7 +27,7 @@ less install.sh && bash install.sh
 
 默认安装到 `~/Applications/AI Bobby.app`；`--system` 可装到 `/Applications`。
 二进制托管在 **GitHub Release**（gh-pages 只放安装脚本、版本号与更新清单，因为 GitHub 对 Git 文件有 100MB 限制）。
-当前首个 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.1.0>（UI shell preview）。
+当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.0>（网关 + OpenCode + Codex/Claude 联调）。
 首版未做 Apple 公证，首次打开若被 Gatekeeper 阻止：
 
 ```bash
@@ -116,9 +116,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 -d out/renderer
 发布（本地）：
 
 ```sh
-bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.1.0
-bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.1.0
-node scripts/release/validate.mjs release-site/releases/0.1.0
+bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.0
+bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.0
+node scripts/release/validate.mjs release-site/releases/0.2.0
 ```
 
 CI：推送 `v*` tag 触发 [.github/workflows/release.yml](./.github/workflows/release.yml)，
