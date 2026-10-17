@@ -10,6 +10,7 @@
 - 仓库：`https://github.com/xsin/ai-bobby`（public，已推送）
 - 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`（Pages 已开启）
 - 首个 release：`v0.1.0`（UI shell preview，二进制在 GitHub Release）
+- 持久目标：`goal-15734299-f955-4979-8342-639ef4809b84`（自动连续推进 v1：网关 / provider / importer）
 - 工具链：Node v26.3.0、pnpm 10.15.1（本机已装）
 
 ---
