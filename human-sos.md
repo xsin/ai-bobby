@@ -19,30 +19,17 @@
 
 ---
 
-## 1. GitHub 仓库与 Pages（**需要你确认/授权**）
+## 1. GitHub 仓库与 Pages（**Agent 已完成**）
 
-- 目标：`https://github.com/xsin/ai-bobby`
-- Agent 已用 `gh auth status` 确认本机登录的是 `aispin`，`xsin` 是组织；尝试创建/推送时会用到组织权限。
-- 如果 Agent 无法创建或推送，请手动执行：
-
-```bash
-gh repo create xsin/ai-bobby --public --source=. --remote=origin --push
-```
-
-- Pages（安装通道）必须在仓库设置里指向 `gh-pages` 分支根目录：
-
-```bash
-gh api --method POST repos/xsin/ai-bobby/pages \
-  -f 'source[branch]=gh-pages' -f 'source[path]=/'
-```
-
-  - 如果仓库是 **private**，免费组织计划可能无法开启 Pages；curl 安装通道会失效。
-    建议 public；若必须 private，请告知，我会改成 Release 直链安装或换托管。
-- 首次 Release 后，确认：
-
-```bash
-curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | head
-```
+- 仓库：<https://github.com/xsin/ai-bobby>（public）
+- Pages：`gh-pages` 分支，`https://xsin.github.io/ai-bobby/`
+- 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`
+- 首个 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.1.0>
+- Agent 已用真实 `curl` 验证：下载 → SHA256 → ditto → 安装到 `~/Applications`（arm64）。
+- **重要**：Electron zip 约 123–135MB，超过 GitHub Git 文件 100MB 限制，因此：
+  - **gh-pages 只放** `install.sh` / `VERSION.txt` / `checksums.txt` / `latest.json` / index；
+  - **二进制放 GitHub Release**，`install.sh` 默认从 `https://github.com/xsin/ai-bobby/releases/latest` 下载。
+- 需要你确认：**仓库保持 public**（curl/Pages 依赖）。如果要 private，请告知，我改成 Release 直链安装或换托管。
 
 ---
 
@@ -87,7 +74,7 @@ gh secret set UPDATE_SIGNING_KEY --repo xsin/ai-bobby < <(base64 < update-signin
 
 ## 4. 首次安装 / Gatekeeper（用户操作）
 
-- 推荐：
+- 推荐（Agent 已实测可安装）：
 
 ```bash
 curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash

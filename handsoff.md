@@ -7,7 +7,9 @@
 - 最后更新：2026-10-18
 - 当前阶段：**P1 骨架 / 发布链路实现**：前端新栈、更新器、curl 安装、CI 发布、打包验证已落地；网关与 provider 待实现
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
-- 目标仓库：`https://github.com/xsin/ai-bobby`（未创建，待首次 push）
+- 仓库：`https://github.com/xsin/ai-bobby`（public，已推送）
+- 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`（Pages 已开启）
+- 首个 release：`v0.1.0`（UI shell preview，二进制在 GitHub Release）
 - 工具链：Node v26.3.0、pnpm 10.15.1（本机已装）
 
 ---
@@ -539,8 +541,9 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] Electron 44.9 + electron-builder 26.15，macOS `.app` + `.zip`（arm64/x64 均验证）
 - [x] ad-hoc 签名 + `codesign --verify --deep --strict`
 - [x] `AI-Bobby-<version>-<arch>.zip` + `.sha256` + `checksums.txt` + `VERSION.txt`
-- [x] `releases/latest/install.sh`：架构检测、下载、SHA256、`ditto`、`~/Applications`、清 quarantine；本地全链路烟测
-- [x] gh-pages + GitHub Release 工作流（`.github/workflows/release.yml`，待仓库/Pages 开启）
+- [x] `releases/latest/install.sh`：架构检测、下载、SHA256、`ditto`、`~/Applications`、清 quarantine；
+  已用真实 `curl` 从 Pages + GitHub Release 全链路安装成功（arm64）
+- [x] gh-pages + GitHub Release 工作流（`.github/workflows/release.yml`，已推送；Pages 已开启；v0.1.0 已发布）
 - [x] `latest.json`（platforms / url / sha256 / size；可选 Ed25519 代码就绪）
 - [x] 应用内更新：检查、更新条、下载进度、SHA256、解压、重签、替换、重启/回滚脚本
 - [ ] 首次启动向导、权限/防火墙提示
@@ -589,8 +592,8 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
   `tech.md` v0.1（进程模型、领域模型、登录/多账号、三协议 codec、导入器、桌面、测试、打包）。
 - 产出 `prototype/` 静态可点击原型：三来源 tab、账号条、全局导入抽屉、添加账号弹窗、
   深浅色、行内详情、dry-run diff；截图在 `prototype/screenshot-*.png`。
-- **下一步**：用户评审 PRD/tech 与界面原型，确认 tab/账号条/导入抽屉/默认模型等细节。
-- **未写业务代码**；未修改任何客户端配置。
+- **下一步**：实现 46890 网关与 provider（P1 剩余 + P2–P5）。
+- **未修改任何客户端配置**。
 
 ### 2026-10-18（第二轮）
 
@@ -604,6 +607,21 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
   `tech-release-without-developer-id.md`；确定自研 Electron 更新器 + ad-hoc 签名 + 双通道发布。
 - 开始 P1：更新依赖、搭 `apps/desktop`（electron-vite + React + shadcn + Tailwind + antd）、
   更新器 core、发布脚手架。
+
+
+### 2026-10-18（第三轮：发布链路）
+
+- 主题色改为 `#1e4fff`；UI 栈按 `ui-guideline.md` 落地：
+  React 19.3.1 / TS 7.0.2 / Vite 8.3.4 / Electron 44.9.0 / Tailwind 4.3.3 / shadcn 4.22 / antd 6.6.6。
+- `apps/desktop` 可构建、可打 `.app`；arm64/x64 均 ad-hoc 签名并通过 `codesign --verify --deep --strict`。
+- 更新器：manifest/semver/SHA256/可选 Ed25519、下载、解压、重签、替换脚本、IPC、更新条；
+  12 项 core 单测通过；本地 manifest 烟测能弹出更新条。
+- 分发：`install.sh` 本地 HTTP 源全链路跑通；GitHub 仓库创建并推送；Pages 开启；
+  `v0.1.0` release 发布；真实 `curl` 安装成功（arm64）。
+- **踩坑**：Electron zip 123–135MB，超过 GitHub Git 文件 100MB 限制，不能放 gh-pages；
+  改为 GitHub Release 托管二进制、gh-pages 只放 install.sh/VERSION/checksums/latest.json。
+  `install.sh` 默认 base 改为 GitHub Releases，`latest.json` URL 指向 Release 资产。
+- **下一步**：P1 剩余（core/gateway/cli）+ P2 WorkBuddy provider。
 
 ---
 

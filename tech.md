@@ -1629,12 +1629,13 @@ release/<version>/
 
 | 通道 | 内容 | 特点 |
 |---|---|---|
-| gh-pages `releases/` | install.sh、VERSION.txt、checksums.txt、zip、latest.json | 可变 latest 指针，curl 默认来源 |
-| GitHub Release（tag） | 同一批产物 + notes + install.sh + VERSION.txt | 不可变归档、人工下载、通知 |
+| gh-pages `releases/latest/` | install.sh、VERSION.txt、checksums.txt、latest.json | 可变 latest 指针；**不放 zip**（Git 100MB 限制） |
+| GitHub Release（tag） | zip 二进制 + checksums + VERSION + latest.json + install.sh + notes | 不可变归档、大文件托管、人工下载、通知 |
 
 - `.github/workflows/release.yml` 在 `v*` tag 触发；macos-latest；构建 arm64 + x64；
   签名/校验；zip/checksums/latest.json；推 gh-pages；创建 Release。
-- `latest.json` 的 `url` 指向 gh-pages 版本目录；`sha256` 从 `checksums.txt` 读取，不重算。
+- `latest.json` 的 `url` 指向 GitHub Release 资产（`/releases/download/v<version>/...`）；`sha256` 从 `checksums.txt` 读取，不重算。
+- `install.sh` 默认 `BASE_URL=https://github.com/xsin/ai-bobby/releases/latest`，先读 `/latest/download/VERSION.txt`，再从 `/download/v<version>/` 下载。
 - 可选 Ed25519：CI 用 secret `UPDATE_SIGNING_KEY` 对 canonical JSON 签名；
   应用内置公钥；私钥不入库。
 

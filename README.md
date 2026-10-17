@@ -24,6 +24,8 @@ less install.sh && bash install.sh
 ```
 
 默认安装到 `~/Applications/AI Bobby.app`；`--system` 可装到 `/Applications`。
+二进制托管在 **GitHub Release**（gh-pages 只放安装脚本、版本号与更新清单，因为 GitHub 对 Git 文件有 100MB 限制）。
+当前首个 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.1.0>（UI shell preview）。
 首版未做 Apple 公证，首次打开若被 Gatekeeper 阻止：
 
 ```bash

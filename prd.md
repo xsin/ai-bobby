@@ -498,9 +498,10 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 **FR-DIST-4 双通道发布**
 
-- **gh-pages**：安装通道（可变 `latest` 指针）：`install.sh`、`VERSION.txt`、`checksums.txt`、zip、`latest.json`。
-- **GitHub Release**：版本归档（不可变 tag）：同一批产物 + 变更说明 + 人工下载入口。
-- 两者由同一次构建产出，内容一致。
+- **gh-pages**：安装通道（可变 `latest` 指针）：`install.sh`、`VERSION.txt`、`checksums.txt`、`latest.json`。
+  **不放 zip**（GitHub 对 Git 文件有 100MB 限制，Electron 包约 123–135MB）。
+- **GitHub Release**：版本归档（不可变 tag）：zip 二进制 + `checksums.txt` + `VERSION.txt` + `latest.json` + `install.sh` + 变更说明。
+- 两者由同一次构建产出；`install.sh` 默认从 GitHub Release 下载二进制，`latest.json` 的 `url` 指向 Release 资产。
 
 ---
 
