@@ -1,4 +1,4 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, safeStorage, shell } from 'electron'
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
@@ -29,7 +29,13 @@ export class Services {
   private readonly importers: Record<ImportTargetName, Importer>
 
   constructor(private readonly mainWindow: () => BrowserWindow | undefined) {
-    this.store = AccountStore.inDataDir(app.getPath('userData'))
+    const codec = safeStorage.isEncryptionAvailable()
+      ? {
+          encode: (text: string) => safeStorage.encryptString(text).toString('base64'),
+          decode: (text: string) => safeStorage.decryptString(Buffer.from(text, 'base64')),
+        }
+      : undefined
+    this.store = AccountStore.inDataDir(app.getPath('userData'), codec)
     this.importers = {
       workbuddy: new WorkBuddyImporter('workbuddy'),
       'workbuddy-ai': new WorkBuddyImporter('workbuddy-ai'),

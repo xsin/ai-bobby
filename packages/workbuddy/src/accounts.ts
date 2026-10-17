@@ -29,11 +29,19 @@ interface AccountFile {
   accounts: WorkBuddyAccount[]
 }
 
-export class AccountStore {
-  constructor(private readonly file: string) {}
+export interface AccountCodec {
+  encode(text: string): string
+  decode(text: string): string
+}
 
-  static inDataDir(dataDir: string): AccountStore {
-    return new AccountStore(join(dataDir, 'accounts.json'))
+export class AccountStore {
+  constructor(
+    private readonly file: string,
+    private readonly codec?: AccountCodec,
+  ) {}
+
+  static inDataDir(dataDir: string, codec?: AccountCodec): AccountStore {
+    return new AccountStore(join(dataDir, 'accounts.json'), codec)
   }
 
   path(): string {
@@ -42,7 +50,9 @@ export class AccountStore {
 
   async load(): Promise<WorkBuddyAccount[]> {
     try {
-      const parsed = JSON.parse(await readFile(this.file, 'utf8')) as Partial<AccountFile>
+      const raw = await readFile(this.file, 'utf8')
+      const text = this.codec ? this.codec.decode(raw) : raw
+      const parsed = JSON.parse(text) as Partial<AccountFile>
       if (parsed.version !== 1 || !Array.isArray(parsed.accounts)) return []
       return parsed.accounts.filter(isAccount)
     } catch (error) {
@@ -55,7 +65,8 @@ export class AccountStore {
     await mkdir(dirname(this.file), { recursive: true, mode: 0o700 })
     const tmp = `${this.file}.${process.pid}.tmp`
     const payload: AccountFile = { version: 1, accounts: [...accounts] }
-    await writeFile(tmp, `${JSON.stringify(payload, null, 2)}\n`, { mode: 0o600 })
+    const text = `${JSON.stringify(payload, null, 2)}\n`
+    await writeFile(tmp, this.codec ? this.codec.encode(text) : text, { mode: 0o600 })
     await rename(tmp, this.file)
   }
 
