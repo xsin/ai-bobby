@@ -1,0 +1,26 @@
+{
+  "name": "ai-bobby",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AI Bobby — 本地 AI 服务网关：聚合 OpenCode 免费模型与 WorkBuddy / WorkBuddy AI 桌面模型，提供统一 OpenAI 兼容端点与一键导入",
+  "packageManager": "pnpm@10.15.1",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "build": "pnpm -r --if-present build",
+    "dev": "pnpm --filter @ai-bobby/desktop dev",
+    "dev:desktop": "pnpm --filter @ai-bobby/desktop dev",
+    "test": "pnpm -r --if-present test",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "clean": "pnpm -r --if-present clean",
+    "release:version": "node scripts/release/version.mjs",
+    "dist:mac": "bash scripts/release/build-mac.sh"
+  },
+  "devDependencies": {
+    "@types/node": "26.6.5",
+    "typescript": "7.0.2",
+    "vitest": "5.0.5"
+  }
+}

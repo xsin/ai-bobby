@@ -1,0 +1,57 @@
+appId: work.xsin.aibobby
+productName: AI Bobby
+copyright: Copyright © 2026 xsin
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - '!out/*.png'
+  - '!out/**/*.map'
+  - package.json
+
+extraResources:
+  - from: build/trayTemplate.png
+    to: trayTemplate.png
+  - from: build/trayTemplate@2x.png
+    to: trayTemplate@2x.png
+
+asar: true
+asarUnpack: []
+
+mac:
+  icon: build/icon.png
+  category: public.app-category.utilities
+  target:
+    - target: dir
+      arch:
+        - arm64
+        - x64
+  identity: null
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  minimumSystemVersion: "13.0"
+  artifactName: AI-Bobby-${version}-${arch}.${ext}
+  extendInfo:
+    NSHumanReadableCopyright: Copyright © 2026 xsin
+
+win:
+  icon: build/icon.png
+  target: nsis
+  artifactName: AI-Bobby-Setup-${version}-${arch}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: AI Bobby
+  runAfterFinish: false
+
+linux:
+  target: AppImage
+  category: Utility
+  artifactName: AI-Bobby-${version}-${arch}.${ext}

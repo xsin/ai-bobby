@@ -1,0 +1,7 @@
+{
+  "name": "@ai-bobby/workbuddy",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WorkBuddy（国内版）与 WorkBuddy AI（国际版）桌面凭据、模型目录、上游转发与检测"
+}

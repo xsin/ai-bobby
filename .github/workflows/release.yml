@@ -1,0 +1,146 @@
+name: Release (ad-hoc signing)
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-publish:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.15.1
+          run_install: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck
+        run: pnpm --filter @ai-bobby/desktop typecheck
+
+      - name: Test
+        run: pnpm --filter @ai-bobby/desktop test
+
+      - name: Read version
+        id: ver
+        run: |
+          V="$(node scripts/release/version.mjs)"
+          echo "version=$V" >> "$GITHUB_OUTPUT"
+          echo "tag=v$V" >> "$GITHUB_OUTPUT"
+
+      - name: Build and package arm64
+        env:
+          SIGN_IDENTITY: "-"
+          AI_BOBBY_RELEASE_NOTES: ${{ github.event.head_commit.message || 'AI Bobby public beta' }}
+        run: |
+          bash scripts/release/build-mac.sh \
+            --arch arm64 \
+            --out-dir "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
+
+      - name: Build and package x64
+        env:
+          SIGN_IDENTITY: "-"
+          AI_BOBBY_RELEASE_NOTES: ${{ github.event.head_commit.message || 'AI Bobby public beta' }}
+        run: |
+          bash scripts/release/build-mac.sh \
+            --arch x64 \
+            --out-dir "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
+
+      - name: Verify signatures of shipped zips
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP"
+          V="${{ steps.ver.outputs.version }}"
+          for arch in arm64 x64; do
+            rm -rf verify && mkdir verify
+            ditto -x -k "site/releases/$V/AI-Bobby-$V-$arch.zip" verify/
+            codesign --verify --deep --strict --verbose=2 "verify/AI Bobby.app"
+          done
+
+      - name: Stage latest entry points
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.version }}"
+          SITE="$RUNNER_TEMP/site"
+          mkdir -p "$SITE/releases/latest"
+          cp scripts/release/install.sh "$SITE/releases/latest/install.sh"
+          cp "$SITE/releases/$V/checksums.txt" "$SITE/releases/latest/checksums.txt"
+          cp "$SITE/releases/$V/latest.json" "$SITE/releases/latest/latest.json"
+          cp "$SITE/releases/$V/VERSION.txt" "$SITE/releases/latest/VERSION.txt"
+
+      - name: Validate release manifest
+        run: node scripts/release/validate.mjs "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
+
+      - name: Publish to gh-pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/site"
+          git init -q
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -q -b gh-pages
+          git add -A
+          git commit -q -m "release: AI Bobby ${{ steps.ver.outputs.version }} (public beta)"
+          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
+          echo "published to gh-pages"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          V="${{ steps.ver.outputs.version }}"
+          TAG="${{ steps.ver.outputs.tag }}"
+          DIR="$RUNNER_TEMP/site/releases/$V"
+
+          gh release view "$TAG" >/dev/null 2>&1 && gh release delete "$TAG" -y || true
+          git push origin ":refs/tags/$TAG" 2>/dev/null || true
+
+          NOTES="$RUNNER_TEMP/release-notes.md"
+          {
+            echo "公测版：ad-hoc 签名分发，未经 Apple 公证。"
+            echo ""
+            echo "**安装（推荐）**"
+            echo ""
+            echo '```bash'
+            echo "curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash"
+            echo '```'
+            echo ""
+            echo "首次打开若被 Gatekeeper 阻止，请右键 → 打开，或执行："
+            echo '```bash'
+            echo 'xattr -dr com.apple.quarantine "/Applications/AI Bobby.app"'
+            echo '```'
+          } > "$NOTES"
+
+          gh release create "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "AI Bobby ${V} (public beta)" \
+            --notes-file "$NOTES" \
+            --generate-notes
+
+          for f in "$DIR"/*; do
+            [ -e "$f" ] || continue
+            gh release upload "$TAG" "$f" --clobber
+          done
+          cp scripts/release/install.sh "$RUNNER_TEMP/install.sh"
+          gh release upload "$TAG" "$RUNNER_TEMP/install.sh" --clobber
+          cp "$RUNNER_TEMP/site/releases/latest/VERSION.txt" "$RUNNER_TEMP/VERSION.txt"
+          gh release upload "$TAG" "$RUNNER_TEMP/VERSION.txt" --clobber

@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AI Bobby — 界面原型</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body data-theme="dark">
+  <div class="desktop">
+    <div class="window" role="application" aria-label="AI Bobby 控制面板">
+      <div class="titlebar">
+        <div class="traffic" aria-hidden="true">
+          <span class="light close"></span>
+          <span class="light minimize"></span>
+          <span class="light maximize"></span>
+        </div>
+        <div class="window-title">AI Bobby</div>
+        <div class="titlebar-right"><span class="window-mode">本地网关</span></div>
+      </div>
+
+      <div class="app-shell">
+        <header class="app-toolbar">
+          <div class="brand">
+            <span class="brand-icon" aria-hidden="true">
+              <svg viewBox="0 0 32 32">
+                <rect width="32" height="32" rx="9" fill="currentColor"/>
+                <rect x="7" y="11" width="18" height="13" rx="4.5" fill="#fff"/>
+                <circle cx="12.5" cy="17" r="1.7" fill="currentColor"/>
+                <circle cx="19.5" cy="17" r="1.7" fill="currentColor"/>
+                <path d="M12.8 21.1c1.8 1.2 4.6 1.2 6.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <path d="M16 6.6v3.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+                <circle cx="16" cy="5.7" r="1.5" fill="#fff"/>
+              </svg>
+            </span>
+            <h1>AI Bobby</h1>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <nav class="source-tabs" role="tablist" aria-label="模型来源">
+              <button class="source-tab active" data-tab="opencode" role="tab" aria-selected="true">
+                OpenCode <span class="tab-count" data-count="opencode">7</span>
+              </button>
+              <button class="source-tab" data-tab="workbuddy" role="tab" aria-selected="false">
+                WorkBuddy <span class="tab-count" data-count="workbuddy">12</span>
+              </button>
+              <button class="source-tab" data-tab="wbi" role="tab" aria-selected="false">
+                WorkBuddy AI <span class="tab-count" data-count="wbi">9</span>
+              </button>
+            </nav>
+          </div>
+
+          <div class="toolbar-controls">
+            <div class="theme-control" role="group" aria-label="界面主题">
+              <button type="button" data-theme-choice="system" aria-pressed="false">系统</button>
+              <button type="button" data-theme-choice="light" aria-pressed="false">浅色</button>
+              <button type="button" data-theme-choice="dark" aria-pressed="true">深色</button>
+            </div>
+            <span class="toolbar-divider" aria-hidden="true"></span>
+            <button class="icon-button" id="open-settings" type="button" title="设置" aria-label="设置">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="10" cy="10" r="2.6"/>
+                <path d="M10 2.8v1.6M10 15.6v1.6M2.8 10h1.6M15.6 10h1.6M4.9 4.9l1.1 1.1M14 14l1.1 1.1M15.1 4.9 14 6M6 14l-1.1 1.1" stroke-linecap="round"/>
+              </svg>
+            </button>
+            <button class="primary import-open" id="open-import" type="button">
+              <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                <path d="M10 3v8m-3-3 3 3 3-3M4 12.5V16h12v-3.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              导入
+              <span class="badge" id="import-badge">7</span>
+            </button>
+          </div>
+        </header>
+
+        <main class="workspace">
+          <section class="source-head">
+            <div class="source-copy">
+              <div class="eyebrow" id="source-eyebrow">OPENCODE · 免费模型</div>
+              <h2 id="source-title">OpenCode 免费模型</h2>
+              <p id="source-subtitle">把 OpenCode 的免费模型接入统一网关</p>
+              <div class="source-actions" id="source-actions">
+                <button type="button" id="refresh">
+                  <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M15.7 7A6 6 0 1 0 16 12M16 3v4h-4" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>读取模型</span>
+                </button>
+                <button type="button" id="probe">
+                  <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M3 10h3l2-5 4 10 2-5h3" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span>检测全部</span>
+                </button>
+              </div>
+            </div>
+            <div class="source-side">
+              <dl class="metrics" id="metrics"></dl>
+              <div class="selection-summary">
+                <span class="selection-dot" aria-hidden="true"></span>
+                本页已选 <strong id="selected-count">7</strong>
+                <span class="global-selection">全局 <strong id="global-selected">7</strong></span>
+              </div>
+            </div>
+          </section>
+
+          <section class="account-strip" id="account-strip" hidden aria-label="WorkBuddy 账号">
+            <div class="account-strip-head">
+              <span class="account-label">账号</span>
+              <span class="account-note" id="account-note">round-robin · 失败自动切换</span>
+            </div>
+            <div class="account-list" id="account-list"></div>
+            <button class="account-add" id="add-account" type="button">
+              <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>
+              添加账号
+            </button>
+          </section>
+
+          <div class="feedback" id="feedback" role="status" aria-live="polite">
+            <span class="feedback-icon" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 10.5 3.2 3L15 6.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+            <span id="feedback-text">配置已是最新，共 7 个模型，无需重复写入。</span>
+            <button class="feedback-close" type="button" aria-label="关闭提示">×</button>
+          </div>
+
+          <section class="model-section" aria-labelledby="models-heading">
+            <div class="list-toolbar">
+              <div class="list-title">
+                <h3 id="models-heading">模型清单</h3>
+                <p id="table-hint">勾选决定导入，点击行查看详情。</p>
+              </div>
+              <div class="list-meta"><span id="list-meta-text">最近刷新 2 分钟前</span></div>
+            </div>
+
+            <div class="table-wrap" tabindex="0" role="region" aria-label="可滚动的模型清单">
+              <table class="model-table" aria-describedby="table-hint">
+                <colgroup>
+                  <col class="check-column">
+                  <col class="name-column">
+                  <col class="capability-column">
+                  <col class="status-column">
+                  <col class="timing-column">
+                </colgroup>
+                <thead>
+                  <tr>
+                    <th scope="col" class="check-heading"><span class="visually-hidden">是否导入</span></th>
+                    <th scope="col">模型</th>
+                    <th scope="col">能力</th>
+                    <th scope="col">状态</th>
+                    <th scope="col" class="timing-heading">耗时</th>
+                  </tr>
+                </thead>
+                <tbody id="model-rows"></tbody>
+              </table>
+            </div>
+
+            <div class="table-footer">
+              <span id="table-footer-text">7 个可用 · 3 个仅对话 / 不可用</span>
+              <button class="link-button" id="select-all" type="button">全选可用</button>
+            </div>
+          </section>
+        </main>
+
+        <footer class="statusbar">
+          <div class="status-left">
+            <span class="dot success" id="service-dot" aria-hidden="true"></span>
+            <span id="service-text" role="status">运行中 · 10 个免费模型</span>
+            <span class="status-sep" aria-hidden="true"></span>
+            <span class="status-muted" id="service-sub">2 个账号在线</span>
+          </div>
+          <div class="status-right">
+            <span class="endpoint-fact"><span class="status-muted">转发口</span> <code id="endpoint">http://127.0.0.1:46890/v1</code></span>
+            <button class="key-button" id="copy-key" type="button" title="复制 API Key">
+              <span class="status-muted">Key</span> <code id="key-mask">sk-…f3a2</code>
+              <svg class="copy-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" stroke-linecap="round"/></svg>
+            </button>
+            <span class="version">AI Bobby 0.1.0</span>
+          </div>
+        </footer>
+      </div>
+    </div>
+
+    <div class="scrim" id="scrim" hidden></div>
+
+    <aside class="drawer" id="drawer" hidden aria-label="导入到客户端">
+      <div class="drawer-head">
+        <div>
+          <h2>导入到客户端</h2>
+          <p>先预览，再写入；只改 AI Bobby 自己的条目。</p>
+        </div>
+        <button class="icon-button close-drawer" id="close-import" type="button" aria-label="关闭导入抽屉">×</button>
+      </div>
+      <div class="drawer-body">
+        <section class="drawer-section">
+          <div class="section-heading">
+            <h3>客户端</h3>
+            <span>5 个已探测</span>
+          </div>
+          <div class="client-list" id="client-list"></div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="section-heading">
+            <h3>分组</h3>
+            <span>WorkBuddy 目标自动排除自身分组</span>
+          </div>
+          <div class="group-chips" id="group-chips"></div>
+        </section>
+
+        <section class="drawer-section">
+          <div class="section-heading"><h3>默认模型</h3><span>用于 Codex / Claude Code</span></div>
+          <select id="default-model" aria-label="默认模型"></select>
+          <label class="check-row"><input type="checkbox" id="set-default"> 同时设为客户端默认模型</label>
+        </section>
+
+        <section class="drawer-section">
+          <div class="section-heading"><h3>预览变更</h3><span id="diff-target">Codex · Claude Code · WorkBuddy</span></div>
+          <pre class="diff" id="diff-preview"></pre>
+        </section>
+      </div>
+      <div class="drawer-foot">
+        <span id="drawer-summary">已选 7 个模型 · 5 个客户端</span>
+        <div class="drawer-actions">
+          <button type="button" id="preview-import">预览变更</button>
+          <button type="button" class="primary" id="apply-import">写入</button>
+        </div>
+      </div>
+    </aside>
+
+    <div class="modal" id="login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-title">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <h2 id="login-title">添加 WorkBuddy 账号</h2>
+            <p>在官方登录页完成登录，AI Bobby 不接触密码。</p>
+          </div>
+          <button class="icon-button" id="close-login" type="button" aria-label="关闭登录窗口">×</button>
+        </div>
+        <div class="login-preview">
+          <div class="login-brand">WorkBuddy</div>
+          <div class="qr" id="login-qr" aria-hidden="true"></div>
+          <p>请使用微信 / QQ 扫码登录</p>
+          <span class="login-url">copilot.tencent.com/login</span>
+        </div>
+        <div class="modal-note">原型演示：真实版本会打开官方登录窗口并轮询回调；token 只保存在本机。</div>
+        <div class="modal-foot">
+          <button type="button" id="cancel-login">取消</button>
+          <button type="button" class="primary" id="mock-login">模拟登录成功</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" hidden role="status" aria-live="polite"></div>
+  </div>
+
+  <script src="./app.js"></script>
+</body>
+</html>

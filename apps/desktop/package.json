@@ -1,0 +1,50 @@
+{
+  "name": "@ai-bobby/desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Bobby 桌面应用：Electron 主进程、托盘与控制面板",
+  "main": "./out/main/index.js",
+  "scripts": {
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc -p tsconfig.node.json --noEmit && tsc -p tsconfig.web.json --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "pack:dir": "electron-builder --dir",
+    "dist:mac": "bash ../../scripts/release/build-mac.sh"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@electron/osx-sign": "2.7.1",
+    "@swc/core": "1.16.18",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/node": "26.6.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@vitejs/plugin-react": "6.1.2",
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3",
+    "electron-vite": "6.0.0",
+    "tailwindcss": "4.3.3",
+    "tailwindcss-scoped-preflight": "4.0.6",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "vitest": "5.0.5",
+    "antd": "6.6.6",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "lucide-react": "1.59.0",
+    "radix-ui": "^1.8.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "sonner": "2.0.8",
+    "tailwind-merge": "3.7.0",
+    "zod": "4.6.7"
+  },
+  "author": "xsin",
+  "homepage": "https://github.com/xsin/ai-bobby",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/xsin/ai-bobby.git"
+  }
+}
