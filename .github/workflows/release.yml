@@ -51,7 +51,7 @@ jobs:
         run: |
           bash scripts/release/build-mac.sh \
             --arch arm64 \
-            --out-dir "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
+            --out-dir "$RUNNER_TEMP/dist/${{ steps.ver.outputs.version }}"
 
       - name: Build and package x64
         env:
@@ -60,7 +60,7 @@ jobs:
         run: |
           bash scripts/release/build-mac.sh \
             --arch x64 \
-            --out-dir "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
+            --out-dir "$RUNNER_TEMP/dist/${{ steps.ver.outputs.version }}"
 
       - name: Verify signatures of shipped zips
         run: |
@@ -69,25 +69,28 @@ jobs:
           V="${{ steps.ver.outputs.version }}"
           for arch in arm64 x64; do
             rm -rf verify && mkdir verify
-            ditto -x -k "site/releases/$V/AI-Bobby-$V-$arch.zip" verify/
+            ditto -x -k "dist/$V/AI-Bobby-$V-$arch.zip" verify/
             codesign --verify --deep --strict --verbose=2 "verify/AI Bobby.app"
           done
 
-      - name: Stage latest entry points
+      - name: Validate release manifest
+        run: node scripts/release/validate.mjs "$RUNNER_TEMP/dist/${{ steps.ver.outputs.version }}"
+
+      - name: Stage Pages install channel
         run: |
           set -euo pipefail
           V="${{ steps.ver.outputs.version }}"
           SITE="$RUNNER_TEMP/site"
+          DIST="$RUNNER_TEMP/dist/$V"
           mkdir -p "$SITE/releases/latest"
           cp scripts/release/install.sh "$SITE/releases/latest/install.sh"
-          cp "$SITE/releases/$V/checksums.txt" "$SITE/releases/latest/checksums.txt"
-          cp "$SITE/releases/$V/latest.json" "$SITE/releases/latest/latest.json"
-          cp "$SITE/releases/$V/VERSION.txt" "$SITE/releases/latest/VERSION.txt"
+          cp "$DIST/checksums.txt" "$SITE/releases/latest/checksums.txt"
+          cp "$DIST/latest.json" "$SITE/releases/latest/latest.json"
+          cp "$DIST/VERSION.txt" "$SITE/releases/latest/VERSION.txt"
+          cp scripts/release/pages/index.html "$SITE/index.html"
+          cp scripts/release/pages/.nojekyll "$SITE/.nojekyll"
 
-      - name: Validate release manifest
-        run: node scripts/release/validate.mjs "$RUNNER_TEMP/site/releases/${{ steps.ver.outputs.version }}"
-
-      - name: Publish to gh-pages
+      - name: Publish install channel to gh-pages
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -98,9 +101,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -q -b gh-pages
           git add -A
-          git commit -q -m "release: AI Bobby ${{ steps.ver.outputs.version }} (public beta)"
+          git commit -q -m "release: AI Bobby ${{ steps.ver.outputs.version }} install channel"
           git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
-          echo "published to gh-pages"
+          echo "published install channel to gh-pages"
 
       - name: Create GitHub Release
         env:
@@ -109,7 +112,7 @@ jobs:
           set -euo pipefail
           V="${{ steps.ver.outputs.version }}"
           TAG="${{ steps.ver.outputs.tag }}"
-          DIR="$RUNNER_TEMP/site/releases/$V"
+          DIST="$RUNNER_TEMP/dist/$V"
 
           gh release view "$TAG" >/dev/null 2>&1 && gh release delete "$TAG" -y || true
           git push origin ":refs/tags/$TAG" 2>/dev/null || true
@@ -124,6 +127,8 @@ jobs:
             echo "curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash"
             echo '```'
             echo ""
+            echo "二进制由 GitHub Release 托管（gh-pages 只放安装脚本与更新清单）。"
+            echo ""
             echo "首次打开若被 Gatekeeper 阻止，请右键 → 打开，或执行："
             echo '```bash'
             echo 'xattr -dr com.apple.quarantine "/Applications/AI Bobby.app"'
@@ -132,15 +137,13 @@ jobs:
 
           gh release create "$TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --title "AI Bobby ${V} (public beta)" \
+            --title "AI Bobby ${V}" \
             --notes-file "$NOTES" \
             --generate-notes
 
-          for f in "$DIR"/*; do
+          for f in "$DIST"/*; do
             [ -e "$f" ] || continue
             gh release upload "$TAG" "$f" --clobber
           done
           cp scripts/release/install.sh "$RUNNER_TEMP/install.sh"
           gh release upload "$TAG" "$RUNNER_TEMP/install.sh" --clobber
-          cp "$RUNNER_TEMP/site/releases/latest/VERSION.txt" "$RUNNER_TEMP/VERSION.txt"
-          gh release upload "$TAG" "$RUNNER_TEMP/VERSION.txt" --clobber

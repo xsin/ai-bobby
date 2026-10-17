@@ -18,7 +18,7 @@
 set -euo pipefail
 
 APP_NAME="AI Bobby"
-BASE_URL="${AI_BOBBY_BASE_URL:-https://xsin.github.io/ai-bobby/releases/latest}"
+BASE_URL="${AI_BOBBY_BASE_URL:-https://github.com/xsin/ai-bobby/releases/latest}"
 VERSION="latest"
 RESOLVED_VERSION=""
 INSTALL_ROOT="${HOME}/Applications"
@@ -66,9 +66,13 @@ log "arch: ${ARCH}"
 log "version: ${RESOLVED_VERSION:-$VERSION}"
 
 if [ "$VERSION" = "latest" ]; then
-  for vt in "$RELEASES_ROOT/latest/VERSION.txt" "$RELEASES_ROOT/latest/download/VERSION.txt"; do
-    RESOLVED_VERSION="$(curl -fsL --retry 3 --retry-delay 2 -sS "$vt" 2>/dev/null | tr -d '[:space:]' || true)"
-    [ -n "$RESOLVED_VERSION" ] && break
+  for vt in "$RELEASES_ROOT/latest/download/VERSION.txt" \
+            "$RELEASES_ROOT/latest/VERSION.txt" \
+            "$RELEASES_ROOT/VERSION.txt"; do
+    CANDIDATE="$(curl -fsL --retry 3 --retry-delay 2 -sS "$vt" 2>/dev/null | tr -d '[:space:]' || true)"
+    case "$CANDIDATE" in
+      v[0-9]*.[0-9]*.[0-9]*|[0-9]*.[0-9]*.[0-9]*) RESOLVED_VERSION="$CANDIDATE"; break ;;
+    esac
   done
   if [ -n "$RESOLVED_VERSION" ]; then
     log "resolved latest: ${RESOLVED_VERSION}"
