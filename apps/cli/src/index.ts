@@ -5,6 +5,7 @@ import { homedir } from 'node:os'
 import { join } from 'node:path'
 import { ModelRegistry, createLogger, redact, type ProviderAdapter, type ProviderId } from '@ai-bobby/core'
 import { GatewayService } from '@ai-bobby/gateway'
+import { OpenCodeProvider } from '@ai-bobby/opencode'
 import { AccountStore, WORKBUDDY_VARIANTS, WorkBuddyProvider } from '@ai-bobby/workbuddy'
 
 const VERSION = '0.1.0'
@@ -44,12 +45,22 @@ async function buildProviders() {
     registry.replace(variant.id, provider.listModels())
     adapters.set(variant.id, provider)
   }
-  return { store, registry, adapters }
+  const opencode = new OpenCodeProvider({ dataDir: dataDir(), log: message => process.stderr.write(`${message}\n`) })
+  if (process.env.AI_BOBBY_DISABLE_OPENCODE !== '1') {
+    try {
+      await opencode.refreshModels()
+      registry.replace('opencode', opencode.listModels())
+    } catch (error) {
+      process.stderr.write(`OpenCode provider unavailable: ${error instanceof Error ? error.message : String(error)}\n`)
+    }
+  }
+  adapters.set('opencode', opencode)
+  return { store, registry, adapters, opencode }
 }
 
 async function serve(): Promise<void> {
   const logger = createLogger((process.env.AI_BOBBY_LOG_LEVEL as 'debug' | 'info' | 'warn' | 'error') || 'info')
-  const { store, registry, adapters } = await buildProviders()
+  const { store, registry, adapters, opencode } = await buildProviders()
   const key = await apiKey()
   const portIndex = process.argv.indexOf('--port')
   const portArg = portIndex >= 0 ? Number(process.argv[portIndex + 1]) : undefined
@@ -75,6 +86,7 @@ async function serve(): Promise<void> {
     ].join('\n'),
   )
   const shutdown = async () => {
+    await opencode.stop().catch(() => undefined)
     await gateway.stop()
     process.exit(0)
   }

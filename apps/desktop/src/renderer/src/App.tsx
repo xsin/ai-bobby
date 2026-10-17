@@ -108,6 +108,7 @@ function AppInner() {
   const [sources, setSources] = useState(cloneSources)
   const [realStatus, setRealStatus] = useState<GatewayStatus | null>(null)
   const hydrated = useRef(false)
+  const lastModelCount = useRef(0)
   const [active, setActive] = useState<ProviderId>('opencode')
   const [selected, setSelected] = useState(initialSelection)
   const [accounts, setAccounts] = useState<Record<'workbuddy' | 'wbi', DemoAccount[]>>({
@@ -197,16 +198,26 @@ function AppInner() {
       return next
     })
     setAccounts({ workbuddy: cn.map(toDemoAccount), wbi: intl.map(toDemoAccount) })
+    const total = groups.opencode.length + groups.workbuddy.length + groups.wbi.length
+    const summary = active === 'opencode'
+      ? groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 免费模型。` : 'OpenCode 运行时尚未就绪；稍后会自动重试。'
+      : active === 'workbuddy'
+        ? cn.length > 0 ? `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。` : '还没有 WorkBuddy 账号；点击“添加账号”开始。'
+        : intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
     if (!hydrated.current) {
       hydrated.current = true
+      lastModelCount.current = total
       setSelected({
         opencode: new Set(groups.opencode.filter(model => model.status === 'available').map(model => model.id)),
         workbuddy: new Set(groups.workbuddy.filter(model => model.status === 'available').map(model => model.id)),
         wbi: new Set(groups.wbi.filter(model => model.status === 'available').map(model => model.id)),
       })
-      setFeedback(groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 模型。` : '登录 WorkBuddy 后即可读取模型。')
+      setFeedback(summary)
+    } else if (total !== lastModelCount.current) {
+      lastModelCount.current = total
+      setFeedback(summary)
     }
-  }, [])
+  }, [active])
 
   useEffect(() => {
     const api = window.aiBobby

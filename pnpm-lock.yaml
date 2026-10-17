@@ -26,6 +26,9 @@ importers:
       '@ai-bobby/gateway':
         specifier: workspace:*
         version: link:../../packages/gateway
+      '@ai-bobby/opencode':
+        specifier: workspace:*
+        version: link:../../packages/opencode
       '@ai-bobby/workbuddy':
         specifier: workspace:*
         version: link:../../packages/workbuddy
@@ -45,6 +48,9 @@ importers:
       '@ai-bobby/importers':
         specifier: workspace:*
         version: link:../../packages/importers
+      '@ai-bobby/opencode':
+        specifier: workspace:*
+        version: link:../../packages/opencode
       '@ai-bobby/workbuddy':
         specifier: workspace:*
         version: link:../../packages/workbuddy
@@ -144,7 +150,14 @@ importers:
         specifier: 2.9.1
         version: 2.9.1
 
-  packages/opencode: {}
+  packages/opencode:
+    dependencies:
+      '@ai-bobby/core':
+        specifier: workspace:*
+        version: link:../core
+      tar:
+        specifier: 7.5.22
+        version: 7.5.22
 
   packages/workbuddy:
     dependencies:

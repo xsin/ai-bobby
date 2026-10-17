@@ -62,7 +62,10 @@ function render(
     return { text: source, warnings, blocked: true }
   }
   const model = selection.defaultModelId ?? selection.modelIds[0]
-  if (selection.setAsDefault) warnings.push('Codex 默认模型请在配置中手动设置；此处只写 provider')
+  let textBase = withoutBlock
+  if (selection.setAsDefault && model !== undefined) {
+    textBase = setDefaultModel(textBase, model)
+  }
   const block = [
     START,
     '[model_providers.ai-bobby]',
@@ -72,7 +75,7 @@ function render(
     `experimental_bearer_token = ${JSON.stringify(context.apiKey)}`,
     END,
   ].join('\n')
-  const text = `${withoutBlock.replace(/\n+$/, '')}\n\n${block}\n`
+  const text = `${textBase.replace(/\n+$/, '')}\n\n${block}\n`
   try {
     parseToml(text)
   } catch (error) {
@@ -81,6 +84,16 @@ function render(
   }
   if (model === undefined) warnings.push('没有默认模型；provider 已写入，但需要手动选择 model')
   return { text, warnings }
+}
+
+function setDefaultModel(source: string, model: string): string {
+  const lines = source.split('\n')
+  const filtered = lines.filter(line => !/^\s*(model|model_provider)\s*=/.test(line))
+  // Top-level keys must appear before the first table header.
+  const firstTable = filtered.findIndex(line => /^\s*\[/.test(line))
+  const head = firstTable === -1 ? filtered : filtered.slice(0, firstTable)
+  const tail = firstTable === -1 ? [] : filtered.slice(firstTable)
+  return [`model = ${JSON.stringify(model)}`, 'model_provider = "ai-bobby"', '', ...head, ...tail].join('\n')
 }
 
 function escapeRegExp(value: string): string {

@@ -206,7 +206,7 @@ if (!gotLock) {
     registerIpc()
     mainWindow = createWindow()
     createTray()
-    void services.start()
+    void services.start().catch(error => console.error('[ai-bobby] services start failed', error))
 
     setTimeout(() => void autoCheck(), 8_000)
     setInterval(() => void autoCheck(), 6 * 60 * 60 * 1000)

@@ -1,9 +1,10 @@
-import { app, BrowserWindow, safeStorage, shell } from 'electron'
+import { app, BrowserWindow, shell } from 'electron'
 import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { ModelRegistry, createLogger } from '@ai-bobby/core'
 import { GatewayService } from '@ai-bobby/gateway'
+import { OpenCodeProvider } from '@ai-bobby/opencode'
 import {
   AccountStore,
   WORKBUDDY_VARIANTS,
@@ -21,21 +22,25 @@ export class Services {
   private readonly registry = new ModelRegistry()
   private readonly providers = new Map<'workbuddy' | 'workbuddy-ai', WorkBuddyProvider>()
   private readonly adapters = new Map()
+  private readonly opencode: OpenCodeProvider
   private readonly store: AccountStore
   private gateway: GatewayService | undefined
   private gatewayState: GatewayStatus['gateway'] = { state: 'starting', port: 46890 }
   private refreshedAtMs = 0
+  private refreshTimer: ReturnType<typeof setInterval> | undefined
   private key = ''
   private readonly importers: Record<ImportTargetName, Importer>
 
+  private readonly dataDir: string
+
   constructor(private readonly mainWindow: () => BrowserWindow | undefined) {
-    const codec = safeStorage.isEncryptionAvailable()
-      ? {
-          encode: (text: string) => safeStorage.encryptString(text).toString('base64'),
-          decode: (text: string) => safeStorage.decryptString(Buffer.from(text, 'base64')),
-        }
-      : undefined
-    this.store = AccountStore.inDataDir(app.getPath('userData'), codec)
+    this.dataDir = process.env.AI_BOBBY_DATA_DIR?.trim() || app.getPath('userData')
+    // AccountStore is 0600 for now. safeStorage.isEncryptionAvailable() can
+    // block on a locked Keychain during headless startup, so encryption is an
+    // explicit future opt-in rather than a startup dependency.
+    this.store = AccountStore.inDataDir(this.dataDir)
+    this.opencode = new OpenCodeProvider({ dataDir: this.dataDir, log: (message: string) => logger.info(message) })
+    this.adapters.set('opencode', this.opencode)
     this.importers = {
       workbuddy: new WorkBuddyImporter('workbuddy'),
       'workbuddy-ai': new WorkBuddyImporter('workbuddy-ai'),
@@ -52,7 +57,7 @@ export class Services {
   }
 
   async start(): Promise<void> {
-    this.key = await ensureApiKey()
+    this.key = await ensureApiKey(this.dataDir)
     const port = Number(process.env.AI_BOBBY_PORT || 46890)
     const gateway = new GatewayService({
       registry: this.registry,
@@ -75,23 +80,40 @@ export class Services {
       logger.error('gateway failed to start', { error: this.gatewayState.error })
     }
     void this.refresh()
+    this.refreshTimer = setInterval(() => void this.refresh(), 15 * 60_000)
   }
 
   async stop(): Promise<void> {
+    if (this.refreshTimer) clearInterval(this.refreshTimer)
+    this.refreshTimer = undefined
+    await this.opencode.stop().catch(() => undefined)
     await this.gateway?.stop()
     this.gateway = undefined
   }
 
   async refresh(): Promise<GatewayStatus> {
-    for (const [realm, provider] of this.providers) {
-      try {
-        const models = await provider.refreshModels()
-        this.registry.replace(realm, models)
-      } catch (error) {
-        logger.warn('workbuddy catalog refresh failed', { provider: realm, error: String(error) })
-      }
-    }
-    await Promise.all([...this.providers.values()].map(provider => provider.refreshCredits().catch(() => undefined)))
+    await Promise.all([
+      (async () => {
+        for (const [realm, provider] of this.providers) {
+          try {
+            const models = await provider.refreshModels()
+            this.registry.replace(realm, models)
+          } catch (error) {
+            logger.warn('workbuddy catalog refresh failed', { provider: realm, error: String(error) })
+          }
+        }
+        await Promise.all([...this.providers.values()].map(provider => provider.refreshCredits().catch(() => undefined)))
+      })(),
+      (async () => {
+        if (process.env.AI_BOBBY_DISABLE_OPENCODE === '1') return
+        try {
+          const models = await this.opencode.refreshModels()
+          this.registry.replace('opencode', models)
+        } catch (error) {
+          logger.warn('opencode catalog refresh failed', { error: String(error) })
+        }
+      })(),
+    ])
     this.refreshedAtMs = Date.now()
     return this.snapshot()
   }
@@ -221,8 +243,7 @@ function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' |
   }
 }
 
-async function ensureApiKey(): Promise<string> {
-  const dir = app.getPath('userData')
+async function ensureApiKey(dir: string): Promise<string> {
   const file = join(dir, 'api-key')
   await mkdir(dir, { recursive: true, mode: 0o700 })
   try {

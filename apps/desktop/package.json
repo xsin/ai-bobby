@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/desktop",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "AI Bobby 桌面应用：Electron 主进程、托盘与控制面板",
   "main": "./out/main/index.js",
@@ -43,7 +43,8 @@
     "@ai-bobby/core": "workspace:*",
     "@ai-bobby/gateway": "workspace:*",
     "@ai-bobby/workbuddy": "workspace:*",
-    "@ai-bobby/importers": "workspace:*"
+    "@ai-bobby/importers": "workspace:*",
+    "@ai-bobby/opencode": "workspace:*"
   },
   "author": "xsin",
   "homepage": "https://github.com/xsin/ai-bobby",

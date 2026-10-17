@@ -790,8 +790,12 @@ Origin/Referer/UA 同上
 ### 5.1 运行时
 
 - 发现顺序：环境变量 `AI_BOBBY_OPENCODE_PATH` → 数据目录 `runtime/<version>/opencode` → 下载。
-- 下载：锁定版本与校验和；失败给出网络/权限/架构错误。
-- 启动：
+- 下载：`opencode-<os>-<arch>` npm 包，校验 `dist.integrity` 的 SHA-512，只解压 `package/bin/opencode`。
+- 目录：启动 `opencode serve --pure` 读取 `/provider`，拿到免费模型后立即停止；不把 serve 留在后台。
+- 对话：当前 OpenCode 官方 server 对免费模型返回 free-tier gate（仅允许官方客户端内使用），
+  因此改用官方 `opencode run --pure --model opencode/<id> --format json`，从 JSON 事件取文本。
+  这是实现细节，不是用户可见的额外登录。
+- 启动（仅目录）：
 
 ```text
 opencode serve --pure
@@ -830,7 +834,9 @@ const free = model.cost.input === 0
 
 ### 5.4 会话与信封
 
-- 每个请求创建一个 OpenCode 会话（或复用，按 oc-ferry 策略）。
+- 每个请求启动一次官方 `opencode run`（隔离 XDG 目录），把 system prompt + 外部对话 JSON 作为 prompt。
+- 为什么不用 server `/session/:id/message`：免费模型在 server 路径被 free-tier gate 拒绝；
+  官方 CLI 路径可用，且能拿到流式 JSON 事件。
 - 系统提示约束：模型只输出一个 JSON 信封：
 
 ```json
@@ -843,8 +849,9 @@ const free = model.cost.input === 0
   - 参数必须是对象；
   - `tool_choice=none/required/forced` 与数量复核；
   - 失败重试一次（诊断重发）；仍失败返回 502。
-- 审批围栏：任何本机动作都不执行，只作为 `tool_call` 交给客户端。
-- 图片：只接受 data URL；模型声明支持图片才转发；否则 400。
+- 审批围栏：当前是 prompt 级约束 + 只解析外部工具信封；OpenCode 原生工具尚未强制 deny，
+  这是 P3 的剩余硬化项（需避免 free-tier gate 与权限配置冲突）。
+- 图片：当前声明不支持，网关直接 400；图片转发待补。
 
 ### 5.5 Canonical 映射
 

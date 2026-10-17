@@ -5,7 +5,7 @@
 > 每完成一个阶段，更新 §9 进度日志与 §0 的“当前阶段”。
 
 - 最后更新：2026-10-18
-- 当前阶段：**P1/P2/P4/P5/P6 已落地代码**：46890 网关、WorkBuddy provider、三种协议、四个 importer、桌面真实状态已接通；OpenCode provider 待实现
+- 当前阶段：**P1–P6 主链路已落地并真机验证**：46890 三协议网关、WorkBuddy provider、OpenCode 免费模型 provider、四个 importer、桌面真实状态；剩余 WorkBuddy 真实账号联调与发布
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：`https://github.com/xsin/ai-bobby`（public，已推送）
 - 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`（Pages 已开启）
@@ -61,8 +61,9 @@ AI Bobby 是“把三条来源摆渡给所有客户端”，WorkBuddy 既是上�
 - `apps/desktop`：主进程启动 46890 网关、IPC 状态、内嵌 WorkBuddy 登录窗口、导入 IPC；
   renderer 用真实状态替换 mock（浏览器预览仍用 demo）。
 - 测试：gateway 9、workbuddy 12、importers 4、updater 12；`pnpm -r typecheck` 与全量测试通过。
-- **未完成**：OpenCode provider（运行时/免费筛选/检测/会话）；Responses/Anthropic 真实 Codex/Claude 联调；
-  WorkBuddy 真实账号联调；safeStorage 加密账号库；发布新版本。
+- **本轮新增**：`@ai-bobby/opencode`（npm 运行时下载/安装、隔离 serve、免费模型过滤、
+  CLI `run --format json` 转发 + JSON 信封工具调用）；真实 `claude` 2.1.296 与 `codex` 0.154.0 已通过本机网关对话。
+- **未完成**：WorkBuddy 真实账号联调；OpenCode 原生工具/图片硬化；safeStorage（Keychain 启动阻塞，暂缓）；发布新版本。
 
 ### §0.1 2026-10-18 新增硬性要求（用户确认）
 
@@ -494,7 +495,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 
 - [x] variant 描述、双 realm 的 `auth/state` → 内嵌登录 → `auth/token` 轮询 → profile
 - [x] 登录窗口隔离（每账号独立 session partition）、超时/取消/错误分类、系统浏览器失败回退
-- [x] 多账号库（按 realm、启用/禁用/额度快照）；桌面端 safeStorage 加密，CLI 0600 明文
+- [x] 多账号库（按 realm、启用/禁用/额度快照）；当前桌面/CLI 均为 0600 明文，safeStorage 因启动阻塞暂缓
 - [x] token 刷新（单账号单飞、过期前刷新、失败换账号）
 - [x] `/v3/config` 目录拉取、模型元数据（上下文、图片、推理档位、计费）+ 内置兜底
 - [x] `/v2/chat/completions` 请求体 quirk、SSE 解析、错误分类
@@ -508,13 +509,15 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 
 ### P3 OpenCode provider
 
-- [ ] 移植 runtime.js：发现/下载/校验/隔离启动
-- [ ] 免费模型筛选（价格字段）+ 目录
+- [x] 移植 runtime.js：发现/下载/SHA-512 校验/隔离启动
+- [x] 免费模型筛选（价格字段）+ 目录
 - [ ] 检测队列、并发、判定缓存、降级“仅对话”
-- [ ] 会话/事件流/审批围栏/翻译兜底
-- [ ] 退出清理
+- [x] 会话/事件流（官方 `opencode run --format json` + 工具信封）
+- [x] 退出清理
+- [ ] 原生工具禁用/图片输入硬化
 
-**验收**：无 OpenCode 安装的机器能自动准备运行时；检测结果跨重启复用；不可用模型不进网关清单。
+**验收**：无 OpenCode 安装的机器能自动准备运行时；真实 `oc/space-bunny-free`
+通过网关返回文本与工具调用；不可用模型不进网关清单。检测缓存仍待补。
 
 ### P4 Gateway 三种方言
 
@@ -523,7 +526,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] Anthropic Messages：system/tools/images/tool_result、事件序列、`count_tokens`
 - [x] 并发上限、请求体上限、客户端断开取消
 - [x] 协议 fixture 测试（不联网）
-- [ ] Codex / Claude Code 真实客户端联调
+- [x] Codex / Claude Code 真实客户端联调（各完成一次真实对话）
 
 **验收**：Codex（responses）、Claude Code（messages）、WorkBuddy/DSH（chat）各完成一次真实对话与一次工具调用。
 
@@ -554,7 +557,8 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] 用真实 gateway 状态替换 mock（浏览器预览仍用 demo）
 - [x] WorkBuddy 内嵌登录窗口 + 状态轮询
 - [x] 导入 Sheet 接真实 importer IPC
-- [ ] 托盘菜单完善、真实账号联调、OpenCode provider 接入
+- [x] 托盘菜单完善、OpenCode provider 接入
+- [ ] WorkBuddy 真实账号联调
 
 **验收**：用户按截图风格验收；浅色/深色都可读；无横向滚动；键盘可达。
 
@@ -658,8 +662,22 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - 真机验证：Electron 启动后 `/health` 与 `/v1/models` 正常；登录窗口加载官方页面；
   未登录时 UI 显示空状态；API Key 从本机数据目录读取并掩码显示。
 - 打包版（arm64）启动后 `/health` 返回 0.1.0 / 46890，UI 能从 IPC 读到真实空状态；ad-hoc 签名验证通过。
-- 账号库已接 Electron safeStorage（桌面端）；CLI 仍为 0600 明文。
-- 待办：OpenCode provider；真实账号/客户端联调；新版本发布。
+- 账号库当前为 0600 明文；safeStorage 在无 Keychain 的启动环境会阻塞，已回退为可选未来项。
+- 待办：WorkBuddy 真实账号联调；OpenCode 原生工具/图片硬化；新版本发布。
+
+
+### 2026-10-18（Round 2：OpenCode / 真实客户端）
+
+- `@ai-bobby/opencode`：按平台从 npm 下载 `opencode-<os>-<arch>`，SHA-512 校验、解压单二进制；
+  隔离 XDG 启动 `serve --pure` 读取 `/provider`，按 cost=0 过滤 10–12 个免费模型。
+- 官方 server 对免费模型的 `/session/:id/message` 会返回 free-tier gate；改用官方
+  `opencode run --pure --model opencode/<id> --format json`，从 JSON 事件取文本，再解析 AI Bobby
+  工具信封。真实 `oc/space-bunny-free` 返回 `OK`，工具请求返回 `read_file` call。
+- 真机 `claude` 2.1.296（隔离 `CLAUDE_CONFIG_DIR`）返回 `CLAUDE_CLIENT_OK`；
+  真机 `codex` 0.154.0（临时 `CODEX_HOME`）返回 `CODEX_CLIENT_OK`。修复了 Anthropic
+  `role:system` 与 Responses 非 function 工具（Codex 的 `web_search`）两个兼容点。
+- safeStorage 在启动时阻塞 Keychain，已回退为 0600 明文；账号加密改为未来显式选项。
+- 全量测试仍通过（gateway 9 / workbuddy 12 / importers 4 / opencode 4 / updater 12）。
 
 ---
 

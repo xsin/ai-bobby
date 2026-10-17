@@ -202,7 +202,10 @@ describe('gateway', () => {
       body: JSON.stringify({
         model: 'wb/hy3',
         input: 'read',
-        tools: [{ type: 'function', name: 'read_file', parameters: { type: 'object' } }],
+        tools: [
+          { type: 'function', name: 'read_file', parameters: { type: 'object' } },
+          { type: 'web_search' },
+        ],
       }),
     })
     const toolBody = (await tool.json()) as Record<string, any>
@@ -251,6 +254,20 @@ describe('gateway', () => {
     const toolBody = (await tool.json()) as Record<string, any>
     expect(toolBody.stop_reason).toBe('tool_use')
     expect(toolBody.content[0]).toMatchObject({ type: 'tool_use', name: 'read_file', input: { path: 'a' } })
+
+    const systemRole = await fetch(`${base}/v1/messages`, {
+      method: 'POST',
+      headers: auth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        model: 'wb/hy3',
+        max_tokens: 100,
+        messages: [
+          { role: 'system', content: 'be brief' },
+          { role: 'user', content: 'hi' },
+        ],
+      }),
+    })
+    expect(systemRole.status).toBe(200)
 
     const stream = await fetch(`${base}/v1/messages`, {
       method: 'POST',

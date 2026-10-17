@@ -6,7 +6,8 @@
 
 > **状态（2026-10-18）**：源码已包含 46890 网关（Chat / Responses / Messages）、
 > WorkBuddy 官方登录 + 多账号 provider、四个客户端 importer、桌面真实状态与更新/分发链路。
-> **OpenCode provider 与真实账号/客户端联调仍需完成**；已发布的 `v0.1.0` 安装包是较早的 UI shell preview，
+> OpenCode 免费模型、真实 Codex 0.154 与 Claude Code 2.1 已在本机跑通；
+> **WorkBuddy 真实账号联调**仍需要你登录一次。已发布的 `v0.1.0` 安装包是较早的 UI shell preview，
 > 新功能会随下一版发布。详见 [handsoff.md](./handsoff.md)。
 
 ![OpenCode tab](docs/screenshots/01-opencode-dark.png)
@@ -66,6 +67,7 @@ xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
 - `packages/gateway`：`/v1/chat/completions`、`/v1/responses`、`/v1/messages`、
   `/v1/messages/count_tokens`、`/v1/models`、`/health`；API Key、Origin/Host 围栏
 - `packages/workbuddy`：官方登录 state/poll、AccountStore、目录/兜底、chat SSE、刷新、billing、多账号调度
+- `packages/opencode`：npm 运行时下载/SHA-512 校验、隔离 serve、免费模型过滤、CLI `run` 转发与工具信封
 - `packages/importers`：WorkBuddy / Codex / Claude Code / DSH 的 dry-run / 备份 / 原子写 / 回滚
 - `apps/desktop`：主进程启动 46890 网关，renderer 读真实模型/账号，内嵌登录窗口与导入 IPC
 - `apps/cli`：`pnpm --filter @ai-bobby/cli start` 可无界面起网关

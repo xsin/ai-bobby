@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/core",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "领域模型、配置、模型注册表、日志与跨包共享类型",

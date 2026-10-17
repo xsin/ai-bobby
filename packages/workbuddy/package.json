@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/workbuddy",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "description": "WorkBuddy（国内版）与 WorkBuddy AI（国际版）登录、账号、模型目录、上游转发与调度",

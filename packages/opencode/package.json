@@ -1,7 +1,22 @@
 {
   "name": "@ai-bobby/opencode",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
-  "description": "OpenCode 隔离运行时、免费模型发现、能力检测与转发适配"
+  "description": "OpenCode 隔离运行时、免费模型发现、能力检测与转发适配",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@ai-bobby/core": "workspace:*",
+    "tar": "7.5.22"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  }
 }

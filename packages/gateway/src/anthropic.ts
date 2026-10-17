@@ -65,7 +65,9 @@ function parseSystem(value: unknown): CanonicalContent[] {
 function appendMessage(messages: CanonicalMessage[], value: unknown, model: ModelDescriptor): void {
   if (!isObject(value)) throw new GatewayError('invalid_request', 400, 'messages 项不合法')
   const role = value['role']
-  if (role !== 'user' && role !== 'assistant') throw new GatewayError('invalid_request', 400, 'Anthropic messages 只支持 user/assistant')
+  if (role !== 'user' && role !== 'assistant' && role !== 'system' && role !== 'developer') {
+    throw new GatewayError('invalid_request', 400, 'Anthropic messages role 不合法')
+  }
   const raw = value['content']
   const content: CanonicalContent[] = []
   const toolResults: CanonicalMessage[] = []
@@ -109,7 +111,7 @@ function appendMessage(messages: CanonicalMessage[], value: unknown, model: Mode
       }
     }
   }
-  if (content.length > 0) messages.push({ role, content })
+  if (content.length > 0) messages.push({ role: role === 'system' || role === 'developer' ? 'system' : role, content })
   messages.push(...toolResults)
 }
 

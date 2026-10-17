@@ -105,17 +105,23 @@ function appendInputItem(messages: CanonicalMessage[], item: unknown, model: Mod
 function parseTools(value: unknown): CanonicalTool[] {
   if (value === undefined) return []
   if (!Array.isArray(value)) throw new GatewayError('invalid_request', 400, 'tools 必须是数组')
-  return value.map((tool, index) => {
+  const parsed: CanonicalTool[] = []
+  for (const [index, tool] of value.entries()) {
     if (!isObject(tool)) throw new GatewayError('invalid_request', 400, `tools[${index}] 不合法`)
+    // Codex may advertise built-in tools (web_search, local_shell, ...) that
+    // have no function name. They are not ours to execute; skip them rather
+    // than failing the whole request.
+    if (tool['type'] !== undefined && tool['type'] !== 'function') continue
     const fn = isObject(tool['function']) ? tool['function'] : tool
     const name = typeof fn['name'] === 'string' ? fn['name'] : ''
     if (name === '') throw new GatewayError('invalid_request', 400, `tools[${index}] 缺少 name`)
-    return {
+    parsed.push({
       name,
       ...(typeof fn['description'] === 'string' ? { description: fn['description'] } : {}),
       parameters: isObject(fn['parameters']) ? fn['parameters'] : { type: 'object', properties: {} },
-    }
-  })
+    })
+  }
+  return parsed
 }
 
 function parseToolChoice(value: unknown): 'auto' | 'none' | 'required' | { name: string } {
