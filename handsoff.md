@@ -690,6 +690,14 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
   实际执行 download → install → 替换/重启后，`Info.plist` 版本变为 0.2.1（自动更新闭环验证）。
 - 已知：旧 v0.1.0 没有网关（UI shell），更新后才有；WorkBuddy 真实登录仍需人工。
 
+### 2026-10-18（v0.2.1 补丁）
+
+- 设置页改为显示真实网关端口 / API Key，并可直接复制；移除“P1.1 接入”占位文案。
+- `runOpenCode` 改为等 stdout `close` 再收尾，避免长输出截断。
+- WorkBuddy HTTP 集成测试（本地 mock：catalog + SSE + 鉴权头）。
+- v0.2.0 安装实例 `checkForUpdates` → download → install，`Info.plist` 变为 0.2.1。
+- 发布 v0.2.1；更新通道与 GitHub Release 均指向 0.2.1。
+
 ---
 
 ## §10 风险与约束
