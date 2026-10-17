@@ -46,8 +46,68 @@ export type UpdateActionResult =
   | { ok: true }
   | { ok: false; error: string }
 
+
+export interface ModelSnapshot {
+  id: string
+  name: string
+  provider: 'opencode' | 'workbuddy' | 'workbuddy-ai'
+  groupName: string
+  status: string
+  capabilities: { text: boolean; images: boolean; tools: boolean; reasoning: boolean }
+  contextWindow?: number
+  maxOutputTokens?: number
+  accounts?: number
+  billing?: { credits?: string; badges?: readonly string[]; free: boolean; rateUnknown?: boolean }
+}
+
+export interface AccountSnapshot {
+  uid: string
+  nickname: string
+  realm: 'cn' | 'intl'
+  enabled: boolean
+  expiresAtMs: number
+  credits?: number
+}
+
+export interface GatewayStatus {
+  version: string
+  gateway: { state: 'starting' | 'ready' | 'error'; port: number; error?: string }
+  models: ModelSnapshot[]
+  accounts: AccountSnapshot[]
+  apiKeyMasked: string
+  refreshedAtMs: number
+}
+
+
+export type ImportTargetName = 'workbuddy' | 'workbuddy-ai' | 'codex' | 'claude' | 'dsh'
+
+export interface ImportSelectionPayload {
+  groups: string[]
+  modelIds: string[]
+  defaultModelId?: string
+  setAsDefault?: boolean
+}
+
+export interface ImportPlanSnapshot {
+  target: string
+  path: string
+  detected: boolean
+  changed: boolean
+  diff: string
+  warnings: string[]
+  requiresRestart: boolean
+  backupPath?: string
+}
+
 export interface AiBobbyApi {
   getAppInfo(): Promise<AppInfo>
+  getStatus(): Promise<GatewayStatus>
+  copyApiKey(): Promise<void>
+  refresh(): Promise<GatewayStatus>
+  startLogin(provider: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot>
+  importPreview(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
+  importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
+  importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
   setAutoCheck(enabled: boolean): Promise<void>
   downloadUpdate(): Promise<UpdateActionResult>

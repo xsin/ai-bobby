@@ -3,6 +3,13 @@ import type { AiBobbyApi, UpdateInfo, UpdateProgress } from '../shared/api'
 
 const api: AiBobbyApi = {
   getAppInfo: () => ipcRenderer.invoke('app:get-info'),
+  getStatus: () => ipcRenderer.invoke('app:get-status'),
+  copyApiKey: () => ipcRenderer.invoke('app:copy-api-key'),
+  refresh: () => ipcRenderer.invoke('app:refresh'),
+  startLogin: provider => ipcRenderer.invoke('account:login', provider),
+  importPreview: (target, selection) => ipcRenderer.invoke('import:preview', target, selection),
+  importApply: (target, selection) => ipcRenderer.invoke('import:apply', target, selection),
+  importRollback: target => ipcRenderer.invoke('import:rollback', target),
   checkForUpdates: manual => ipcRenderer.invoke('update:check', Boolean(manual)),
   setAutoCheck: enabled => ipcRenderer.invoke('app:set-auto-check', Boolean(enabled)),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),

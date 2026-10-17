@@ -8,6 +8,11 @@
 
 ## 0. 当前状态（Agent 已完成）
 
+- **源码新增**：46890 网关（Chat / Responses / Anthropic Messages）、WorkBuddy 官方登录 +
+  AccountStore + 目录/chat/刷新/billing、四个 importer、桌面真实状态与导入 IPC。
+- 测试：gateway 9、workbuddy 12、importers 4、updater 12；typecheck / 全量测试通过。
+- **仍待你本人登录一次 WorkBuddy** 才能做真实上游联调（见 §7）。
+
 - 桌面壳：React 19.3.1 + TS 7.0.2 + Vite 8.3.4 + Electron 44.9.0 + Tailwind 4.3.3 +
   shadcn/ui 4.22 + antd 6.6.6；主题色 **#1e4fff**。
 - 可运行 UI：三 tab、账号条、antd 模型表格、全局导入 Sheet、登录 Dialog、设置 Dialog、更新条。

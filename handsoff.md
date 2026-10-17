@@ -5,7 +5,7 @@
 > 每完成一个阶段，更新 §9 进度日志与 §0 的“当前阶段”。
 
 - 最后更新：2026-10-18
-- 当前阶段：**P1 骨架 / 发布链路实现**：前端新栈、更新器、curl 安装、CI 发布、打包验证已落地；网关与 provider 待实现
+- 当前阶段：**P1/P2/P4/P5/P6 已落地代码**：46890 网关、WorkBuddy provider、三种协议、四个 importer、桌面真实状态已接通；OpenCode provider 待实现
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：`https://github.com/xsin/ai-bobby`（public，已推送）
 - 安装通道：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`（Pages 已开启）
@@ -48,6 +48,21 @@ AI Bobby 是“把三条来源摆渡给所有客户端”，WorkBuddy 既是上�
   本地 install.sh 已从 HTTP 源完整跑通（下载→SHA256→ditto→安装）。
 - **打包**：arm64/x64 均能打出 `.app` 并 ad-hoc 验证；zip 约 127–135MB（Electron 体积）。
 - **仓库**：`refs/` 已加入 `.gitignore`；准备推 `xsin/ai-bobby`（见 `human-sos.md`）。
+
+### §0.3 Round 1 代码进展（目标轮次）
+
+- `@ai-bobby/core`：领域类型、模型注册表、错误、日志脱敏。
+- `@ai-bobby/gateway`：`/health`、`/v1/models`、`/v1/chat/completions`、
+  `/v1/responses`、`/v1/messages`、`/v1/messages/count_tokens`；API Key、Origin/Host 围栏、并发上限、SSE。
+- `@ai-bobby/workbuddy`：双 variant、官方登录 state/poll、AccountStore、目录解析/兜底、
+  `/v3/config`、`/v2/chat/completions`、刷新、billing、SSE → CanonicalEvent、round-robin/冷却。
+- `@ai-bobby/importers`：WorkBuddy 双 models.json、Codex config.toml、Claude settings.json、DSH cordis.patch.yml；
+  dry-run/备份/原子写/回滚/归属标记。
+- `apps/desktop`：主进程启动 46890 网关、IPC 状态、内嵌 WorkBuddy 登录窗口、导入 IPC；
+  renderer 用真实状态替换 mock（浏览器预览仍用 demo）。
+- 测试：gateway 9、workbuddy 12、importers 4、updater 12；`pnpm -r typecheck` 与全量测试通过。
+- **未完成**：OpenCode provider（运行时/免费筛选/检测/会话）；Responses/Anthropic 真实 Codex/Claude 联调；
+  WorkBuddy 真实账号联调；safeStorage 加密账号库；发布新版本。
 
 ### §0.1 2026-10-18 新增硬性要求（用户确认）
 
@@ -464,9 +479,9 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] `apps/desktop`：electron-vite 6 + Electron 44.9 + React 19.3.1 + TS 7.0.2 + Vite 8.3.4
 - [x] Tailwind 4.3.3 + shadcn/ui 4.22 + antd 6.6.6（token 桥接、scoped preflight、antd Table）
 - [x] renderer 用 mock 数据复刻 `prototype/`（三 tab / 账号条 / 导入 Sheet / 登录 Dialog / 设置 / 更新条）
-- [ ] `@ai-bobby/core`：领域类型 / 注册表 / 设置 / 数据目录 / 日志脱敏
-- [ ] `@ai-bobby/gateway`：`/health` + `/v1/models`（先返回空注册表）+ API Key + 来源围栏
-- [ ] `apps/cli`：`serve` 能起 46890，`/health` 可访问
+- [x] `@ai-bobby/core`：领域类型 / 注册表 / 错误 / 日志脱敏
+- [x] `@ai-bobby/gateway`：`/health` + `/v1/models` + Chat + Responses + Messages + count_tokens + 鉴权围栏
+- [x] `apps/cli`：`serve` 能起 46890，`/health`/`/v1/models` 可访问
 - [x] 单实例锁、托盘、关窗隐藏、更新检查调度
 - [x] 版本探测 + 更新器（manifest / semver / SHA256 / 可选 Ed25519 / 下载 / 签名校验 / 替换脚本）
 - [x] 发布脚手架：`version.mjs`、`manifest.mjs`、`validate.mjs`、`build-mac.sh`、`install.sh`、`release.yml`
@@ -477,16 +492,16 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 
 ### P2 WorkBuddy provider（国内 + 国际）
 
-- [ ] variant 描述、双 realm 的 `auth/state` → 内嵌登录 → `auth/token` 轮询 → profile
-- [ ] 登录窗口隔离（每账号独立 session partition）、超时/取消/错误分类、系统浏览器回退
-- [ ] 多账号库（按 realm、启用/禁用、优先、额度快照、模型目录快照）
-- [ ] token 刷新（单账号锁、过期前刷新、失败换账号）与安全落盘（safeStorage / 0600）
-- [ ] `/v3/config` 目录拉取、模型元数据（上下文、图片、推理档位、计费）
-- [ ] `/v2/chat/completions` 请求体 quirk、SSE 解析、错误分类
-- [ ] 多账号调度：round-robin + 401 刷新 / 429·402 冷却切换；流式开始后不换
-- [ ] 额度接口与账号 UI 数据
-- [ ] 未登录 / 令牌过期 / 额度不足 / 地区不匹配的可读状态
-- [ ] 单元测试：登录 state/poll fixture、SSE、错误分类、账号选择
+- [x] variant 描述、双 realm 的 `auth/state` → 内嵌登录 → `auth/token` 轮询 → profile
+- [x] 登录窗口隔离（每账号独立 session partition）、超时/取消/错误分类、系统浏览器失败回退
+- [x] 多账号库（按 realm、启用/禁用/额度快照）——当前 0600 明文，safeStorage 待补
+- [x] token 刷新（单账号单飞、过期前刷新、失败换账号）
+- [x] `/v3/config` 目录拉取、模型元数据（上下文、图片、推理档位、计费）+ 内置兜底
+- [x] `/v2/chat/completions` 请求体 quirk、SSE 解析、错误分类
+- [x] 多账号调度：round-robin + 401 刷新 / 429·402 冷却切换；流式开始后不换
+- [x] 额度接口与账号 UI 数据（真实账号联调待做）
+- [x] 未登录 / 令牌过期 / 额度不足 / 地区不匹配的可读状态
+- [x] 单元测试：登录 state/poll fixture、SSE、账号选择、429 切换
 
 **验收**：两个 realm 各自能通过内嵌登录添加至少两个账号；能列出模型并完成流式对话；
 一个账号 429 时自动切到另一个；不读取 WorkBuddy 桌面凭据文件。
@@ -503,21 +518,24 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 
 ### P4 Gateway 三种方言
 
-- [ ] Chat Completions：路由、流式/非流式、usage、错误归一化
-- [ ] Responses：请求翻译、事件翻译、工具调用、`[DONE]` 语义
-- [ ] Anthropic Messages：system/tools/images/thinking、事件序列、`count_tokens`
-- [ ] 并发上限、请求体上限、启动期 503、客户端断开取消
-- [ ] 协议 fixture 测试（不联网）
+- [x] Chat Completions：路由、流式/非流式、usage、错误归一化
+- [x] Responses：请求翻译、事件翻译、工具调用、`[DONE]` 语义
+- [x] Anthropic Messages：system/tools/images/tool_result、事件序列、`count_tokens`
+- [x] 并发上限、请求体上限、客户端断开取消
+- [x] 协议 fixture 测试（不联网）
+- [ ] Codex / Claude Code 真实客户端联调
 
 **验收**：Codex（responses）、Claude Code（messages）、WorkBuddy/DSH（chat）各完成一次真实对话与一次工具调用。
 
 ### P5 四个 importer
 
-- [ ] WorkBuddy `models.json`：合并/归属标记/备份/原子写/自环排除
-- [ ] Codex `config.toml`：provider 块、token、dry-run diff
-- [ ] Claude Code `settings.json`：env、模型别名、dry-run diff
-- [ ] DSH `cordis.patch.yml` + 凭据：profile 探测、provider 合并、密钥引用、dry-run diff
-- [ ] 统一 `changed/path/warnings/dryRun` 结果；回滚命令
+- [x] WorkBuddy `models.json`：合并/归属标记/备份/原子写/自环排除
+- [x] Codex `config.toml`：标记块、token、dry-run diff
+- [x] Claude Code `settings.json`：env、默认模型、dry-run diff
+- [x] DSH `cordis.patch.yml`：profile 探测、provider 合并、dry-run diff（凭据引用待补）
+- [x] 统一 `changed/path/warnings/dryRun` 结果；回滚
+- [x] 桌面导入 Sheet 已接真实 importer IPC
+- [ ] 真实客户端配置写入联调
 
 **验收**：四个客户端各自导入后能选到分组模型并完成一次对话；重复导入 `changed:false`；手动条目不被覆盖。
 
@@ -533,7 +551,10 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - [x] 更新条（非模态）+ 设置 Dialog：版本、自动检查、手动检查、更新源、安装并重启
 - [x] 服务状态条：46890 / Key 掩码 / 版本 / 服务状态
 - [x] 主题（系统/浅色/深色，Ant Design algorithm 驱动）
-- [ ] 用真实 `status.json` / IPC 数据替换 mock；托盘菜单完善
+- [x] 用真实 gateway 状态替换 mock（浏览器预览仍用 demo）
+- [x] WorkBuddy 内嵌登录窗口 + 状态轮询
+- [x] 导入 Sheet 接真实 importer IPC
+- [ ] 托盘菜单完善、真实账号联调、OpenCode provider 接入
 
 **验收**：用户按截图风格验收；浅色/深色都可读；无横向滚动；键盘可达。
 
@@ -623,6 +644,20 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
   改为 GitHub Release 托管二进制、gh-pages 只放 install.sh/VERSION/checksums/latest.json。
   `install.sh` 默认 base 改为 GitHub Releases，`latest.json` URL 指向 Release 资产。
 - **下一步**：P1 剩余（core/gateway/cli）+ P2 WorkBuddy provider。
+
+
+### 2026-10-18（Round 1：网关 / Provider / Importer）
+
+- 新建 `@ai-bobby/core`、`@ai-bobby/gateway`、`@ai-bobby/workbuddy`、`@ai-bobby/importers`。
+- 网关三种协议 + count_tokens + 鉴权/Origin/Host/并发/SSE；fixture 测试 9 项。
+- WorkBuddy：官方登录 state/poll（真机打开 codebuddy.cn/login）、AccountStore、目录解析/兜底、
+  chat SSE → CanonicalEvent、刷新、billing、round-robin/冷却；测试 12 项。
+- Importers：WorkBuddy/Codex/Claude/DSH；dry-run/备份/原子写/回滚；测试 4 项。
+- 桌面主进程启动 46890 网关；renderer 从 IPC 读真实模型/账号；WorkBuddy 登录窗口与导入 IPC 已接通。
+- 全量 `pnpm -r typecheck`、`pnpm -r test`、`pnpm --filter @ai-bobby/desktop build` 通过。
+- 真机验证：Electron 启动后 `/health` 与 `/v1/models` 正常；登录窗口加载官方页面；
+  未登录时 UI 显示空状态；API Key 从本机数据目录读取并掩码显示。
+- 待办：OpenCode provider；真实账号/客户端联调；safeStorage 账号加密；新版本发布。
 
 ---
 

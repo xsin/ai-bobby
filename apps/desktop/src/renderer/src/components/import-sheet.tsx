@@ -32,8 +32,10 @@ interface ImportSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   selectedByGroup: Record<ProviderId, number>
+  selectedIdsByGroup: Record<ProviderId, string[]>
   selectedTotal: number
   onApplied: () => void
+  onApply?: (payload: { clients: ClientId[]; groups: ProviderId[]; modelIds: string[]; defaultModelId: string }) => Promise<void> | void
 }
 
 type ClientId = ImportClient['id']
@@ -53,7 +55,7 @@ const GROUP_LABELS: Record<GroupId, string> = {
   wbi: 'WBI',
 }
 
-export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedTotal, onApplied }: ImportSheetProps) {
+export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply }: ImportSheetProps) {
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
     Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, true])) as Record<ClientId, boolean>,
   )
@@ -92,13 +94,29 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedTotal
     setGroups(current => ({ ...current, [id]: checked }))
   }
 
-  function apply() {
+  async function apply() {
     if (checkedClients.length === 0) {
       toast.error('请至少选择一个客户端')
       return
     }
     if (selectedTotal === 0) {
       toast.error('请至少勾选一个模型')
+      return
+    }
+    const activeGroups = (Object.keys(groups) as GroupId[]).filter(group => groups[group]).map(providerOf)
+    const modelIds = activeGroups.flatMap(group => selectedIdsByGroup[group])
+    if (onApply) {
+      try {
+        await onApply({
+          clients: checkedClients.map(client => client.id),
+          groups: activeGroups,
+          modelIds,
+          defaultModelId: defaultModel,
+        })
+        onOpenChange(false)
+      } catch (error) {
+        toast.error(error instanceof Error ? error.message : String(error))
+      }
       return
     }
     toast.success(`原型演示：将备份后写入 ${checkedClients.length} 个客户端`)

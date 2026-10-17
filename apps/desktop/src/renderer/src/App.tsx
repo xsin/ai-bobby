@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CheckCircle2, Download, Settings, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { AntdProvider } from '@/components/antd-provider'
@@ -19,11 +19,15 @@ import {
   SOURCES,
   isUsable,
   type DemoAccount,
+  type DemoModel,
   type DemoSource,
   type ProviderId,
 } from '@/lib/demo-data'
 import type {
+  AccountSnapshot,
   AppInfo,
+  GatewayStatus,
+  ModelSnapshot,
   ThemeChoice,
   UpdateInfo,
   UpdateProgress,
@@ -43,25 +47,67 @@ const THEME_OPTIONS: Array<{ id: ThemeChoice; label: string }> = [
   { id: 'dark', label: '深色' },
 ]
 
-function cloneSources(): Record<ProviderId, DemoSource> {
-  return typeof structuredClone === 'function'
+function emptySources(): Record<ProviderId, DemoSource> {
+  const copy = typeof structuredClone === 'function'
     ? structuredClone(SOURCES)
     : (JSON.parse(JSON.stringify(SOURCES)) as Record<ProviderId, DemoSource>)
+  for (const key of Object.keys(copy) as ProviderId[]) {
+    copy[key] = { ...copy[key], models: [], accounts: [], credits: '0' }
+  }
+  copy.opencode.feedback = 'OpenCode provider 接入后，这里会显示免费模型。'
+  copy.workbuddy.feedback = '还没有 WorkBuddy 账号；点击“添加账号”开始。'
+  copy.wbi.feedback = '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
+  return copy
+}
+
+function cloneSources(): Record<ProviderId, DemoSource> {
+  return window.aiBobby ? emptySources() : (typeof structuredClone === 'function'
+    ? structuredClone(SOURCES)
+    : (JSON.parse(JSON.stringify(SOURCES)) as Record<ProviderId, DemoSource>))
 }
 
 function initialSelection(): Record<ProviderId, Set<string>> {
+  const base = window.aiBobby ? emptySources() : SOURCES
   return {
-    opencode: new Set(
-      SOURCES.opencode.models.filter(model => model.status === 'available').map(model => model.id),
-    ),
-    workbuddy: new Set(),
-    wbi: new Set(),
+    opencode: new Set(base.opencode.models.filter(model => model.status === 'available').map(model => model.id)),
+    workbuddy: new Set(base.workbuddy.models.filter(model => model.status === 'available').map(model => model.id)),
+    wbi: new Set(base.wbi.models.filter(model => model.status === 'available').map(model => model.id)),
+  }
+}
+
+function toDemoModel(model: ModelSnapshot): DemoModel {
+  const caps: string[] = []
+  if (model.capabilities.reasoning) caps.push('推理')
+  if (model.capabilities.images) caps.push('图片')
+  if (model.capabilities.tools) caps.push('工具')
+  return {
+    id: model.id,
+    display: model.name,
+    upstream: model.id.split('/').slice(1).join('/'),
+    caps: caps.length > 0 ? caps : ['文本'],
+    status: model.status as DemoModel['status'],
+    latency: model.accounts ? `${model.accounts} 账号` : '—',
+    accounts: model.accounts,
+    context: model.contextWindow?.toLocaleString('en-US') ?? '—',
+    maxOutput: model.maxOutputTokens?.toLocaleString('en-US') ?? '—',
+    checked: '刚刚',
+  }
+}
+
+function toDemoAccount(account: AccountSnapshot): DemoAccount {
+  return {
+    initials: (account.nickname || account.uid).slice(0, 1).toUpperCase(),
+    name: account.nickname || account.uid.slice(0, 8),
+    sub: `${account.credits?.toLocaleString('en-US') ?? '额度未知'} 积分 · ${account.enabled ? '启用' : '禁用'}`,
+    status: account.enabled ? 'success' : 'error',
   }
 }
 
 function AppInner() {
   const { choice, setChoice } = useTheme()
   const [sources, setSources] = useState(cloneSources)
+  const [realStatus, setRealStatus] = useState<GatewayStatus | null>(null)
+  const hydrated = useRef(false)
   const [active, setActive] = useState<ProviderId>('opencode')
   const [selected, setSelected] = useState(initialSelection)
   const [accounts, setAccounts] = useState<Record<'workbuddy' | 'wbi', DemoAccount[]>>({
@@ -104,6 +150,88 @@ function AppInner() {
     }),
     [selected],
   )
+
+  const selectedIdsByGroup = useMemo(
+    () => ({
+      opencode: [...selected.opencode],
+      workbuddy: [...selected.workbuddy],
+      wbi: [...selected.wbi],
+    }),
+    [selected],
+  )
+
+  const applyStatus = useCallback((status: GatewayStatus) => {
+    const groups: Record<ProviderId, ModelSnapshot[]> = { opencode: [], workbuddy: [], wbi: [] }
+    for (const model of status.models) {
+      if (model.provider === 'opencode') groups.opencode.push(model)
+      else if (model.provider === 'workbuddy') groups.workbuddy.push(model)
+      else groups.wbi.push(model)
+    }
+    const cn = status.accounts.filter(account => account.realm === 'cn')
+    const intl = status.accounts.filter(account => account.realm === 'intl')
+    setSources(current => {
+      const next = structuredClone(current)
+      next.opencode = {
+        ...next.opencode,
+        models: groups.opencode.map(toDemoModel),
+        statusText: status.gateway.state === 'ready' ? `运行中 · ${status.models.length} 个模型` : '网关未就绪',
+        serviceSub: status.gateway.state === 'ready' ? `网关 ${status.gateway.port}` : status.gateway.error || '网关未就绪',
+        feedback: groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 模型。` : next.opencode.feedback,
+      }
+      next.workbuddy = {
+        ...next.workbuddy,
+        models: groups.workbuddy.map(toDemoModel),
+        accounts: cn.map(toDemoAccount),
+        credits: cn.reduce((sum, account) => sum + (account.credits ?? 0), 0).toLocaleString('en-US'),
+        feedback: cn.length === 0 ? '还没有 WorkBuddy 账号；点击“添加账号”开始。' : `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。`,
+        statusText: cn.length === 0 ? '未登录' : `运行中 · ${cn.length} 个账号`,
+      }
+      next.wbi = {
+        ...next.wbi,
+        models: groups.wbi.map(toDemoModel),
+        accounts: intl.map(toDemoAccount),
+        credits: intl.reduce((sum, account) => sum + (account.credits ?? 0), 0).toLocaleString('en-US'),
+        feedback: intl.length === 0 ? '还没有 WorkBuddy AI 账号；点击“添加账号”开始。' : `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。`,
+        statusText: intl.length === 0 ? '未登录' : `运行中 · ${intl.length} 个账号`,
+      }
+      return next
+    })
+    setAccounts({ workbuddy: cn.map(toDemoAccount), wbi: intl.map(toDemoAccount) })
+    if (!hydrated.current) {
+      hydrated.current = true
+      setSelected({
+        opencode: new Set(groups.opencode.filter(model => model.status === 'available').map(model => model.id)),
+        workbuddy: new Set(groups.workbuddy.filter(model => model.status === 'available').map(model => model.id)),
+        wbi: new Set(groups.wbi.filter(model => model.status === 'available').map(model => model.id)),
+      })
+      setFeedback(groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 模型。` : '登录 WorkBuddy 后即可读取模型。')
+    }
+  }, [])
+
+  useEffect(() => {
+    const api = window.aiBobby
+    if (!api) {
+      setAppInfo(APP_FALLBACK)
+      return
+    }
+    let alive = true
+    const load = async () => {
+      try {
+        const status = await api.getStatus()
+        if (!alive) return
+        setRealStatus(status)
+        applyStatus(status)
+      } catch {
+        // The gateway may still be starting; retry on the next tick.
+      }
+    }
+    void load()
+    const timer = window.setInterval(() => void load(), 3000)
+    return () => {
+      alive = false
+      window.clearInterval(timer)
+    }
+  }, [applyStatus])
 
   useEffect(() => {
     const api = window.aiBobby
@@ -182,6 +310,19 @@ function AppInner() {
 
   const handleAction = useCallback(
     (action: 'refresh' | 'probe' | 'credits') => {
+      if (window.aiBobby) {
+        setProbing(true)
+        void window.aiBobby.refresh().then(status => {
+          setRealStatus(status)
+          applyStatus(status)
+          setProbing(false)
+          toast.success(action === 'credits' ? '额度已刷新' : '模型目录已刷新')
+        }).catch(error => {
+          setProbing(false)
+          toast.error(error instanceof Error ? error.message : String(error))
+        })
+        return
+      }
       if (action === 'probe') {
         if (probing) return
         setProbing(true)
@@ -220,7 +361,7 @@ function AppInner() {
       }
       showFeedback(action === 'credits' ? '额度已刷新；模型目录保持最新。' : `目录已刷新：${source.models.length} 个模型。`)
     },
-    [active, probing, showFeedback, source.models.length],
+    [active, probing, showFeedback, source.models.length, applyStatus],
   )
 
   const handleProbeOne = useCallback((id: string) => {
@@ -243,6 +384,21 @@ function AppInner() {
       setLoginOpen(false)
       return
     }
+    if (window.aiBobby) {
+      setLoginOpen(false)
+      void window.aiBobby.startLogin(accountRealm === 'workbuddy' ? 'workbuddy' : 'workbuddy-ai')
+        .then(async account => {
+          const status = await window.aiBobby!.refresh()
+          setRealStatus(status)
+          applyStatus(status)
+          showFeedback(`已添加账号 ${account.nickname}；目录与额度已刷新。`)
+          toast.success(`已添加账号 ${account.nickname}`)
+        })
+        .catch(error => {
+          toast.error(error instanceof Error ? error.message : String(error))
+        })
+      return
+    }
     const current = accounts[accountRealm]
     if (current.length >= 3) {
       toast.info('原型最多演示 3 个账号')
@@ -261,13 +417,12 @@ function AppInner() {
     setLoginOpen(false)
     showFeedback(`已添加账号 ${name}；目录与额度会在后台刷新。`)
     toast.success(`已添加账号 ${name}；目录与额度会后台刷新`)
-  }, [accountRealm, accounts, showFeedback])
+  }, [accountRealm, accounts, showFeedback, applyStatus])
 
   const copyKey = useCallback(async () => {
-    const key = 'sk-ai-bobby-demo-f3a2'
     try {
-      if (window.aiBobby) await window.aiBobby.copyText(key)
-      else await navigator.clipboard.writeText(key)
+      if (window.aiBobby) await window.aiBobby.copyApiKey()
+      else await navigator.clipboard.writeText('sk-ai-bobby-demo-f3a2')
       toast.success('API Key 已复制')
     } catch {
       toast.error('复制失败，请在设置中查看')
@@ -491,16 +646,50 @@ function AppInner() {
         </section>
       </main>
 
-      <StatusBar source={source} appInfo={appInfo} onCopyKey={() => void copyKey()} />
+      <StatusBar source={source} appInfo={appInfo} keyMask={realStatus?.apiKeyMasked ?? 'sk-…f3a2'} onCopyKey={() => void copyKey()} />
 
       <ImportSheet
         open={importOpen}
         onOpenChange={setImportOpen}
         selectedByGroup={selectedByGroup}
+        selectedIdsByGroup={selectedIdsByGroup}
         selectedTotal={globalSelected}
         onApplied={() => {
           setFeedback('已写入客户端；重启对应客户端后生效。')
           toast.success('已写入客户端；重启对应客户端后生效')
+        }}
+        onApply={async payload => {
+          const api = window.aiBobby
+          if (!api) {
+            toast.success(`浏览器预览：将备份后写入 ${payload.clients.length} 个客户端`)
+            setFeedback('浏览器预览：未写入任何文件。')
+            return
+          }
+          const targetMap = {
+            workbuddy: 'workbuddy',
+            wbi: 'workbuddy-ai',
+            codex: 'codex',
+            claude: 'claude',
+            dsh: 'dsh',
+          } as const
+          const plans = []
+          for (const client of payload.clients) {
+            plans.push(await api.importApply(targetMap[client], {
+              groups: payload.groups,
+              modelIds: payload.modelIds,
+              defaultModelId: payload.defaultModelId,
+              setAsDefault: true,
+            }))
+          }
+          const changed = plans.filter(plan => plan.changed)
+          const warnings = plans.flatMap(plan => plan.warnings)
+          setFeedback(
+            changed.length === 0
+              ? `配置已是最新（${plans.length} 个客户端），无需重复写入。`
+              : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`,
+          )
+          if (warnings.length > 0) toast.warning(warnings[0]!)
+          toast.success(changed.length === 0 ? '配置已是最新' : `已写入 ${changed.length} 个客户端`)
         }}
       />
 

@@ -1,7 +1,23 @@
 {
   "name": "@ai-bobby/importers",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness 的配置写入与回滚"
+  "description": "一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness 的配置写入与回滚",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@ai-bobby/core": "workspace:*",
+    "smol-toml": "1.9.1",
+    "yaml": "2.9.1"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  }
 }

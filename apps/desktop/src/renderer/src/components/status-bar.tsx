@@ -6,10 +6,11 @@ import type { AppInfo } from '@shared/api'
 interface StatusBarProps {
   source: DemoSource
   appInfo: AppInfo | null
+  keyMask: string
   onCopyKey: () => void
 }
 
-export function StatusBar({ source, appInfo, onCopyKey }: StatusBarProps) {
+export function StatusBar({ source, appInfo, keyMask, onCopyKey }: StatusBarProps) {
   return (
     <footer className="flex h-[42px] shrink-0 items-center justify-between gap-3 border-t border-line bg-toolbar px-5 text-[10px]">
       <div className="flex min-w-0 items-center gap-2">
@@ -35,7 +36,7 @@ export function StatusBar({ source, appInfo, onCopyKey }: StatusBarProps) {
           title="复制 API Key"
         >
           <span className="text-faint">Key</span>
-          <code className="font-mono text-[10px]">sk-…f3a2</code>
+          <code className="font-mono text-[10px]">{keyMask}</code>
           <Copy className="size-3" />
         </Button>
         <span className="whitespace-nowrap text-faint">AI Bobby {appInfo?.version ?? '0.1.0'}</span>

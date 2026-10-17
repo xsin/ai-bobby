@@ -62,6 +62,7 @@ function QrMock() {
 
 export function LoginDialog({ open, onOpenChange, source, onSuccess }: LoginDialogProps) {
   const qr = <QrMock />
+  const real = Boolean(window.aiBobby)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -91,8 +92,9 @@ export function LoginDialog({ open, onOpenChange, source, onSuccess }: LoginDial
         <div className="mx-5 mb-3 flex items-start gap-2 text-[10px] leading-relaxed text-faint">
           <ShieldCheck className="mt-0.5 size-3.5 shrink-0 text-success" />
           <span>
-            真实版本会打开官方登录窗口并轮询回调；token 只保存在本机，日志不记录明文。
-            当前为界面原型，可点“模拟登录成功”查看多账号效果。
+            {real
+              ? '点击后会打开 WorkBuddy 官方登录窗口；完成登录后自动关闭并把账号入库。token 只保存在本机，日志不记录明文。'
+              : '当前为浏览器预览：点“模拟登录成功”可查看多账号效果。真实版本会打开官方登录窗口并轮询回调。'}
           </span>
         </div>
 
@@ -123,7 +125,7 @@ export function LoginDialog({ open, onOpenChange, source, onSuccess }: LoginDial
               className="h-8 bg-primary text-[11px] text-primary-foreground"
               onClick={onSuccess}
             >
-              模拟登录成功
+              {real ? '打开官方登录页' : '模拟登录成功'}
             </Button>
           </div>
         </DialogFooter>

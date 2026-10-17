@@ -73,7 +73,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
         },
       }}
     >
-      <AntApp>
+      <AntApp className="h-full">
         <TooltipProvider delayDuration={300}>
           {children}
           <Toaster theme={resolved} position="bottom-center" richColors closeButton />

@@ -1,7 +1,21 @@
 {
   "name": "@ai-bobby/gateway",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "统一网关：OpenAI Chat Completions / Responses 与 Anthropic Messages 三种协议面、鉴权、路由"
+  "description": "统一网关：OpenAI Chat Completions / Responses 与 Anthropic Messages 三种协议面、鉴权、路由",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "types": "./src/index.ts",
+  "dependencies": {
+    "@ai-bobby/core": "workspace:*"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run --passWithNoTests"
+  }
 }
