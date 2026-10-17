@@ -657,6 +657,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
 - 全量 `pnpm -r typecheck`、`pnpm -r test`、`pnpm --filter @ai-bobby/desktop build` 通过。
 - 真机验证：Electron 启动后 `/health` 与 `/v1/models` 正常；登录窗口加载官方页面；
   未登录时 UI 显示空状态；API Key 从本机数据目录读取并掩码显示。
+- 打包版（arm64）启动后 `/health` 返回 0.1.0 / 46890，UI 能从 IPC 读到真实空状态；ad-hoc 签名验证通过。
 - 待办：OpenCode provider；真实账号/客户端联调；safeStorage 账号加密；新版本发布。
 
 ---
