@@ -60,7 +60,7 @@ AI Bobby 是“把三条来源摆渡给所有客户端”，WorkBuddy 既是上�
   dry-run/备份/原子写/回滚/归属标记。
 - `apps/desktop`：主进程启动 46890 网关、IPC 状态、内嵌 WorkBuddy 登录窗口、导入 IPC；
   renderer 用真实状态替换 mock（浏览器预览仍用 demo）。
-- 测试：gateway 9、workbuddy 12、importers 4、updater 12；`pnpm -r typecheck` 与全量测试通过。
+- 测试：gateway 9、workbuddy 13、importers 4、updater 12；`pnpm -r typecheck` 与全量测试通过。
 - **本轮新增**：`@ai-bobby/opencode`（npm 运行时下载/安装、隔离 serve、免费模型过滤、
   CLI `run --format json` 转发 + JSON 信封工具调用）；真实 `claude` 2.1.296 与 `codex` 0.154.0 已通过本机网关对话。
 - **未完成**：WorkBuddy 真实账号联调；OpenCode 原生工具/图片硬化；safeStorage（Keychain 启动阻塞，暂缓）；发布新版本。
@@ -677,7 +677,7 @@ macOS 优先，Windows 在正式发版前补齐；托盘常驻、关窗不退出
   真机 `codex` 0.154.0（临时 `CODEX_HOME`）返回 `CODEX_CLIENT_OK`。修复了 Anthropic
   `role:system` 与 Responses 非 function 工具（Codex 的 `web_search`）两个兼容点。
 - safeStorage 在启动时阻塞 Keychain，已回退为 0600 明文；账号加密改为未来显式选项。
-- 全量测试仍通过（gateway 9 / workbuddy 12 / importers 4 / opencode 4 / updater 12）。
+- 全量测试仍通过（gateway 9 / workbuddy 13 / importers 4 / opencode 4 / updater 12）。
 
 
 ### 2026-10-18（Round 3：v0.2.0 发布）

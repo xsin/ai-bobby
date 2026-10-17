@@ -10,7 +10,7 @@
 
 - **源码新增**：46890 网关（Chat / Responses / Anthropic Messages）、WorkBuddy 官方登录 +
   AccountStore + 目录/chat/刷新/billing、四个 importer、桌面真实状态与导入 IPC。
-- 测试：gateway 9、workbuddy 12、importers 4、updater 12；typecheck / 全量测试通过。
+- 测试：gateway 9、workbuddy 13、importers 4、updater 12；typecheck / 全量测试通过。
 - 账号库当前是 `0600` 明文；`safeStorage` 在启动时会阻塞 Keychain，已回退，后续做成显式选项。
 - OpenCode provider 已可用：真实 `claude` 与 `codex` 客户端已通过本机网关各跑通一次对话。
 - **仍待你本人登录一次 WorkBuddy** 才能做真实上游联调（见 §7）；OpenCode/Codex/Claude 已跑通。
