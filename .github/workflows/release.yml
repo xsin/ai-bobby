@@ -45,7 +45,7 @@ jobs:
       - name: Build and package arm64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: ${{ github.event.head_commit.message || 'AI Bobby public beta' }}
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 公测更新：OpenCode 免费模型、WorkBuddy 双版本 provider、Codex/Claude Code 兼容；WorkBuddy 登录需本人扫码。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch arm64 \
@@ -54,7 +54,7 @@ jobs:
       - name: Build and package x64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: ${{ github.event.head_commit.message || 'AI Bobby public beta' }}
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 公测更新：OpenCode 免费模型、WorkBuddy 双版本 provider、Codex/Claude Code 兼容；WorkBuddy 登录需本人扫码。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch x64 \
