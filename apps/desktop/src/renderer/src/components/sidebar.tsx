@@ -17,7 +17,7 @@ export type NavPage = ProviderId | 'overview' | 'history' | 'about' | 'settings'
 
 interface SidebarProps {
   page: NavPage
-  counts: Record<ProviderId, number>
+  counts: Record<ProviderId, string>
   historyCount: number
   collapsed: boolean
   gatewayRunning: boolean
@@ -119,7 +119,7 @@ export function Sidebar({
               {!collapsed ? (
                 <>
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  <span className={cn('min-w-5 rounded bg-surface-2 px-1.5 text-center font-mono text-[9px] leading-4 text-faint', active && 'bg-surface text-primary')}>
+                  <span className={cn('min-w-[34px] rounded bg-surface-2 px-1.5 text-center font-mono text-[9px] leading-4 tabular-nums text-faint', active && 'bg-surface text-primary')}>
                     {counts[item.id]}
                   </span>
                 </>

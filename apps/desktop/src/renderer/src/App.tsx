@@ -214,13 +214,13 @@ function AppInner() {
     [selected],
   )
 
-  const counts = useMemo<Record<ProviderId, number>>(
+  const counts = useMemo<Record<ProviderId, string>>(
     () => ({
-      opencode: sources.opencode.models.filter(model => model.status === 'available').length,
-      workbuddy: sources.workbuddy.models.filter(model => model.status === 'available').length,
-      wbi: sources.wbi.models.filter(model => model.status === 'available').length,
+      opencode: `${selected.opencode.size}/${sources.opencode.models.length}`,
+      workbuddy: `${selected.workbuddy.size}/${sources.workbuddy.models.length}`,
+      wbi: `${selected.wbi.size}/${sources.wbi.models.length}`,
     }),
-    [sources],
+    [selected, sources],
   )
 
   const navigate = useCallback(
@@ -791,7 +791,7 @@ function AppInner() {
               <SourceHead
                 source={source}
                 selectedCount={selectedSet.size}
-                globalSelectedCount={globalSelected}
+                totalCount={source.models.length}
                 probing={probing}
                 onAction={handleAction}
               />

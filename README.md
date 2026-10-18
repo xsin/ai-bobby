@@ -7,9 +7,10 @@
 > **状态（2026-10-18）**：`v0.2.1` 已发布；`main` 的 **v0.2.2 界面改版已实现并完成本地验证**，等待你本机验收，尚未发版。
 > 46890 网关（Chat / Responses / Messages）、OpenCode 免费模型、WorkBuddy 双版本 provider、
 > 四个 importer、自动更新与 curl 安装链路均已落地。
-> v0.2.2 改版包含：可收起左侧栏 + 多页导航、主题只在设置页、导入历史与备份恢复、
+> v0.2.2 改版包含：可收起左侧栏 + 多页导航（新增概览页）、主题只在设置页、导入历史与备份合并表格、
 > 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI；
-> 设置页开关已做浅色对比度修复；关于页歌曲优先唤起网易云音乐 App，失败回退网页播放器。
+> 设置页开关已做浅色对比度修复；关于页歌曲优先唤起网易云音乐 App，失败回退网页播放器；
+> 导入抽屉实时预览、模型清单显示计费。
 > **发布需要你本机验收后确认；在此之前不创建 tag/release。**
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
@@ -192,14 +193,14 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 
 | | |
 |---|---|
-| ![OpenCode](docs/screenshots/01-opencode-dark.png) | ![History](docs/screenshots/07-history-dark.png) |
-| 左侧栏多页导航 + 模型清单 | 导入历史、diff 与备份恢复 |
+| ![概览](docs/screenshots/12-overview-dark.png) | ![OpenCode](docs/screenshots/01-opencode-dark.png) |
+| 概览：网关、模型源、积分与最近导入 | 左侧栏多页导航 + 模型清单 |
+| ![History](docs/screenshots/07-history-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
+| 导入记录与备份合并表格 | 全局导入：实时预览 + 默认模型 |
 | ![About](docs/screenshots/08-about-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
 | 关于 ZEO、音乐与赞助 | 非模态更新条 |
-| ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
-| WorkBuddy 多账号、额度与计费 | 全局导入：dry-run 预览 |
-
-浅色主题：![Light](docs/screenshots/06-opencode-light.png)
+| ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) | ![Light](docs/screenshots/06-opencode-light.png) |
+| WorkBuddy 多账号、额度与计费 | 浅色主题下的模型清单 |
 
 更多截图：[全局播放器](docs/screenshots/09-music-player-dark.png)、
 [设置页（主题唯一入口）](docs/screenshots/10-settings-dark.png)、
@@ -209,7 +210,8 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 ## 导入历史与备份
 
 - 每次实际写入客户端前，importer 会先备份目标文件；每个目标保留最近 5 份。
-- **历史记录**页展示最近 30 天的导入/恢复记录，可按客户端筛选、按路径搜索、查看 diff。
+- **历史记录**页把导入记录与备份合并成一张表：客户端、时间·模型数·状态、配置路径、备份文件。
+  可按客户端筛选、按路径搜索；支持「查看差异」（只读 diff）、「打开目录」（Finder 定位）和「恢复」。
 - 点“恢复”会先备份当前文件，再把历史备份写回；失败不会覆盖当前文件。
 - 记录与备份只在本机：`import-history.json` 为 `0600`，diff 中的 Key/token 会先脱敏。
 - 重复导入且内容未变时返回 `changed:false`，不会新增历史或备份。

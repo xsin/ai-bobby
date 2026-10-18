@@ -6,12 +6,12 @@ import { metricsFor, type DemoSource, type SourceAction } from '@/lib/demo-data'
 interface SourceHeadProps {
   source: DemoSource
   selectedCount: number
-  globalSelectedCount: number
+  totalCount: number
   probing: boolean
   onAction: (action: SourceAction['id']) => void
 }
 
-export function SourceHead({ source, selectedCount, globalSelectedCount, probing, onAction }: SourceHeadProps) {
+export function SourceHead({ source, selectedCount, totalCount, probing, onAction }: SourceHeadProps) {
   const metrics = metricsFor(source)
 
   return (
@@ -41,34 +41,32 @@ export function SourceHead({ source, selectedCount, globalSelectedCount, probing
         </div>
       </div>
 
-      <div className="flex shrink-0 flex-col items-end gap-2">
-        <dl className="flex items-end gap-6">
-          {source.metricDefs.map(def => {
-            const value = metrics[def.key as keyof typeof metrics] ?? 0
-            return (
-              <div key={def.key} className="text-right">
-                <dt className="text-[11px] text-muted-foreground">{def.label}</dt>
-                <dd
-                  className={cn(
-                    'mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-text',
-                    def.tone === 'accent' && 'text-success',
-                    def.tone === 'warning' && 'text-warning',
-                  )}
-                >
-                  {value}
-                </dd>
-              </div>
-            )
-          })}
-        </dl>
-        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <span className="size-1.5 rounded-full bg-primary" />
-          本页已选 <strong className="font-semibold text-text">{selectedCount}</strong>
-          <span className="ml-1 border-l border-line pl-2 text-faint">
-            全局 <strong className="font-medium text-muted-foreground">{globalSelectedCount}</strong>
-          </span>
+      <dl className="flex shrink-0 items-end gap-6">
+        {source.metricDefs.map(def => {
+          const value = metrics[def.key as keyof typeof metrics] ?? 0
+          return (
+            <div key={def.key} className="text-right">
+              <dt className="text-[11px] text-muted-foreground">{def.label}</dt>
+              <dd
+                className={cn(
+                  'mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-text',
+                  def.tone === 'accent' && 'text-success',
+                  def.tone === 'warning' && 'text-warning',
+                )}
+              >
+                {value}
+              </dd>
+            </div>
+          )
+        })}
+        <div className="text-right">
+          <dt className="text-[11px] text-muted-foreground">已选</dt>
+          <dd className="mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-primary">
+            {selectedCount}
+            <span className="ml-0.5 text-[12px] font-normal text-faint">/ {totalCount}</span>
+          </dd>
         </div>
-      </div>
+      </dl>
     </section>
   )
 }
