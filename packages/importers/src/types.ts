@@ -29,6 +29,8 @@ export interface ImportPlan {
 export interface Importer {
   readonly target: ImportTarget
   detect(): Promise<{ path: string; detected: boolean }>
+  /** AI Bobby model ids this client's config currently references. */
+  installedModelIds(): Promise<string[]>
   plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan>
   apply(selection: ImportSelection, context: ImportContext): Promise<ImportPlan>
   rollback(): Promise<ImportPlan>

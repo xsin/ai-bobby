@@ -17,6 +17,28 @@ export class DshImporter implements Importer {
     return { path: path ?? join(this.root, '.dsh', 'profiles', 'desktop', 'cordis.patch.yml'), detected: path !== undefined }
   }
 
+  async installedModelIds(): Promise<string[]> {
+    const path = await this.findProfile()
+    if (path === undefined) return []
+    const before = await readText(path)
+    if (before === undefined) return []
+    let parsed: unknown
+    try {
+      parsed = parseYaml(before)
+    } catch {
+      return []
+    }
+    if (!Array.isArray(parsed)) return []
+    const entry = parsed.find(item => isObject(item) && item['id'] === 'llm-pi-ai')
+    if (!isObject(entry) || !isObject(entry['config'])) return []
+    const providers = entry['config']['providers']
+    if (!isObject(providers) || !isObject(providers['ai-bobby'])) return []
+    const models = providers['ai-bobby']['models']
+    return Array.isArray(models)
+      ? models.flatMap(model => (isObject(model) && typeof model['id'] === 'string' ? [model['id']] : []))
+      : []
+  }
+
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const path = await this.ensurePath()
     const before = await readText(path)

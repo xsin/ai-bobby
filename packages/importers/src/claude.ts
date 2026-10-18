@@ -15,6 +15,22 @@ export class ClaudeImporter implements Importer {
     return { path: this.path, detected: await exists(this.path) }
   }
 
+  async installedModelIds(): Promise<string[]> {
+    const before = await readText(this.path)
+    if (before === undefined) return []
+    let parsed: unknown
+    try {
+      parsed = JSON.parse(before)
+    } catch {
+      return []
+    }
+    if (!isObject(parsed) || !isObject(parsed['env'])) return []
+    const base = parsed['env']['ANTHROPIC_BASE_URL']
+    const model = parsed['env']['ANTHROPIC_MODEL']
+    if (typeof base !== 'string' || !/127\.0\.0\.1|localhost/.test(base)) return []
+    return typeof model === 'string' && /^(oc|wb|wbi)\//.test(model) ? [model] : []
+  }
+
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const before = await readText(this.path)
     const { text, warnings } = render(before, selection, context)

@@ -1244,6 +1244,7 @@ export interface ImportPlan {
 export interface Importer {
   readonly target: ImportTarget
   detect(): Promise<{ path: string; detected: boolean; reason?: string }>
+  installedModelIds(): Promise<string[]>
   plan(selection: ImportSelection): Promise<ImportPlan>
   apply(selection: ImportSelection): Promise<ImportPlan>
   rollback(): Promise<ImportPlan>
@@ -1252,6 +1253,11 @@ export interface Importer {
 
 通用机制：
 
+- `installedModelIds()`：只读扫描该客户端配置里当前引用的 AI Bobby 模型，供启动时回勾选择：
+  WorkBuddy 系按 `aiBobbyOwner` 标记；DSH 读 `providers.ai-bobby.models[]`；
+  Codex 只认 `model_provider = "ai-bobby"` 时的顶层 `model`；Claude 只认本机 base URL 下的 `ANTHROPIC_MODEL`。
+- 启动时并行读取 `getStatus()` 与 `getImportedModelIds()`，首次拿到模型后用“已安装 ids ∩ 当前可用模型”初始化勾选；
+  默认不勾选任何模型，不记忆上一次的临时选择。
 - `withFileLock(path, fn)`：锁文件 + 过期（5 分钟）。
 - `backup(path)`：`<name>.ai-bobby-<timestamp>.bak`，保留 5 份。
 - `atomicWrite(path, text, mode)`：同目录临时文件 + `rename`。

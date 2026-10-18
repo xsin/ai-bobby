@@ -153,6 +153,7 @@ export interface AiBobbyApi {
   importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   getImportHistory(): Promise<ImportHistorySnapshot>
+  getImportedModelIds(): Promise<string[]>
   restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
   playInMusicApp(songId: string): Promise<MusicAppResult>
   openMusicAlbum(href: string): Promise<MusicAlbumResult>

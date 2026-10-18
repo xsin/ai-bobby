@@ -59,6 +59,10 @@ describe('WorkBuddy importer', () => {
     expect(entries.some(entry => entry['id'] === 'wbi/glm-5.3')).toBe(true)
     expect(entries.some(entry => entry['aiBobbyOwner'] === 'ai-bobby-v1')).toBe(true)
     expect((await importer.plan(selection, context())).changed).toBe(false)
+    await expect(importer.installedModelIds()).resolves.toEqual(
+      expect.arrayContaining(['wbi/glm-5.3', 'oc/big-pickle']),
+    )
+    await expect(importer.installedModelIds()).resolves.not.toContain('wb/hy3')
     await importer.rollback()
     const restored = JSON.parse(await readFile(path, 'utf8')) as Array<Record<string, unknown>>
     expect(restored.some(entry => entry['id'] === 'old')).toBe(true)
@@ -83,6 +87,22 @@ describe('Codex importer', () => {
     expect(parsed.model_providers['ai-bobby'].base_url).toBe('http://127.0.0.1:46890/v1')
     expect(parsed.model_providers.other.name).toBe('Other')
   })
+
+  it('reports the default model when ai-bobby is the default provider', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-import-'))
+    const path = join(dir, '.codex', 'config.toml')
+    await mkdir(join(dir, '.codex'), { recursive: true })
+    await writeFile(path, 'model = "gpt-5"\n')
+    const importer = new CodexImporter(dir)
+    const selection = {
+      groups: ['workbuddy'] as const,
+      modelIds: [],
+      defaultModelId: 'wb/hy3',
+      setAsDefault: true,
+    }
+    await importer.apply(selection, context())
+    await expect(importer.installedModelIds()).resolves.toEqual(['wb/hy3'])
+  })
 })
 
 describe('Claude Code importer', () => {
@@ -99,6 +119,7 @@ describe('Claude Code importer', () => {
     expect(parsed.env.EXISTING).toBe('1')
     expect(parsed.env.ANTHROPIC_BASE_URL).toBe('http://127.0.0.1:46890')
     expect(parsed.env.ANTHROPIC_MODEL).toBe('wb/hy3')
+    await expect(importer.installedModelIds()).resolves.toEqual(['wb/hy3'])
   })
 })
 
@@ -121,6 +142,7 @@ describe('DSH importer', () => {
       baseURL: 'http://127.0.0.1:46890/v1',
     })
     expect(entry.config.providers['ai-bobby'].models[0]).toMatchObject({ id: 'wb/hy3', name: 'WB. Hy3' })
+    await expect(importer.installedModelIds()).resolves.toEqual(['wb/hy3'])
 
     const credentials = parseYaml(await readFile(join(dir, '.dsh', '.credentials.yaml'), 'utf8')) as Record<string, any>
     expect(credentials.refs).toMatchObject({ AI_BOBBY_API_KEY: 'sk-ai-bobby-test' })

@@ -74,50 +74,24 @@ function cloneSources(): Record<ProviderId, DemoSource> {
     : (JSON.parse(JSON.stringify(SOURCES)) as Record<ProviderId, DemoSource>))
 }
 
-const SELECTION_KEY = 'ai-bobby-last-selection'
-
-function readSavedSelection(): Record<ProviderId, string[]> | null {
-  try {
-    const raw = localStorage.getItem(SELECTION_KEY)
-    if (raw === null || raw === '') return null
-    const parsed: unknown = JSON.parse(raw)
-    if (typeof parsed !== 'object' || parsed === null) return null
-    const record = parsed as Record<string, unknown>
-    const pick = (key: ProviderId): string[] => {
-      const value = record[key]
-      return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : []
-    }
-    return { opencode: pick('opencode'), workbuddy: pick('workbuddy'), wbi: pick('wbi') }
-  } catch {
-    return null
-  }
+function emptySelection(): Record<ProviderId, Set<string>> {
+  return { opencode: new Set(), workbuddy: new Set(), wbi: new Set() }
 }
 
-function writeSavedSelection(selection: Record<ProviderId, Set<string>>): void {
-  try {
-    const payload = Object.fromEntries(
-      (Object.keys(selection) as ProviderId[]).map(key => [key, [...selection[key]]]),
+function installedSelection(
+  installed: readonly string[],
+  groups: Record<ProviderId, ModelSnapshot[]>,
+): Record<ProviderId, Set<string>> {
+  const keep = (models: ModelSnapshot[]) =>
+    new Set(
+      models
+        .filter(model => installed.includes(model.id) && (model.status === 'available' || model.status === 'chat_only'))
+        .map(model => model.id),
     )
-    localStorage.setItem(SELECTION_KEY, JSON.stringify(payload))
-  } catch {
-    // Persisting the selection is best effort.
-  }
-}
-
-function initialSelection(): Record<ProviderId, Set<string>> {
-  const saved = readSavedSelection()
-  if (saved !== null && saved.opencode.length + saved.workbuddy.length + saved.wbi.length > 0) {
-    return {
-      opencode: new Set(saved.opencode),
-      workbuddy: new Set(saved.workbuddy),
-      wbi: new Set(saved.wbi),
-    }
-  }
-  const base = window.aiBobby ? emptySources() : SOURCES
   return {
-    opencode: new Set(base.opencode.models.filter(model => model.status === 'available').map(model => model.id)),
-    workbuddy: new Set(base.workbuddy.models.filter(model => model.status === 'available').map(model => model.id)),
-    wbi: new Set(base.wbi.models.filter(model => model.status === 'available').map(model => model.id)),
+    opencode: keep(groups.opencode),
+    workbuddy: keep(groups.workbuddy),
+    wbi: keep(groups.wbi),
   }
 }
 
@@ -173,7 +147,14 @@ function AppInner() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     try { return localStorage.getItem('ai-bobby-sidebar') === '1' } catch { return false }
   })
-  const [selected, setSelected] = useState(initialSelection)
+  const [selected, setSelected] = useState(emptySelection)
+  const importedModelIds = useRef<string[]>([])
+  const scannedImports = useRef(false)
+  const selectionInitialized = useRef<Record<ProviderId, boolean>>({
+    opencode: false,
+    workbuddy: false,
+    wbi: false,
+  })
   const [accounts, setAccounts] = useState<Record<'workbuddy' | 'wbi', DemoAccount[]>>({
     workbuddy: SOURCES.workbuddy.accounts ?? [],
     wbi: SOURCES.wbi.accounts ?? [],
@@ -382,6 +363,20 @@ function AppInner() {
       : active === 'workbuddy'
         ? cn.length > 0 ? `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。` : '还没有 WorkBuddy 账号；点击“添加账号”开始。'
         : intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
+    // Each source may finish loading at a different time (OpenCode downloads a
+    // runtime first), so seeded selection is applied per source once its models
+    // are known, instead of once globally.
+    const installedNow = installedSelection(importedModelIds.current, groups)
+    const pendingSelection: Partial<Record<ProviderId, Set<string>>> = {}
+    for (const key of ['opencode', 'workbuddy', 'wbi'] as ProviderId[]) {
+      if (selectionInitialized.current[key] || groups[key].length === 0) continue
+      selectionInitialized.current[key] = true
+      pendingSelection[key] = installedNow[key]
+    }
+    if (Object.keys(pendingSelection).length > 0) {
+      setSelected(previous => ({ ...previous, ...pendingSelection }))
+    }
+
     if (!hydrated.current) {
       if (total === 0) {
         setFeedback(summary)
@@ -389,26 +384,6 @@ function AppInner() {
       }
       hydrated.current = true
       lastModelCount.current = total
-      const saved = readSavedSelection()
-      if (saved !== null && saved.opencode.length + saved.workbuddy.length + saved.wbi.length > 0) {
-        const keep = (ids: string[], models: ModelSnapshot[]) =>
-          new Set(ids.filter(id => models.some(model => model.id === id)))
-        const restored = {
-          opencode: keep(saved.opencode, groups.opencode),
-          workbuddy: keep(saved.workbuddy, groups.workbuddy),
-          wbi: keep(saved.wbi, groups.wbi),
-        }
-        if (restored.opencode.size + restored.workbuddy.size + restored.wbi.size > 0) {
-          setSelected(restored)
-          setFeedback(summary)
-          return
-        }
-      }
-      setSelected({
-        opencode: new Set(groups.opencode.filter(model => model.status === 'available').map(model => model.id)),
-        workbuddy: new Set(groups.workbuddy.filter(model => model.status === 'available').map(model => model.id)),
-        wbi: new Set(groups.wbi.filter(model => model.status === 'available').map(model => model.id)),
-      })
       setFeedback(summary)
     } else if (total !== lastModelCount.current) {
       lastModelCount.current = total
@@ -427,6 +402,10 @@ function AppInner() {
       try {
         const status = await api.getStatus()
         if (!alive) return
+        if (!scannedImports.current) {
+          importedModelIds.current = await api.getImportedModelIds().catch(() => [])
+          scannedImports.current = true
+        }
         setRealStatus(status)
         applyStatus(status)
       } catch {
@@ -913,17 +892,6 @@ function AppInner() {
           }
           const changed = plans.filter(plan => plan.changed)
           const warnings = plans.flatMap(plan => plan.warnings)
-          const byProvider: Record<ProviderId, Set<string>> = {
-            opencode: new Set(),
-            workbuddy: new Set(),
-            wbi: new Set(),
-          }
-          for (const id of payload.modelIds) {
-            const prefix = id.split('/')[0]
-            const key: ProviderId = prefix === 'oc' ? 'opencode' : prefix === 'wb' ? 'workbuddy' : 'wbi'
-            byProvider[key].add(id)
-          }
-          writeSavedSelection(byProvider)
           setFeedback(changed.length === 0 ? `配置已是最新（${plans.length} 个客户端），无需重复写入。` : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`)
           if (warnings.length > 0) toast.warning(warnings[0]!)
           toast.success(changed.length === 0 ? '配置已是最新' : `已写入 ${changed.length} 个客户端`)

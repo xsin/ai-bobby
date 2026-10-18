@@ -19,6 +19,23 @@ export class CodexImporter implements Importer {
     return { path: this.path, detected: await exists(this.path) }
   }
 
+  async installedModelIds(): Promise<string[]> {
+    const before = await readText(this.path)
+    if (before === undefined) return []
+    let doc: Record<string, unknown>
+    try {
+      doc = parseToml(before)
+    } catch {
+      return []
+    }
+    const providers = doc['model_providers']
+    if (!isObject(providers) || !isObject(providers['ai-bobby'])) return []
+    // Codex stores no model list; the provider only participates when the
+    // top-level default points at it.
+    if (doc['model_provider'] !== 'ai-bobby') return []
+    return typeof doc['model'] === 'string' ? [doc['model']] : []
+  }
+
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const before = await readText(this.path)
     const { text, warnings } = render(before, selection, context)
@@ -98,4 +115,8 @@ function setDefaultModel(source: string, model: string): string {
 
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
 }

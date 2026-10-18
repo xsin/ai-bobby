@@ -427,3 +427,18 @@ WorkBuddy 上游
   来源页选中数与指标同字号、主色强调；登录弹窗改为官方窗口三步引导；导入抽屉去掉“预览”按钮、改为实时只读预览，
   并补充“默认模型”的语义说明。
 - 验证：desktop typecheck、27 项测试（新增 2 项）。
+
+### 2026-10-19 Round 7：第四轮反馈（设计稿收口 + 勾选来源改为配置扫描）
+
+- 设计稿（仅 `prototype/desktop`，待用户 HTML 验收）：
+  - 来源页删除与主标题重复的 eyebrow（`OPENCODE · 免费模型` / `WORKBUDDY · 国内版`）。
+  - 概览页移除“导入到客户端”按钮。
+  - 历史记录页移除“对比当前配置”（页头与表头各一处）和“导入新配置”。
+- 勾选逻辑（需求变更）：打开应用时所有来源默认不勾选；启动时并行读取网关状态与各客户端配置，
+  按“配置里实际引用的 AI Bobby 模型 ∩ 当前可用模型”回勾；删除上一轮的 localStorage 选择记忆。
+  - 新增 `Importer.installedModelIds()`：WorkBuddy 系按 `aiBobbyOwner`；DSH 读 `providers.ai-bobby.models`；
+    Codex 认 `model_provider = "ai-bobby"` 时的顶层 `model`；Claude 认本机 base URL 下的 `ANTHROPIC_MODEL`。
+  - 新增 IPC `import:installed-models` → `getImportedModelIds()`。
+  - 按来源分别初始化（OpenCode 运行时较慢），避免首次只初始化 WB/WBI 导致 OpenCode 全不选。
+- 文档：PRD FR-UI-5、tech §7.1、README 首次使用步骤同步。
+- 验证：全量 64 项测试通过。

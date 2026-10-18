@@ -140,6 +140,11 @@ function registerIpc(): void {
     return services.getImportHistory()
   })
 
+  ipcMain.handle('import:installed-models', async () => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.importedModelIds()
+  })
+
   ipcMain.handle('import:restore-backup', async (_event, id: string) => {
     if (!services) throw new Error('服务尚未启动')
     return services.restoreImportBackup(id)

@@ -31,6 +31,19 @@ export class WorkBuddyImporter implements Importer {
     return { path: this.path, detected: await exists(this.path) }
   }
 
+  async installedModelIds(): Promise<string[]> {
+    const before = await readText(this.path)
+    const parsed = safeJsonParse(before, [])
+    const source = Array.isArray(parsed)
+      ? parsed
+      : isObject(parsed) && Array.isArray(parsed['models'])
+        ? parsed['models']
+        : []
+    return source.flatMap(entry =>
+      isObject(entry) && entry['aiBobbyOwner'] === OWNER && typeof entry['id'] === 'string' ? [entry['id']] : [],
+    )
+  }
+
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const before = await readText(this.path)
     const { array, warnings } = render(before, selection, context, this.excluded)

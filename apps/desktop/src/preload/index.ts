@@ -11,6 +11,7 @@ const api: AiBobbyApi = {
   importApply: (target, selection) => ipcRenderer.invoke('import:apply', target, selection),
   importRollback: target => ipcRenderer.invoke('import:rollback', target),
   getImportHistory: () => ipcRenderer.invoke('import:history'),
+  getImportedModelIds: () => ipcRenderer.invoke('import:installed-models'),
   restoreImportBackup: id => ipcRenderer.invoke('import:restore-backup', id),
   playInMusicApp: songId => ipcRenderer.invoke('app:play-music', songId),
   openMusicAlbum: href => ipcRenderer.invoke('app:open-album', href),

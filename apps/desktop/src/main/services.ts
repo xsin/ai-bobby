@@ -247,6 +247,14 @@ export class Services {
     return snapshotPlan(plan)
   }
 
+  /** AI Bobby model ids referenced by any client config right now. */
+  async importedModelIds(): Promise<string[]> {
+    const lists = await Promise.all(
+      Object.values(this.importers).map(importer => importer.installedModelIds().catch(() => [])),
+    )
+    return [...new Set(lists.flat())]
+  }
+
   async importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot> {
     const plan = await this.importers[target].rollback()
     if (plan.changed) {

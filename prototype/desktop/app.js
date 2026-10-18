@@ -300,7 +300,6 @@
 
   function renderSourceHead() {
     const src = source();
-    $('#source-eyebrow').textContent = src.eyebrow;
     $('#source-title').textContent = src.title;
     $('#source-subtitle').textContent = src.subtitle;
     $('#list-meta-text').textContent = src.listMeta;
@@ -1238,7 +1237,6 @@
     state.historyQuery = event.target.value;
     renderHistory();
   });
-  $('#history-compare').addEventListener('click', () => showToast('原型：会打开当前配置与最近备份的差异对比'));
   $('#history-list').addEventListener('click', event => {
     const restore = event.target.closest('[data-restore]');
     if (restore) {
@@ -1298,9 +1296,6 @@
   });
 
   $('#open-import').addEventListener('click', openDrawer);
-  document.addEventListener('click', event => {
-    if (event.target.closest('.import-open') && !event.target.closest('#open-import')) openDrawer();
-  });
   $('#overview-refresh').addEventListener('click', () => {
     renderOverview();
     showToast('概览数据已刷新');
