@@ -467,7 +467,8 @@ function mapFinishReason(value: string): 'stop' | 'tool_calls' | 'length' | 'con
 
 function isKnownExhausted(account: WorkBuddyAccount): boolean {
   const credits = account.credits
-  return credits !== undefined && credits.packages.length > 0 && credits.total <= 0
+  if (credits === undefined || credits.unlimited === true) return false
+  return credits.packages.length > 0 && credits.total <= 0
 }
 
 function upstreamStatus(kind: string): number {

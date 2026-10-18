@@ -7,6 +7,8 @@ export interface WorkBuddyCredits {
   total: number
   packages: Array<{ name: string; remain: number; size: number; endTimeMs?: number }>
   fetchedAtMs: number
+  /** CN enterprise cycle quota reported as uncapped. */
+  unlimited?: true
 }
 
 export interface WorkBuddyAccount {

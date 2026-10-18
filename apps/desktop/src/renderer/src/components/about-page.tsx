@@ -12,12 +12,13 @@ import { ALBUMS, HOT_TRACKS, LATEST_TRACKS, type MusicTrack } from '@/lib/music'
 interface AboutPageProps {
   version: string
   onPlay: (track: MusicTrack) => void
+  onOpenAlbum: (album: { id: string; name: string; href: string }) => void
   onOpenExternal: (url: string) => void
 }
 
 const COVERS = [electroCover, zeoCover] as const
 
-export function AboutPage({ version, onPlay, onOpenExternal }: AboutPageProps) {
+export function AboutPage({ version, onPlay, onOpenAlbum, onOpenExternal }: AboutPageProps) {
   const [tab, setTab] = useState<'latest' | 'hot'>('latest')
   const tracks = tab === 'latest' ? LATEST_TRACKS : HOT_TRACKS
 
@@ -63,13 +64,13 @@ export function AboutPage({ version, onPlay, onOpenExternal }: AboutPageProps) {
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">SUPPORT MY MUSIC</div>
           <h2 className="mt-1 text-[27px] font-medium leading-tight tracking-[-0.035em] text-text">Support my music</h2>
           <p className="mt-2.5 max-w-[390px] text-[11px] leading-7 text-muted-foreground">写代码之外，我也做音乐。最近两张专辑：《Electro Surge》关于速度、夜色和电子颗粒，《ZEO》更贴近卧室里的轻声与留白。点一首听听。</p>
-          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-faint">点击歌曲优先唤起网易云音乐 App；未安装或唤起失败时，使用网页播放器。</p>
+          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-faint">点击歌曲优先唤起网易云音乐 App；未安装或唤起失败时使用网页播放器。专辑暂不支持 App 深链，会在网页版打开。</p>
           <div className="mt-3.5 flex max-w-[390px] flex-col gap-1.5">
             {ALBUMS.map((album, index) => (
               <button
                 key={album.id}
                 type="button"
-                onClick={() => onOpenExternal(album.href)}
+                onClick={() => onOpenAlbum(album)}
                 className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-line-soft bg-surface p-2 text-left transition-colors hover:border-primary/30 hover:bg-accent-soft"
               >
                 <img src={COVERS[index]} alt={`${album.name} 专辑封面`} className="size-[54px] shrink-0 rounded-md object-cover" />

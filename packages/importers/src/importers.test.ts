@@ -121,5 +121,25 @@ describe('DSH importer', () => {
       baseURL: 'http://127.0.0.1:46890/v1',
     })
     expect(entry.config.providers['ai-bobby'].models[0]).toMatchObject({ id: 'wb/hy3', name: 'WB. Hy3' })
+
+    const credentials = parseYaml(await readFile(join(dir, '.dsh', '.credentials.yaml'), 'utf8')) as Record<string, any>
+    expect(credentials.refs).toMatchObject({ AI_BOBBY_API_KEY: 'sk-ai-bobby-test' })
+  })
+
+  it('keeps other credential refs and records intact', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-import-'))
+    const path = join(dir, '.dsh', 'profiles', 'desktop', 'cordis.patch.yml')
+    await mkdir(join(dir, '.dsh', 'profiles', 'desktop'), { recursive: true })
+    await writeFile(path, '- id: llm-pi-ai\n  name: "@deepseek-ai/dsh-llm-pi-ai"\n  config:\n    providers: {}\n')
+    await writeFile(
+      join(dir, '.dsh', '.credentials.yaml'),
+      'version: 1\nrecords:\n  client-connection/browser-session:\n    kind: grant\n    payload:\n      secret: keep-me\nrefs:\n  OTHER_KEY: other-secret\n',
+    )
+    const importer = new DshImporter(dir)
+    await importer.apply({ groups: ['workbuddy'] as const, modelIds: [] }, context())
+    const credentials = parseYaml(await readFile(join(dir, '.dsh', '.credentials.yaml'), 'utf8')) as Record<string, any>
+    expect(credentials.version).toBe(1)
+    expect(credentials.records['client-connection/browser-session'].payload.secret).toBe('keep-me')
+    expect(credentials.refs).toMatchObject({ OTHER_KEY: 'other-secret', AI_BOBBY_API_KEY: 'sk-ai-bobby-test' })
   })
 })

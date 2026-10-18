@@ -44,7 +44,7 @@ export function SettingsPage({
       <div className="border-b border-line pb-4">
         <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">PREFERENCES</div>
         <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">设置</h1>
-        <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">主界面不再放主题切换；外观与网关配置都在这里。</p>
+        <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">外观、本地网关、更新与关于都集中在这页；所有设置只作用于本机。</p>
       </div>
 
       <section className="mt-4 overflow-hidden rounded-lg border border-line-soft bg-surface">

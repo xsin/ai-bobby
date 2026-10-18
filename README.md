@@ -79,13 +79,14 @@ Little Snitch 会把“未签名进程要联网”标成风险，这是签名状
 3. 切到 **WorkBuddy** 或 **WorkBuddy AI** 页，点“添加账号”。
    会打开 WorkBuddy 官方登录窗口；完成扫码/授权后窗口自动关闭，账号进入本机账号库。
    同一个来源可以添加多个账号，默认 round-robin + 失败切换。
-4. 勾选要暴露给客户端的模型；点右上角 **导入**，选择客户端、分组和默认模型，
-   先看 diff 预览，再写入。写前会备份，只改 AI Bobby 自己标记的条目。
+4. 勾选要暴露给客户端的模型；模型清单的 **计费** 列标出免费（`免费`）或消耗倍率（如 `x0.79`）。
+   点右上角 **导入**，选择客户端、分组和默认模型，先看 diff 预览，再写入。写前会备份，只改 AI Bobby 自己标记的条目。
 5. 在底部状态条复制 **转发口** 与 **API Key**，填到 Codex / Claude Code / DSH / WorkBuddy。
 6. **历史记录**页查看每次写入、diff 与备份，可一键恢复；恢复前会再备份当前文件。
 7. **设置**页切换主题、手动检查更新、复制网关地址/Key；**关于**页有 ZEO、音乐与赞助方式。
 8. 点击关于页歌曲会优先唤起本机网易云音乐 App；未安装或唤起失败时，自动使用全局可拖动网页播放器。
-   专辑卡片打开网易云专辑网页；当前客户端不支持专辑深链。
+   客户端没开着时会先把它启动起来再补发一次播放指令，不用点第二次。
+   专辑卡片打开网易云专辑网页；当前客户端不支持专辑深链，会提示并打开网页版。
 9. 右下角应用 LOGO 头像可拖动，点击进入关于。
 
 ## 接入客户端
@@ -163,7 +164,7 @@ curl http://127.0.0.1:46890/v1/messages \
 | WorkBuddy AI | `~/.workbuddy-ai/models.json` | Chat | 默认排除 `wbi/` 自身分组 |
 | Codex | `~/.codex/config.toml` | Responses | 写入 `[model_providers.ai-bobby]` 标记块，可选默认模型 |
 | Claude Code | `~/.claude/settings.json` | Messages | 合并 `env.ANTHROPIC_BASE_URL / AUTH_TOKEN / MODEL` |
-| DeepSeek Harness | `~/.dsh/profiles/<profile>/cordis.patch.yml` | Chat | 合并 `llm-pi-ai` 的 `ai-bobby` provider；密钥需在 DSH 侧配置 |
+| DeepSeek Harness | `~/.dsh/profiles/<profile>/cordis.patch.yml` | Chat | 合并 `llm-pi-ai` 的 `ai-bobby` provider；同时把网关 Key 写入 DSH 凭据存储（`refs.AI_BOBBY_API_KEY`），不需要设环境变量 |
 
 共同行为：
 
@@ -194,7 +195,7 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 | ![About](docs/screenshots/08-about-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
 | 关于 ZEO、音乐与赞助 | 非模态更新条 |
 | ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
-| WorkBuddy 多账号与额度 | 全局导入：dry-run 预览 |
+| WorkBuddy 多账号、额度与计费 | 全局导入：dry-run 预览 |
 
 浅色主题：![Light](docs/screenshots/06-opencode-light.png)
 

@@ -27,6 +27,7 @@ export interface DemoModel {
   latency: string
   latencyMs?: number
   accounts?: number
+  billing?: { credits?: string; badges?: readonly string[]; free: boolean; rateUnknown?: boolean }
   context: string
   maxOutput: string
   checked: string

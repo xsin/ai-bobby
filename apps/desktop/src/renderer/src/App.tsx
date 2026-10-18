@@ -95,6 +95,7 @@ function toDemoModel(model: ModelSnapshot): DemoModel {
     status: model.status as DemoModel['status'],
     latency: model.accounts ? `${model.accounts} 账号` : '—',
     accounts: model.accounts,
+    ...(model.billing === undefined ? {} : { billing: model.billing }),
     context: model.contextWindow?.toLocaleString('en-US') ?? '—',
     maxOutput: model.maxOutputTokens?.toLocaleString('en-US') ?? '—',
     checked: '刚刚',
@@ -102,12 +103,25 @@ function toDemoModel(model: ModelSnapshot): DemoModel {
 }
 
 function toDemoAccount(account: AccountSnapshot): DemoAccount {
+  const credits = account.unlimited
+    ? '不限量'
+    : account.credits === undefined
+      ? '额度未知'
+      : `${account.credits.toLocaleString('en-US')} 积分`
   return {
     initials: (account.nickname || account.uid).slice(0, 1).toUpperCase(),
     name: account.nickname || account.uid.slice(0, 8),
-    sub: `${account.credits?.toLocaleString('en-US') ?? '额度未知'} 积分 · ${account.enabled ? '启用' : '禁用'}`,
+    sub: `${credits} · ${account.enabled ? '启用' : '禁用'}`,
     status: account.enabled ? 'success' : 'error',
   }
+}
+
+function creditSummary(accounts: AccountSnapshot[]): string {
+  if (accounts.length === 0) return '0'
+  if (accounts.some(account => account.unlimited)) return '不限量'
+  const known = accounts.filter(account => typeof account.credits === 'number')
+  if (known.length === 0) return '未知'
+  return known.reduce((sum, account) => sum + (account.credits ?? 0), 0).toLocaleString('en-US')
 }
 
 function AppInner() {
@@ -129,6 +143,8 @@ function AppInner() {
   const [probing, setProbing] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
+  const [loginBusy, setLoginBusy] = useState(false)
+  const [loginError, setLoginError] = useState<string | undefined>()
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [autoCheck, setAutoCheck] = useState(() => {
     try {
@@ -249,6 +265,22 @@ function AppInner() {
     else toast.warning('唤起网易云音乐失败，已切换到网页播放器')
   }, [])
 
+  const openAlbum = useCallback(async (album: { id: string; name: string; href: string }) => {
+    const api = window.aiBobby
+    if (!api) {
+      window.open(album.href, '_blank', 'noopener,noreferrer')
+      return
+    }
+    const result = await api.openMusicAlbum(album.href).catch(() => ({ ok: false as const, error: '打开失败' }))
+    if (!result.ok) {
+      toast.error(result.error ?? '打开专辑页面失败')
+      return
+    }
+    if (result.appInstalled) {
+      toast.info('当前音乐应用不支持打开专辑，已为你打开网页版')
+    }
+  }, [])
+
   const restoreBackup = useCallback(async (id: string) => {
     const api = window.aiBobby
     if (!api) {
@@ -290,7 +322,7 @@ function AppInner() {
         ...next.workbuddy,
         models: groups.workbuddy.map(toDemoModel),
         accounts: cn.map(toDemoAccount),
-        credits: cn.reduce((sum, account) => sum + (account.credits ?? 0), 0).toLocaleString('en-US'),
+        credits: creditSummary(cn),
         feedback: cn.length === 0 ? '还没有 WorkBuddy 账号；点击“添加账号”开始。' : `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。`,
         statusText: cn.length === 0 ? '未登录' : `运行中 · ${cn.length} 个账号`,
       }
@@ -298,7 +330,7 @@ function AppInner() {
         ...next.wbi,
         models: groups.wbi.map(toDemoModel),
         accounts: intl.map(toDemoAccount),
-        credits: intl.reduce((sum, account) => sum + (account.credits ?? 0), 0).toLocaleString('en-US'),
+        credits: creditSummary(intl),
         feedback: intl.length === 0 ? '还没有 WorkBuddy AI 账号；点击“添加账号”开始。' : `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。`,
         statusText: intl.length === 0 ? '未登录' : `运行中 · ${intl.length} 个账号`,
       }
@@ -512,18 +544,23 @@ function AppInner() {
       return
     }
     if (window.aiBobby) {
-      setLoginOpen(false)
+      setLoginBusy(true)
+      setLoginError(undefined)
       void window.aiBobby.startLogin(accountRealm === 'workbuddy' ? 'workbuddy' : 'workbuddy-ai')
         .then(async account => {
           const status = await window.aiBobby!.refresh()
           setRealStatus(status)
           applyStatus(status)
+          setLoginOpen(false)
           showFeedback(`已添加账号 ${account.nickname}；目录与额度已刷新。`)
           toast.success(`已添加账号 ${account.nickname}`)
         })
         .catch(error => {
-          toast.error(error instanceof Error ? error.message : String(error))
+          const message = error instanceof Error ? error.message : String(error)
+          setLoginError(message)
+          toast.error(message)
         })
+        .finally(() => setLoginBusy(false))
       return
     }
     const current = accounts[accountRealm]
@@ -763,7 +800,7 @@ function AppInner() {
               onRestore={restoreBackup}
             />
           ) : page === 'about' ? (
-            <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={track => void playTrack(track)} onOpenExternal={openExternal} />
+            <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={track => void playTrack(track)} onOpenAlbum={album => void openAlbum(album)} onOpenExternal={openExternal} />
           ) : (
             <SettingsPage
               appInfo={appInfo}
@@ -829,7 +866,17 @@ function AppInner() {
         }}
       />
 
-      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} source={source} onSuccess={addDemoAccount} />
+      <LoginDialog
+        open={loginOpen}
+        onOpenChange={open => {
+          setLoginOpen(open)
+          if (open) setLoginError(undefined)
+        }}
+        source={source}
+        busy={loginBusy}
+        {...(loginError === undefined ? {} : { error: loginError })}
+        onStart={addDemoAccount}
+      />
     </div>
   )
 

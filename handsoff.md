@@ -7,8 +7,11 @@
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版已实现并完成本地验证（含设置页开关对比度修复、关于页网易云音乐 App 播放），工作区 clean；等待用户本机验收，未经确认不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
-  落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
+- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版 + 第二轮体验反馈修复已实现并本地验证
+  （开关对比度、关于页 App 播放与边框、额度接口、登录弹窗、DSH 凭据、计费列、全局手型）。
+  issues 里 #1–#4、#7–#10 已处理；#5/#6（历史页合并表格）等用户更新设计稿后再开工。
+  未经用户确认不创建新 tag/release。**
+  落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
@@ -393,3 +396,19 @@ WorkBuddy 上游
 - 文档：PRD FR-UI-10、tech §8.5.1、ui-guideline §5.5 与 Agent 约束 #14、README、issues 第 7 条。
 - 验证：浅色/深色下歌曲列表边框与手型检查；desktop typecheck/build；全量 53 项测试通过。
 - 提交：`fa61d0d fix(desktop): repair about-page track borders and pointer cursors`；工作区 clean；未 push、未 tag、未创建 release。
+
+### 2026-10-18 Round 5：v0.2.2 体验反馈（issues #1–#4、#7–#10）
+
+- 额度：billing 改为 `POST /v2/billing/meter/get-user-resource`，带 `PageNumber/PageSize/ProductCode/Status/时间范围`，
+  解析 `data.Response.Data.Accounts[]` 的 `CycleCapacity*`；CN 企业账号走 `get-enterprise-user-usage`（`limitNum<0` = 不限量）。
+  实测 3 个账号 2,714 / 2,910 / 137 积分，不再显示 0；失败显示“额度未知”。
+- 登录：弹窗去掉占位二维码，改为官方登录窗口引导；等待中保持打开并显示进度，失败在弹窗内报错；深色不再反白。
+- 关于页：网易云冷启动时先等进程（pgrep `NeteaseMusic`）再延迟补发一次 payload；专辑打开网页并在已装 App 时提示
+  “当前音乐应用不支持打开专辑，已为你打开网页版”。
+- DSH：导入时写 `refs.AI_BOBBY_API_KEY` 到 `~/.dsh/.credentials.yaml`（备份、0600、保留 records/其他 refs），免环境变量。
+- 模型清单：新增「计费」列（免费 / 倍率 / 未知），详情同步展示。
+- 手型：基础层规则改为全局（Dialog/Sheet portal 在 `.tw-root` 之外），禁用态 `not-allowed`。
+- 设置页文案改成面向用户的描述。
+- 截图：`02-workbuddy-dark.png`、`04-login-light.png` 刷新。
+- 验证：typecheck、61 项测试、desktop build；CDP 复核计费列、portal 按钮手型、登录弹窗文案。
+- #5/#6（历史页合并表格、`变更` 语义与“打开目录”）按用户要求等设计稿后再开工。

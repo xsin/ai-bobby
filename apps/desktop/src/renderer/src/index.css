@@ -184,9 +184,15 @@ html[data-theme="light"] {
     background-color: transparent;
     background-image: none;
   }
-  .tw-root button:not(:disabled),
-  .tw-root [role='button']:not([aria-disabled='true']) {
+  /* Portals (dialogs, sheets, tooltips) render outside .tw-root, so the
+     pointer rule is global rather than scoped to the app shell. */
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']) {
     cursor: pointer;
+  }
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
   }
   .tw-root input,
   .tw-root select,

@@ -381,14 +381,16 @@ function redactSecrets(text: string): string {
     )
 }
 
-function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' | 'intl'; enabled: boolean; expiresAtMs: number; credits?: { total: number } }): AccountSnapshot {
+function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' | 'intl'; enabled: boolean; expiresAtMs: number; credits?: { total: number; unlimited?: true } }): AccountSnapshot {
   return {
     uid: account.uid,
     nickname: account.nickname,
     realm: account.realm,
     enabled: account.enabled,
     expiresAtMs: account.expiresAtMs,
-    ...(account.credits === undefined ? {} : { credits: account.credits.total }),
+    ...(account.credits === undefined
+      ? {}
+      : { credits: account.credits.total, ...(account.credits.unlimited === true ? { unlimited: true } : {}) }),
   }
 }
 

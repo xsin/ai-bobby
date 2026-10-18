@@ -1,7 +1,7 @@
 import type { CanonicalErrorKind } from '@ai-bobby/core'
 import type { WorkBuddyAccount, WorkBuddyCredits } from './accounts'
 import { parseModelCatalog, type WorkBuddyCatalogModel } from './catalog'
-import { chatHeaders, jsonHeaders, type WorkBuddyVariant } from './variants'
+import { billingHeaders, chatHeaders, jsonHeaders, type WorkBuddyVariant } from './variants'
 
 export class UpstreamError extends Error {
   constructor(
@@ -98,37 +98,106 @@ export class WorkBuddyClient {
   }
 
   async billing(account: WorkBuddyAccount): Promise<WorkBuddyCredits> {
+    if (this.variant.realm === 'cn' && account.enterpriseId !== undefined && account.enterpriseId !== '') {
+      return this.enterpriseBilling(account)
+    }
+    const now = new Date()
     const response = await this.fetchImpl(`${this.variant.billingBase}/v2/billing/meter/get-user-resource`, {
-      headers: {
-        ...jsonHeaders(this.variant, account.accessToken, account),
-        'X-Domain': account.domain,
-        ...(account.enterpriseId === undefined ? {} : { 'X-Tenant-Id': account.enterpriseId }),
-      },
+      method: 'POST',
+      headers: billingHeaders(this.variant, account),
+      body: JSON.stringify({
+        PageNumber: 1,
+        PageSize: 100,
+        ProductCode: 'p_tcaca',
+        Status: [0, 3],
+        PackageEndTimeRangeBegin: localTimestamp(now),
+        PackageEndTimeRangeEnd: localTimestamp(new Date(now.getTime() + 365 * 24 * 3600 * 1000)),
+      }),
       signal: AbortSignal.timeout(20_000),
     })
     const { document } = await readEnvelope(response, 'billing')
-    const data = isObject(document['data']) ? document['data'] : {}
-    const packages = Array.isArray(data['packages'])
-      ? data['packages'].flatMap(item => {
-          if (!isObject(item)) return []
-          const remain = number(item['Remain'])
-          const size = number(item['Size'])
-          return [{
-            name: typeof item['PackageName'] === 'string' ? item['PackageName'] : 'package',
-            remain,
-            size,
-            ...(typeof item['CycleEndTime'] === 'string'
-              ? { endTimeMs: Date.parse(item['CycleEndTime']) || undefined }
-              : {}),
-          }]
-        })
-      : []
+    const wrapper = isObject(document['data']) ? document['data'] : {}
+    const payload = isObject(wrapper['Response']) ? wrapper['Response'] : {}
+    const inner = isObject(payload['Data']) ? payload['Data'] : {}
+    const raw = Array.isArray(inner['Accounts']) ? inner['Accounts'] : []
+    const packages = raw.flatMap(item => {
+      if (!isObject(item)) return []
+      const remain = accountRemain(item)
+      const size = number(item['CycleCapacitySize']) || number(item['CapacitySize'])
+      return [{
+        name: typeof item['PackageName'] === 'string' && item['PackageName'] !== '' ? item['PackageName'] : 'package',
+        remain,
+        size,
+        ...(typeof item['CycleEndTime'] === 'string'
+          ? { endTimeMs: Date.parse(item['CycleEndTime']) || undefined }
+          : {}),
+      }]
+    })
     return {
       total: packages.reduce((sum, item) => sum + item.remain, 0),
       packages,
       fetchedAtMs: Date.now(),
     }
   }
+
+  /**
+   * CN enterprise accounts answer the personal endpoint with an empty account
+   * list, which renders as a wrong "0 credit". They use a separate cycle-quota
+   * endpoint whose payload carries `limitNum`/`credit` (or snake_case).
+   */
+  private async enterpriseBilling(account: WorkBuddyAccount): Promise<WorkBuddyCredits> {
+    const response = await this.fetchImpl(`${this.variant.billingBase}/v2/billing/meter/get-enterprise-user-usage`, {
+      method: 'POST',
+      headers: billingHeaders(this.variant, account),
+      body: '{}',
+      signal: AbortSignal.timeout(20_000),
+    })
+    const { document } = await readEnvelope(response, 'billing')
+    const sources: Array<Record<string, unknown>> = []
+    for (const candidate of [document['data'], document]) {
+      if (!isObject(candidate)) continue
+      if (isObject(candidate['data'])) sources.push(candidate['data'])
+      sources.push(candidate)
+    }
+    const numberAt = (source: Record<string, unknown>, key: string): number | undefined =>
+      typeof source[key] === 'number' ? source[key] : undefined
+    let limit: number | undefined
+    let used = 0
+    for (const source of sources) {
+      const candidate = numberAt(source, 'limitNum') ?? numberAt(source, 'limit_num')
+      if (candidate === undefined) continue
+      limit = candidate
+      used = numberAt(source, 'credit') ?? numberAt(source, 'used_num') ?? 0
+      break
+    }
+    if (limit === undefined) {
+      throw new UpstreamError('WorkBuddy 企业额度响应缺少 limitNum/limit_num 字段', response.status, 'upstream')
+    }
+    if (limit < 0) {
+      return { total: 0, packages: [], unlimited: true, fetchedAtMs: Date.now() }
+    }
+    const remain = Math.max(limit - used, 0)
+    return {
+      total: remain,
+      packages: [{ name: 'enterprise', remain, size: limit }],
+      fetchedAtMs: Date.now(),
+    }
+  }
+}
+
+/** Upstream expects a zone-less `YYYY-MM-DD HH:mm:ss` in local time. */
+function localTimestamp(date: Date): string {
+  const pad = (value: number): string => String(value).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+}
+
+function accountRemain(item: Record<string, unknown>): number {
+  const size = number(item['CycleCapacitySize'])
+  const cycleRemain = number(item['CycleCapacityRemain'])
+  const cycleUsed = number(item['CycleCapacityUsed'])
+  const capacityRemain = number(item['CapacityRemain'])
+  const remain = size > 0 ? cycleRemain : cycleRemain > 0 || cycleUsed > 0 ? cycleRemain : capacityRemain
+  return Math.max(remain, 0)
 }
 
 export function prepareChatBody(source: string, variant: WorkBuddyVariant): string {

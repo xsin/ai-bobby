@@ -73,3 +73,27 @@ export function chatHeaders(variant: WorkBuddyVariant, token: string, account?: 
     ...(account?.enterpriseId === undefined ? {} : { 'X-Enterprise-Id': account.enterpriseId }),
   }
 }
+
+/**
+ * Billing calls use the narrow header set the console's own XHR sends:
+ * identity plus bearer token only. Extra browser headers are rejected by the
+ * billing gateway, which is why the shared json headers must not be reused.
+ */
+export function billingHeaders(variant: WorkBuddyVariant, account: {
+  accessToken: string
+  uid?: string
+  enterpriseId?: string
+  domain?: string
+}): Record<string, string> {
+  return {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${account.accessToken}`,
+    ...(account.uid === undefined ? {} : { 'X-User-Id': account.uid }),
+    ...(account.enterpriseId === undefined
+      ? {}
+      : { 'X-Enterprise-Id': account.enterpriseId, 'X-Tenant-Id': account.enterpriseId }),
+    ...(account.domain === undefined ? {} : { 'X-Domain': account.domain }),
+    ...(variant.international ? { 'X-Product': 'SaaS' } : {}),
+  }
+}

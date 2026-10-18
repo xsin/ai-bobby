@@ -13,6 +13,7 @@ const api: AiBobbyApi = {
   getImportHistory: () => ipcRenderer.invoke('import:history'),
   restoreImportBackup: id => ipcRenderer.invoke('import:restore-backup', id),
   playInMusicApp: songId => ipcRenderer.invoke('app:play-music', songId),
+  openMusicAlbum: href => ipcRenderer.invoke('app:open-album', href),
   checkForUpdates: manual => ipcRenderer.invoke('update:check', Boolean(manual)),
   setAutoCheck: enabled => ipcRenderer.invoke('app:set-auto-check', Boolean(enabled)),
   downloadUpdate: () => ipcRenderer.invoke('update:download'),

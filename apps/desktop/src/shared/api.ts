@@ -67,6 +67,7 @@ export interface AccountSnapshot {
   enabled: boolean
   expiresAtMs: number
   credits?: number
+  unlimited?: boolean
 }
 
 export interface GatewayStatus {
@@ -135,6 +136,13 @@ export type MusicAppResult =
   | { ok: true }
   | { ok: false; reason: MusicAppFailureReason; error?: string }
 
+export interface MusicAlbumResult {
+  ok: boolean
+  /** True when the NetEase client is installed but album deep links are unsupported. */
+  appInstalled?: boolean
+  error?: string
+}
+
 export interface AiBobbyApi {
   getAppInfo(): Promise<AppInfo>
   getStatus(): Promise<GatewayStatus>
@@ -147,6 +155,7 @@ export interface AiBobbyApi {
   getImportHistory(): Promise<ImportHistorySnapshot>
   restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
   playInMusicApp(songId: string): Promise<MusicAppResult>
+  openMusicAlbum(href: string): Promise<MusicAlbumResult>
   checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
   setAutoCheck(enabled: boolean): Promise<void>
   downloadUpdate(): Promise<UpdateActionResult>

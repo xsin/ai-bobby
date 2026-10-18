@@ -97,6 +97,13 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
       ),
     },
     {
+      title: '计费',
+      dataIndex: 'billing',
+      key: 'billing',
+      width: 132,
+      render: (_value, model) => <BillingCell billing={model.billing} />,
+    },
+    {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
@@ -132,6 +139,16 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
         <Detail label="最大输出" value={`${model.maxOutput} tokens`} />
         <Detail label="最近检测" value={model.checked} />
         <Detail label="能力" value={model.caps.join(' / ')} />
+        <Detail
+          label="计费"
+          value={
+            model.billing === undefined
+              ? '—'
+              : model.billing.free
+                ? '免费'
+                : model.billing.credits ?? (model.billing.rateUnknown ? '未知' : '—')
+          }
+        />
         <Detail label="路由" value={routeFor(model.id)} />
         <Detail label="状态" value={meta.label + (model.accounts ? ` · ${model.accounts} 个账号` : '')} />
         <div className="col-span-2 flex items-center gap-2 pt-1 sm:col-span-4">
@@ -208,4 +225,16 @@ function Detail({ label, value, mono }: { label: string; value: string; mono?: b
       <p className={cn('truncate text-[11px] text-text', mono && 'font-mono text-[10px]')}>{value}</p>
     </div>
   )
+}
+
+function BillingCell({ billing }: { billing?: DemoModel['billing'] }) {
+  if (billing === undefined) return <span className="text-[11px] text-faint">—</span>
+  if (billing.free) {
+    return <span className="rounded border border-success/30 bg-success-soft px-1.5 py-px text-[10px] leading-[15px] text-success">免费</span>
+  }
+  if (billing.credits !== undefined) {
+    return <span className="font-mono text-[11px] text-muted-foreground">{billing.credits}</span>
+  }
+  if (billing.rateUnknown) return <span className="text-[11px] text-faint">未知</span>
+  return <span className="text-[11px] text-faint">—</span>
 }

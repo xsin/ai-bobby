@@ -30,9 +30,13 @@ export class DshImporter implements Importer {
       const before = await readText(path)
       const { text, warnings, blocked } = render(before, selection, context)
       if (blocked) return planFor(this.target, path, before !== undefined, before, before ?? '', warnings, true)
-      if (before === text) return planFor(this.target, path, before !== undefined, before, text, warnings, true)
+      if (before === text) {
+        await this.syncCredentialRef(context.apiKey, warnings)
+        return planFor(this.target, path, before !== undefined, before, text, warnings, true)
+      }
       const backupPath = await backup(path)
       await atomicWrite(path, text, 0o600)
+      await this.syncCredentialRef(context.apiKey, warnings)
       return planFor(this.target, path, true, before, text, warnings, true, backupPath)
     })
   }
@@ -47,6 +51,47 @@ export class DshImporter implements Importer {
       await atomicWrite(path, (await readText(backupPath)) ?? '', 0o600)
       return { target: this.target, path, detected: true, changed: true, diff: `已从 ${backupPath} 恢复`, warnings: [], requiresRestart: true, backupPath }
     })
+  }
+
+  /**
+   * DSH resolves `apiKeyEnv` through its credential store before the process
+   * environment, so writing the gateway key under `refs` makes the imported
+   * provider work without asking the user to export a variable.
+   */
+  private async syncCredentialRef(apiKey: string, warnings: string[]): Promise<void> {
+    const path = join(this.root, '.dsh', '.credentials.yaml')
+    try {
+      await withLock(path, async () => {
+        const before = await readText(path)
+        let doc: Record<string, unknown> = { version: 1 }
+        if (before !== undefined && before.trim() !== '') {
+          let parsed: unknown
+          try {
+            parsed = parseYaml(before)
+          } catch {
+            warnings.push('无法解析 ~/.dsh/.credentials.yaml；请在 DSH 设置中手动填入 API Key')
+            return
+          }
+          if (!isObject(parsed)) {
+            warnings.push('~/.dsh/.credentials.yaml 结构异常；请在 DSH 设置中手动填入 API Key')
+            return
+          }
+          doc = parsed
+        }
+        const refs = isObject(doc['refs']) ? { ...(doc['refs'] as Record<string, unknown>) } : {}
+        if (refs['AI_BOBBY_API_KEY'] === apiKey) {
+          warnings.push('DSH 凭据存储已包含网关 Key；无需设置 AI_BOBBY_API_KEY 环境变量')
+          return
+        }
+        refs['AI_BOBBY_API_KEY'] = apiKey
+        doc['refs'] = refs
+        if (before !== undefined) await backup(path)
+        await atomicWrite(path, stringifyYaml(doc, { lineWidth: 0 }), 0o600)
+        warnings.push('已把网关 Key 写入 DSH 凭据存储（AI_BOBBY_API_KEY）；无需设置环境变量')
+      })
+    } catch (error) {
+      warnings.push(`写入 DSH 凭据存储失败：${error instanceof Error ? error.message : String(error)}；请在 DSH 设置中手动填入 API Key`)
+    }
   }
 
   private async ensurePath(): Promise<string> {
@@ -123,7 +168,7 @@ function render(
   if (selection.setAsDefault) {
     warnings.push('DSH 默认模型请在 agent-default-model 中切换；此处只写 provider')
   }
-  warnings.push('请在 DSH 设置中填入 AI_BOBBY_API_KEY，或使用后续凭据写入器')
+  warnings.push('写入时会同步把网关 Key 写入 DSH 凭据存储（~/.dsh/.credentials.yaml），无需设置 AI_BOBBY_API_KEY 环境变量')
   return { text: stringifyYaml(parsed, { lineWidth: 0 }), warnings }
 }
 

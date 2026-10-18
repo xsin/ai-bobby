@@ -530,6 +530,9 @@ Referer: {origin}/
 - 加载 `authUrl`。
 - 页面 `did-fail-load` / 用户关闭 / 超时 → 取消或回退系统浏览器。
 - 若回退系统浏览器：`shell.openExternal(authUrl)`，主窗口显示“请在弹出的浏览器完成登录”，继续轮询。
+- 登录弹窗只做流程引导，**不渲染占位二维码**：真实二维码由官方窗口实时生成，
+  旧实现画的假二维码既扫不出内容，深色主题下还会被 `var(--text)` 反色。
+- 弹窗在等待期间保持打开并显示进度，失败把错误显示在弹窗内（不再静默关闭）。
 
 > 2026-10-18 探测：CN/INTL 登录页均为官方页面，CN 含微信/QQ，INTL 含 Google/微信；
 > 页面未设 `X-Frame-Options`/CSP。仍需 P2 真机验证各登录方式在 Electron 中的行为。
@@ -774,15 +777,27 @@ for attempt in 1..2:
 ### 4.9 额度
 
 ```http
-GET {base}/v2/billing/meter/get-user-resource
+POST {base}/v2/billing/meter/get-user-resource
 Authorization: Bearer <accessToken>
-Origin/Referer: {origin}
-User-Agent: {jsonUserAgent}
+Content-Type: application/json
+X-User-Id: <uid>
+X-Domain: <domain>
+X-Enterprise-Id / X-Tenant-Id: <enterpriseId>
+
+{"PageNumber":1,"PageSize":100,"ProductCode":"p_tcaca","Status":[0,3],
+ "PackageEndTimeRangeBegin":"YYYY-MM-DD HH:mm:ss",
+ "PackageEndTimeRangeEnd":"YYYY-MM-DD HH:mm:ss"}
 ```
 
-- 解析 `data.packages[]`：`PackageName`、`Remain`、`Size`、`CycleEndTime`。
-- 合计 `total`；缺失字段不影响其他。
-- 国际版若企业端点不同，先走个人端点，失败显示“额度不可用”，不阻塞。
+- 成功响应在 `data.Response.Data.Accounts[]`：`PackageName`、`CycleCapacitySize/Remain/Used`、
+  `CapacityRemain`、`CycleEndTime`。
+- 余额取 `CycleCapacitySize > 0 ? CycleCapacityRemain : CapacityRemain`，负数归零后合计为 `total`；
+  缺失字段不影响其他包。
+- 计费端点只接受上面这组精简头；复用带 `Origin`/`User-Agent` 的通用 JSON 头会被 404。
+- CN 企业账号（`realm === 'cn'` 且有 `enterpriseId`）改走
+  `POST /v2/billing/meter/get-enterprise-user-usage`（空 body），解析 `limitNum/limit_num`
+  与 `credit/used_num`；`limitNum < 0` 记为 `unlimited`，UI 显示“不限量”而不是 0。
+- 失败不阻塞：账号显示“额度未知”，不能把失败当 0。
 - 桌面每 15 分钟随目录刷新一次 billing；登录、手动刷新、tab 打开时也读取；不做高频轮询。
 
 ### 4.10 token 刷新
@@ -1357,9 +1372,10 @@ experimental_bearer_token = "<key>"
 - 合并 `providers.ai-bobby`；保留其他 provider 与注释。
 - 删除：只删 `ai-bobby` 键；若 `providers` 变空，保留空对象。
 - 密钥：
-  - 首选通过 DSH 的 credentials 引用机制写入 `AI_BOBBY_API_KEY`；
-  - 若版本/schema 不匹配，退回“提示用户在 DSH 设置中填入 Key”，配置文件仍写入 `apiKeyEnv`。
-  - `~/.dsh/.credentials.yaml` 的 `refs` 是明文映射（本机实测 `version: 1`）；写入前备份，失败不破坏。
+  - DSH 的 `apiKeyEnv` 是按请求经 credentials seam 解析的引用，配置文件本身不存密钥；
+  - 导入时把网关 Key 写入 `~/.dsh/.credentials.yaml` 的 `refs.AI_BOBBY_API_KEY`
+    （本机实测 `version: 1`，写前备份、0600、原子替换），`apiKeyEnv: AI_BOBBY_API_KEY` 随之生效；
+  - 保留原有 `records` 与其他 `refs`；解析失败则跳过写入并提示在 DSH 设置中手动填入 Key，不覆盖文件。
 - 写入后提示重启 DSH；不修改 DSH 的 `package.json` / `node_modules`。
 
 ### 7.6 回滚
@@ -1508,6 +1524,11 @@ App
   登录、会员、版权与地区限制仍由网易云客户端处理。
 - 专辑：`{"type":"album","id":<albumId>,"cmd":"open"}` 在 3.1.12.3443 上提示“操作不支持”，
   `cmd:"play"` 无效果；因此专辑卡片继续打开 `music.163.com` 专辑页，不调用 App。
+- IPC：`app:open-album` 负责打开网页并回报 handler 是否属于网易云；renderer 在已装 App 时提示
+  “当前音乐应用不支持打开专辑，已为你打开网页版”。
+- 冷启动：客户端未运行时，第一条 `orpheus://` 会被当作启动命令吞掉。`music-app.ts` 先用
+  `pgrep -x NeteaseMusic` 判断进程，未运行则等待进程出现（最多 8s）并延迟 700ms 后再投递一次 payload；
+  已在运行则只投递一次，避免重复切歌。
 
 验证：macOS 网易云音乐 3.1.12.3443 实测 payload 可把播放器切到目标歌曲；
 单测覆盖 URL 生成、无 handler、handler 非网易云、打开失败、非法 ID。
