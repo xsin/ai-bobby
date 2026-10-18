@@ -306,7 +306,7 @@ WorkBuddy 上游
 
 ### 2026-10-18 发布链路
 
-- 主题色 `#1e4fff`；UI 按 `ui-guideline.md` 落地；arm64/x64 打包与 ad-hoc 签名通过。
+- 主题色 `#1e4fff`；UI 按 `docs/ui-guideline.md` 落地；arm64/x64 打包与 ad-hoc 签名通过。
 - 自研更新器、install.sh、gh-pages + GitHub Release 工作流；`v0.1.0` 发布。
 - 踩坑：Electron zip 123–135MB，超过 GitHub Git 100MB 限制 → 二进制放 Release，
   gh-pages 只放 install.sh/VERSION/checksums/latest.json。
@@ -356,6 +356,6 @@ WorkBuddy 上游
 - 审计所有 `Switch` 使用点：当前仅设置页“自动检查”一个；导入抽屉的 Checkbox 不受影响。
 - 浅色/深色 checked、unchecked 四种状态截图检查；desktop typecheck、12 项测试、build 通过。
 - 提交：`98babc4 fix(desktop): give switches a visible border and label spacing`。
-- 收尾：`ui-guideline.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
+- 收尾：`docs/ui-guideline.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
   设计依据引用 Spec.fm 8-Point Grid、IBM Carbon 2x Grid、Material Design 3 spacing。
 - 工作区 clean；未 push、未 tag、未创建 release。

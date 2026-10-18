@@ -261,7 +261,7 @@ Codex/Claude 的配置块只改 AI Bobby 标记的部分，不会覆盖其他 pr
 
 - **React 19.3.1** + **TypeScript 7.0.2** + **Vite 8.3.4** + **Electron 44.9.0**
 - **Tailwind CSS 4.3.3** + **shadcn/ui 4.22**（视觉层）
-- **Ant Design 6.6.6**（模型表格等功能层，按 [ui-guideline.md](./ui-guideline.md) 做 token 桥接）
+- **Ant Design 6.6.6**（模型表格等功能层，按 [ui-guideline.md](./docs/ui-guideline.md) 做 token 桥接）
 - **Three.js 0.186.1 + GLSL**（落地页 WebGL）、**vite-plugin-pwa 2.0**（PWA 更新）
 - pnpm 10 workspace；`electron-vite` 构建 main/preload/renderer
 - 第三方依赖版本统一在 `pnpm-workspace.yaml` 的 `catalog:` 声明，子项目只写 `catalog:`
@@ -334,7 +334,7 @@ refs/                 只读参考实现（.gitignore，不发布）
 - [docs/tech-landing.md](./docs/tech-landing.md) — 落地页技术方案（React/Vite/Three/PWA）
 - [human-sos.md](./human-sos.md) — **需要人工完成/确认的交付事项**
 - [prototype/](./prototype/) — 视觉稿：`desktop/` 控制面板、`website/` 落地页
-- [ui-guideline.md](./ui-guideline.md) — shadcn/Tailwind/antd 分层规范
+- [docs/ui-guideline.md](./docs/ui-guideline.md) — shadcn/Tailwind/antd 分层与 4px 间距规范
 
 ## 新项目状态
 
