@@ -7,7 +7,7 @@
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
+- 当前阶段：**v0.2.1 已发布但处于人工验收中；未经用户本机确认，不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
   落地页已实现并上线 `/website/`；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
@@ -151,7 +151,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P4 三协议网关 | 完成 | Chat/Responses/Messages + count_tokens；真实 Codex/Claude 各跑通 |
 | P5 四个 importer | 基本完成 | 四个目标写入/备份/回滚测试；Codex/Claude 已真机回环；WorkBuddy/DSH 待账号/客户端验证 |
 | P6 控制面板 | 完成 | 三 tab、真实状态、登录窗口、导入 IPC、设置真实端口/Key |
-| P7 打包/分发/更新 | 完成（macOS） | v0.2.1 发布；curl 安装与 0.1.0→0.2.0→0.2.1 更新闭环验证；Windows 未做 |
+| P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布但验收中；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
 | Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署 `/website/` |
 | Lucia | 独立项目 | 同级 `ai-lucia/`；等 AI Bobby 完结后再启动，不在本仓库实现 |
@@ -201,6 +201,16 @@ Headroom 式前缀缓存/压缩后置到 P8。
 4. safeStorage 账号库加密（需解决启动时 Keychain 阻塞）。
 5. Windows NSIS 打包与更新脚本。
 6. WorkBuddy 真实账号后的端到端 smoke test 与 importer 修正。
+
+### 2026-10-18 历史清理 / 多账号 / 发布闸门
+
+- 用 `git filter-repo --path docs/marketing-brainstorm.md --invert-paths` 清理公开历史，
+  已 force push `main`；当前 refs 不再包含该文件。
+- WorkBuddy：已知额度耗尽（billing 有 packages 且 total=0）的账号会被跳过；
+  SSE 错误现在按 status/message 分类为 credit；402/429 会在流开始前切换账号；
+  支持 `preferred` 优先。
+- 多账号“探活”仍以目录 + billing 刷新为主，不做周期聊天 probe；快照滞后时靠 402/SSE 冷却兜底。
+- 明确发布闸门：v0.2.1 验收中，未经用户本机确认不创建新 tag/release。
 
 ---
 

@@ -741,9 +741,12 @@ class AccountScheduler {
 `pick` 规则：
 
 1. 过滤 `enabled`、token 未过期、`models.has(modelId)`、当前无冷却。
-2. `preferred` 账号优先（用户“仅用此账号”即把其他账号临时排除）。
-3. 其余按 `lastUsedAtMs` 升序（round-robin），`uid` 字典序打破平局。
-4. 没有账号 → `no_account`。
+2. 已知额度耗尽（billing 有 packages 且 `total <= 0`）的账号跳过；billing 为空表示“未知”，不能当 0。
+3. `preferred` 账号优先；其余按 `lastUsedAtMs` 升序（round-robin），`uid` 字典序打破平局。
+4. 没有账号 → 404；若所有候选都是已知额度耗尽 → 402。
+
+> **探活**：当前“探活”是每个账号的 `/v3/config` 目录拉取 + billing 刷新，
+> 不做周期性聊天 probe。因此额度快照可能滞后；额度耗尽时由 402/SSE 错误触发冷却并换号。
 
 请求重试：
 

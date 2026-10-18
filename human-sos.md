@@ -39,10 +39,21 @@ Agent 已用 Codex 0.154、Claude Code 2.1、OpenCode 免费模型在本机跑�
 - [ ] 从 **导入** 抽屉导入到 Codex / Claude Code（先看 diff，再写入），重启客户端后能选到模型
 - [ ] 如果使用 DSH，导入后按 README 说明在 DSH 侧配置 `AI_BOBBY_API_KEY`
 - [ ] 设置页“检查更新”能返回 v0.2.1 或更高版本
+- [ ] 验收通过后明确回复“可以发版”；在此之前不要创建新的 release/tag
 
 ---
 
-## 3. 确认仓库保持 public（必须）
+## 3. 发布闸门（必须）
+
+当前处于 **v0.2.1 真实验收阶段**，问题记录在 [`issues.md`](./issues.md)。
+
+- 未经你本机验收通过，不创建新 tag、不发布 GitHub Release、不更新安装通道。
+- 验收通过后，你明确回复“可以发版”，再走 release workflow。
+- 发版前必须确认：WorkBuddy 登录/额度、主题/关于页 FR、安装提醒等问题已处理或明确接受。
+
+---
+
+## 4. 确认仓库保持 public（必须）
 
 安装通道依赖 GitHub Pages 与 Release：
 
@@ -53,7 +64,7 @@ Agent 已用 Codex 0.154、Claude Code 2.1、OpenCode 免费模型在本机跑�
 
 ---
 
-## 4. 确认可接受的 v1 安全边界（必须）
+## 5. 确认可接受的 v1 安全边界（必须）
 
 以下两项是当前 v1 的已知限制，需要你确认是否接受作为公测版边界：
 

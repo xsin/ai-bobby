@@ -16,7 +16,7 @@ import {
   mergeCatalog,
   type WorkBuddyCatalogModel,
 } from './catalog'
-import { UpstreamError, WorkBuddyClient } from './upstream'
+import { UpstreamError, WorkBuddyClient, classifyUpstreamError } from './upstream'
 import type { WorkBuddyVariant } from './variants'
 
 interface AccountRuntime {
@@ -115,6 +115,12 @@ export class WorkBuddyProvider implements ProviderAdapter {
   async *chat(request: CanonicalRequest, signal: AbortSignal): AsyncGenerator<CanonicalEvent> {
     const candidates = this.pickAccounts(request.model.upstreamId)
     if (candidates.length === 0) {
+      const eligible = [...this.runtimes.values()].filter(
+        runtime => runtime.account.enabled && runtime.models.has(request.model.upstreamId),
+      )
+      if (eligible.length > 0 && eligible.every(runtime => isKnownExhausted(runtime.account))) {
+        throw new GatewayError('credit', 402, `模型 ${request.model.id} 的所有账号额度都不足`)
+      }
       throw new GatewayError('not_found', 404, `模型 ${request.model.id} 当前没有可用账号`)
     }
 
@@ -200,11 +206,18 @@ export class WorkBuddyProvider implements ProviderAdapter {
     const candidates = [...this.runtimes.values()].filter(runtime => {
       if (!runtime.account.enabled) return false
       if (!runtime.models.has(modelId)) return false
+      // A billing snapshot with packages and zero remaining is a known
+      // exhausted account; an empty snapshot means "unknown", not zero.
+      if (isKnownExhausted(runtime.account)) return false
       const cooldown = this.cooldowns.get(this.cooldownKey(runtime.account, modelId))
       return cooldown === undefined || cooldown.until <= now
     })
     if (candidates.length === 0) return []
-    const sorted = candidates.sort((a, b) => (a.account.lastUsedAtMs ?? 0) - (b.account.lastUsedAtMs ?? 0))
+    const sorted = candidates.sort((a, b) => {
+      const preferred = Number(Boolean(b.account.preferred)) - Number(Boolean(a.account.preferred))
+      if (preferred !== 0) return preferred
+      return (a.account.lastUsedAtMs ?? 0) - (b.account.lastUsedAtMs ?? 0)
+    })
     const offset = this.roundRobin % sorted.length
     this.roundRobin += 1
     return [...sorted.slice(offset), ...sorted.slice(0, offset)]
@@ -369,10 +382,12 @@ export async function* parseUpstreamSse(response: Response, responseId: string):
           if (!isObject(chunk)) continue
           if (isObject(chunk['error'])) {
             const error = chunk['error']
+            const message = typeof error['message'] === 'string' ? error['message'] : 'upstream error'
+            const status = number(error['status'])
             throw new UpstreamError(
-              typeof error['message'] === 'string' ? error['message'] : 'upstream error',
-              502,
-              'upstream',
+              message,
+              status > 0 ? status : 502,
+              classifyUpstreamError(status > 0 ? status : 502, message),
             )
           }
           if (typeof chunk['usage'] === 'object' && chunk['usage'] !== null) {
@@ -448,6 +463,11 @@ function mapFinishReason(value: string): 'stop' | 'tool_calls' | 'length' | 'con
   if (value === 'length') return 'length'
   if (value === 'content_filter') return 'content_filter'
   return 'stop'
+}
+
+function isKnownExhausted(account: WorkBuddyAccount): boolean {
+  const credits = account.credits
+  return credits !== undefined && credits.packages.length > 0 && credits.total <= 0
 }
 
 function upstreamStatus(kind: string): number {

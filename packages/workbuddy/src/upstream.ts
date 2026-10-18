@@ -218,21 +218,18 @@ async function readEnvelope(response: Response, route: string): Promise<Envelope
   return { document: parsed }
 }
 
-function upstreamError(status: number, body: string, retryAfter?: string | null): UpstreamError {
+export function classifyUpstreamError(status: number, body: string): CanonicalErrorKind {
   const lower = body.toLowerCase()
-  const kind: CanonicalErrorKind =
-    status === 402 ||
-    /insufficient|credit|quota|积分不足|额度不足|余额不足/.test(lower)
-      ? 'credit'
-      : status === 401 || status === 403
-        ? 'auth'
-        : status === 429
-          ? 'rate_limit'
-          : status === 404
-            ? 'not_found'
-            : status >= 500
-              ? 'upstream'
-              : 'invalid_request'
+  if (status === 402 || /insufficient|credit|quota|积分不足|额度不足|余额不足|积分用完|额度用完/.test(lower)) return 'credit'
+  if (status === 401 || status === 403) return 'auth'
+  if (status === 429) return 'rate_limit'
+  if (status === 404) return 'not_found'
+  if (status >= 500) return 'upstream'
+  return 'invalid_request'
+}
+
+function upstreamError(status: number, body: string, retryAfter?: string | null): UpstreamError {
+  const kind = classifyUpstreamError(status, body)
   const seconds = retryAfter === null || retryAfter === undefined ? 0 : Number(retryAfter)
   return new UpstreamError(
     body.slice(0, 400) || `WorkBuddy HTTP ${status}`,

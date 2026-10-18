@@ -16,7 +16,7 @@ afterEach(async () => {
   dir = undefined
 })
 
-function account(uid: string): WorkBuddyAccount {
+function account(uid: string, credits?: WorkBuddyAccount['credits']): WorkBuddyAccount {
   return {
     uid,
     nickname: uid,
@@ -26,6 +26,7 @@ function account(uid: string): WorkBuddyAccount {
     refreshToken: 'refresh',
     expiresAtMs: Date.now() + 3_600_000,
     enabled: true,
+    ...(credits === undefined ? {} : { credits }),
   }
 }
 
@@ -99,6 +100,34 @@ describe('WorkBuddyProvider', () => {
     )
     const stored = await store.list('cn')
     expect(stored[0]?.lastUsedAtMs).toBeTypeOf('number')
+  })
+
+  it('skips an account whose known credits are exhausted', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-wb-'))
+    const store = new AccountStore(join(dir, 'accounts.json'))
+    await store.upsert(account('u1', { total: 0, packages: [{ name: 'pro', remain: 0, size: 100 }], fetchedAtMs: Date.now() }))
+    await store.upsert(account('u2', { total: 100, packages: [{ name: 'pro', remain: 100, size: 100 }], fetchedAtMs: Date.now() }))
+    const client = new FakeClient()
+    const provider = new WorkBuddyProvider({ variant: CN, store, client: client as never })
+    await provider.refreshModels()
+    const events = []
+    for await (const event of provider.chat(request(), new AbortController().signal)) events.push(event)
+    expect(events).toEqual(expect.arrayContaining([{ type: 'text', delta: 'Hello' }]))
+    expect(client.calls).toEqual(['u2'])
+  })
+
+  it('fails over to another account on 402 / credit error', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-wb-'))
+    const store = new AccountStore(join(dir, 'accounts.json'))
+    await store.upsert(account('u1'))
+    await store.upsert(account('u2'))
+    const client = new FakeClient(new UpstreamError('积分不足', 402, 'credit'))
+    const provider = new WorkBuddyProvider({ variant: CN, store, client: client as never })
+    await provider.refreshModels()
+    const events = []
+    for await (const event of provider.chat(request(), new AbortController().signal)) events.push(event)
+    expect(events).toEqual(expect.arrayContaining([{ type: 'text', delta: 'Hello' }]))
+    expect(client.calls.length).toBe(2)
   })
 
   it('fails over to another account on 429', async () => {
