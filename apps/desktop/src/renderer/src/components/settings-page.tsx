@@ -105,7 +105,7 @@ export function SettingsPage({
             {lastMessage ? <p className="mt-1 text-[10px] text-muted-foreground">{lastMessage}</p> : null}
           </div>
           <div className="flex items-center gap-2">
-            <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <label className="flex cursor-pointer items-center gap-2.5 text-[10px] text-muted-foreground">
               <Switch checked={autoCheck} onCheckedChange={onAutoCheckChange} />
               自动检查
             </label>
