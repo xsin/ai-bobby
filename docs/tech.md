@@ -282,14 +282,15 @@ Tailwind 通过 `@theme inline` 把语义色指向 antd 变量；shadcn 的 `--b
 
 ```
 components/
-  sidebar.tsx                # 左侧栏：来源/历史/关于/设置，收起持久化
+  sidebar.tsx                # 左侧栏：概览/来源/历史/关于/设置，收起持久化
+  overview-page.tsx          # 概览：网关/模型源/积分/最近导入指标卡 + 来源卡 + 最近导入
   source-head.tsx            # 来源标题、说明、统计、动作
   account-strip.tsx          # 账号 chip、额度、冷却
   model-table.tsx            # antd Table（选择/展开/排序）
-  import-sheet.tsx           # shadcn Sheet + 客户端/分组/默认模型/diff
+  import-sheet.tsx           # shadcn Sheet；选择变化时调用 importPreview 实时预览 diff
   login-dialog.tsx           # 登录提示（真实登录由主进程 BrowserWindow 承载）
   update-banner.tsx          # 非模态更新条（发现/下载/就绪）
-  history-page.tsx           # 导入历史、备份、恢复确认、diff
+  history-page.tsx           # 导入记录与备份合并表格；查看差异/打开目录/恢复
   about-page.tsx             # ZEO 个人 IP、项目、音乐、赞助
   settings-page.tsx          # 主题、网关、Key、版本与更新
   floating-avatar.tsx        # 可拖动应用 LOGO 头像

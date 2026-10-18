@@ -229,9 +229,20 @@
     toastTimer: null,
   };
 
-  // Pre-select available OpenCode models (the screenshot starts with 7 selected).
-  for (const model of SOURCES.opencode.models) {
-    if (model.status === 'available') state.selection.opencode.add(model.id);
+  // Mirrors the real startup scan: nothing is selected until the client
+  // configs are read, then only the models they reference come back checked.
+  for (const id of [
+    'oc/deepseek-v4.1-flash',
+    'oc/glm-5.3-flash',
+    'oc/space-bunny',
+    'wb/deepseek-v4.1-flash',
+    'wb/glm-5.3-flash',
+    'wbi/deepseek-v4.1-flash',
+    'wbi/glm-5.3-flash',
+  ]) {
+    const [group] = id.split('/');
+    const tab = group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : 'wbi';
+    state.selection[tab].add(id);
   }
 
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -309,11 +320,12 @@
     $('#service-sub').textContent = src.serviceSub;
 
     const metrics = metricsFor(state.tab);
+    const selected = selectedCount();
     $('#metrics').innerHTML = src.metricDefs.map(def => {
       const value = metrics[def.key];
       const tone = def.tone ? ` ${def.tone}` : '';
       return `<div class="metric${tone}"><dt>${escapeHtml(def.label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
-    }).join('');
+    }).join('') + `<div class="metric accent"><dt>已选</dt><dd><span id="selected-count">${selected}</span><span class="metric-unit">/ <span id="selected-total">${src.models.length}</span></span></dd></div>`;
 
     $('#source-actions').innerHTML = src.actions.map(action =>
       `<button type="button" data-action="${action.id}">${ICONS[action.icon] || ''}<span>${escapeHtml(action.label)}</span></button>`
@@ -322,10 +334,6 @@
     const lastHeader = $('.timing-heading');
     if (lastHeader) lastHeader.textContent = src.lastHeader;
 
-    const selected = selectedCount();
-    $('#selected-count').textContent = String(selected);
-    const globalNode = $('#global-selected');
-    if (globalNode) globalNode.textContent = String(totalSelected());
     $('#account-strip').hidden = state.tab === 'opencode';
     if (state.tab !== 'opencode') {
       $('#account-note').textContent = src.accounts.length > 1
@@ -340,9 +348,8 @@
 
   function renderTabCounts() {
     for (const [key, src] of Object.entries(SOURCES)) {
-      const available = src.models.filter(model => model.status === 'available').length;
       const node = $(`[data-count="${key}"]`);
-      if (node) node.textContent = String(available);
+      if (node) node.textContent = `${state.selection[key].size}/${src.models.length}`;
     }
   }
 
@@ -701,9 +708,8 @@
     const selected = selectedCount();
     const total = totalSelected();
     $('#selected-count').textContent = String(selected);
-    $('#global-selected').textContent = String(total);
     $('#selected-total').textContent = String(source().models.length);
-    $('#global-total').textContent = String(Object.values(SOURCES).reduce((sum, src) => sum + src.models.length, 0));
+    renderTabCounts();
     const badge = $('#import-badge');
     badge.textContent = String(total);
     badge.hidden = total === 0;

@@ -20,6 +20,7 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet'
 import { cn } from '@/lib/utils'
+import { toProviderGroups } from '@/lib/import-groups'
 import {
   IMPORT_CLIENTS,
   SOURCES,
@@ -27,6 +28,7 @@ import {
   type ImportClient,
   type ProviderId,
 } from '@/lib/demo-data'
+import type { ImportPlanSnapshot, ImportTargetName } from '@shared/api'
 
 interface ImportSheetProps {
   open: boolean
@@ -55,6 +57,22 @@ const GROUP_LABELS: Record<GroupId, string> = {
   wbi: 'WBI',
 }
 
+const TARGET_MAP: Record<ClientId, ImportTargetName> = {
+  workbuddy: 'workbuddy',
+  wbi: 'workbuddy-ai',
+  codex: 'codex',
+  claude: 'claude',
+  dsh: 'dsh',
+}
+
+const TARGET_LABEL: Record<string, string> = {
+  workbuddy: 'WorkBuddy',
+  'workbuddy-ai': 'WorkBuddy AI',
+  codex: 'Codex',
+  claude: 'Claude Code',
+  dsh: 'DeepSeek Harness',
+}
+
 export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply }: ImportSheetProps) {
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
     Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, true])) as Record<ClientId, boolean>,
@@ -81,9 +99,90 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   }, [defaultModel, modelOptions])
 
   const checkedClients = IMPORT_CLIENTS.filter(client => clients[client.id])
-  const diff = useMemo(
+  const clientKey = checkedClients.map(client => client.id).join(',')
+  const activeGroups = useMemo(
+    () => (Object.keys(groups) as GroupId[]).filter(group => groups[group]).map(providerOf),
+    [groups],
+  )
+  const modelIds = useMemo(
+    () => activeGroups.flatMap(group => selectedIdsByGroup[group]),
+    [activeGroups, selectedIdsByGroup],
+  )
+
+  const [previews, setPreviews] = useState<ImportPlanSnapshot[]>([])
+  const [previewing, setPreviewing] = useState(false)
+  const [previewError, setPreviewError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const api = window.aiBobby
+    if (!api) {
+      setPreviews([])
+      setPreviewError(null)
+      return
+    }
+    const targetIds = clientKey === '' ? [] : (clientKey.split(',') as ClientId[])
+    if (targetIds.length === 0) {
+      setPreviews([])
+      setPreviewError(null)
+      return
+    }
+    let alive = true
+    setPreviewing(true)
+    const timer = window.setTimeout(() => {
+      void Promise.all(
+        targetIds.map(async client =>
+          api
+            .importPreview(TARGET_MAP[client], {
+              groups: toProviderGroups(activeGroups),
+              modelIds,
+              defaultModelId: defaultModel,
+              setAsDefault,
+            })
+            .catch(error => ({
+              target: TARGET_MAP[client],
+              path: '',
+              detected: false,
+              changed: false,
+              diff: '',
+              warnings: [error instanceof Error ? error.message : String(error)],
+              requiresRestart: false,
+            })),
+        ),
+      )
+        .then(plans => {
+          if (!alive) return
+          setPreviews(plans)
+          setPreviewError(null)
+        })
+        .catch(error => {
+          if (alive) setPreviewError(error instanceof Error ? error.message : String(error))
+        })
+        .finally(() => {
+          if (alive) setPreviewing(false)
+        })
+    }, 250)
+    return () => {
+      alive = false
+      window.clearTimeout(timer)
+    }
+  }, [open, clientKey, activeGroups, modelIds, defaultModel, setAsDefault])
+
+  const demoDiff = useMemo(
     () => buildDiff(checkedClients, groups, selectedByGroup, defaultModel),
     [checkedClients, groups, selectedByGroup, defaultModel],
+  )
+
+  const realDiff = useMemo(() => {
+    const blocks = previews
+      .filter(plan => plan.diff.trim() !== '')
+      .map(plan => `# ${TARGET_LABEL[plan.target] ?? plan.target}  ${plan.path}\n${plan.diff}`)
+    return blocks.length > 0 ? blocks.join('\n\n') : '# 没有需要写入的变更'
+  }, [previews])
+
+  const previewWarnings = useMemo(
+    () => previews.flatMap(plan => plan.warnings.map(warning => `${TARGET_LABEL[plan.target] ?? plan.target}：${warning}`)),
+    [previews],
   )
 
   function toggleClient(id: ClientId, checked: boolean) {
@@ -131,7 +230,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
         <SheetHeader className="border-b border-line bg-toolbar px-5 py-4 text-left">
           <SheetTitle className="text-[15px] font-semibold text-text">导入到客户端</SheetTitle>
           <SheetDescription className="text-[11px] text-muted-foreground">
-            先预览，再写入；只改 AI Bobby 自己的条目。
+            变更自动预览，确认后写入；只改 AI Bobby 自己的条目。
           </SheetDescription>
         </SheetHeader>
 
@@ -223,26 +322,34 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
               </Select>
               <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
                 <Checkbox checked={setAsDefault} onCheckedChange={value => setSetAsDefault(value === true)} />
-                同时设为客户端默认模型
+                同时设为目标客户端的默认模型
               </label>
+              <p className="mt-1.5 text-[10px] leading-relaxed text-faint">
+                「客户端」指导入目标（Codex / Claude Code / DSH / WorkBuddy），不是 AI Bobby。
+                这里只影响 Codex 与 Claude Code 的默认模型字段，AI Bobby 网关本身不变；WorkBuddy 与 DSH 暂不支持默认模型。
+              </p>
             </section>
 
             <section>
-              <SectionTitle title="预览变更" hint={checkedClients.map(client => client.name).join(' · ') || '未选择客户端'} />
-              <pre className="max-h-[220px] overflow-auto rounded-md border border-line bg-code p-2.5 font-mono text-[10px] leading-relaxed text-code-text">
-                {diff.map((line, index) => (
-                  <div
-                    key={`${index}-${line.text}`}
-                    className={cn(
-                      line.type === 'add' && 'text-code-add',
-                      line.type === 'del' && 'text-code-del',
-                      line.type === 'dim' && 'text-code-dim',
-                    )}
-                  >
-                    {line.text || '\u00A0'}
-                  </div>
-                ))}
-              </pre>
+              <SectionTitle
+                title="变更预览"
+                hint={previewing ? '更新中…' : window.aiBobby ? '自动更新 · 只读，不会写入' : '原型预览'}
+              />
+              <p className="mb-2 text-[10px] leading-relaxed text-faint">
+                勾选模型、切换分组或客户端时这里会自动更新；点「写入」之前不会修改任何文件。
+              </p>
+              {previewError ? (
+                <p className="rounded-md border border-danger/30 bg-danger-soft px-2.5 py-2 text-[10px] text-danger">
+                  预览失败：{previewError}
+                </p>
+              ) : (
+                <pre className="max-h-[220px] overflow-auto rounded-md border border-line bg-code p-2.5 font-mono text-[10px] leading-relaxed text-code-text">
+                  {window.aiBobby ? realDiff : demoDiffText(demoDiff)}
+                </pre>
+              )}
+              {window.aiBobby && previewWarnings.length > 0 ? (
+                <p className="mt-1.5 text-[10px] leading-relaxed text-warning">{previewWarnings[0]}</p>
+              ) : null}
             </section>
           </div>
         </ScrollArea>
@@ -252,14 +359,8 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             已选 {selectedTotal} 个模型 · {checkedClients.length} 个客户端
           </span>
           <div className="flex gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-8 border-line bg-surface text-[11px]"
-              onClick={() => toast.success('已生成 dry-run 预览；写入前不会修改任何文件')}
-            >
-              预览变更
+            <Button type="button" variant="outline" size="sm" className="h-8 border-line bg-surface text-[11px]" onClick={() => onOpenChange(false)}>
+              取消
             </Button>
             <Button type="button" size="sm" className="h-8 bg-primary text-[11px] text-primary-foreground" onClick={apply}>
               写入
@@ -340,4 +441,8 @@ function buildDiff(
   }
   lines.push({ type: 'dim', text: '# 写入前会备份；只增删 aiBobbyOwner 标记的条目。' })
   return lines
+}
+
+function demoDiffText(lines: DiffLine[]): string {
+  return lines.map(line => line.text).join('\n')
 }

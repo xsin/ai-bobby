@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog'
 import { formatBytes } from '@/lib/format'
 import { cn } from '@/lib/utils'
-import type { ImportBackupSnapshot, ImportHistoryEntry, ImportHistorySnapshot } from '@shared/api'
+import type { ImportHistoryEntry, ImportHistorySnapshot } from '@shared/api'
 
 interface HistoryPageProps {
   history: ImportHistorySnapshot | null
@@ -19,6 +19,7 @@ interface HistoryPageProps {
   restoringId: string | null
   onRefresh: () => void
   onRestore: (id: string) => Promise<void>
+  onOpenDirectory: (path: string) => void
 }
 
 const TARGET_LABEL: Record<string, string> = {
@@ -49,7 +50,12 @@ function formatTime(ms: number): string {
   }).format(new Date(ms))
 }
 
-export function HistoryPage({ history, loading, restoringId, onRefresh, onRestore }: HistoryPageProps) {
+function backupName(path: string | undefined): string {
+  if (path === undefined) return ''
+  return path.split('/').pop() ?? path
+}
+
+export function HistoryPage({ history, loading, restoringId, onRefresh, onRestore, onOpenDirectory }: HistoryPageProps) {
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
   const [pending, setPending] = useState<ImportHistoryEntry | null>(null)
@@ -71,16 +77,6 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
     }),
     [entries, filter, normalizedQuery, cutoff],
   )
-  const visibleBackups = useMemo(
-    () => backups.filter(backup => {
-      const targetOk = filter === 'all' || backup.target === filter
-      const queryOk = normalizedQuery === ''
-        || [TARGET_LABEL[backup.target], backup.path, backup.backupPath]
-          .filter(Boolean).join(' ').toLowerCase().includes(normalizedQuery)
-      return targetOk && queryOk
-    }),
-    [backups, filter, normalizedQuery],
-  )
   const totalBackupSize = backups.reduce((sum, backup) => sum + (backup.size ?? 0), 0)
   const latest = entries[0]
 
@@ -91,7 +87,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">OTHER · HISTORY</div>
           <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">导入历史</h1>
           <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">
-            每次写入都会先备份；在这里查看变更、找回旧配置或恢复备份。
+            每次写入都会先备份；在这里查看差异、打开配置目录或恢复备份。
           </p>
         </div>
         <div className="flex items-center gap-2 pt-4">
@@ -147,75 +143,92 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
         </label>
       </div>
 
-      <div className="mt-3 grid grid-cols-1 items-start gap-3 xl:grid-cols-[minmax(0,1.55fr)_minmax(250px,0.85fr)]">
-        <section className="overflow-hidden rounded-lg border border-line-soft bg-surface">
-          <div className="flex items-center justify-between border-b border-line-soft px-3.5 py-2.5">
-            <h2 className="text-[12px] font-semibold text-text">导入记录</h2>
-            <span className="text-[10px] text-faint">最近 30 天</span>
-          </div>
-          {visibleEntries.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[11px] text-faint">没有匹配的导入记录。</div>
-          ) : (
-            <div className="flex flex-col">
-              {visibleEntries.map(entry => (
-                <div key={entry.id} className="grid grid-cols-[30px_minmax(0,1fr)_auto] items-start gap-2.5 border-b border-line-soft px-3.5 py-3 last:border-b-0 hover:bg-surface-2">
-                  <span className="grid size-7 place-items-center rounded-md bg-accent-soft font-mono text-[9px] font-semibold text-primary">
-                    {(TARGET_LABEL[entry.target] ?? '?').slice(0, 2).toUpperCase()}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-1.5">
-                      <strong className="text-[12px] font-semibold text-text">{TARGET_LABEL[entry.target] ?? entry.target}</strong>
-                      <span className={cn(
-                        'rounded px-1.5 py-px text-[9px]',
-                        entry.action === 'restore' ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success',
-                      )}>
-                        {entry.action === 'restore' ? '已恢复' : '成功'}
+      <section className="mt-3 overflow-hidden rounded-lg border border-line-soft bg-surface" aria-labelledby="history-heading">
+        <div className="flex items-center justify-between border-b border-line-soft px-3.5 py-2.5">
+          <h2 id="history-heading" className="text-[12px] font-semibold text-text">导入记录与备份</h2>
+          <span className="text-[10px] text-faint">每个目标保留最近 5 份</span>
+        </div>
+        {visibleEntries.length === 0 ? (
+          <div className="px-4 py-10 text-center text-[11px] text-faint">没有匹配的导入记录或备份。</div>
+        ) : (
+          <table className="w-full border-collapse">
+            <colgroup>
+              <col className="w-[44px]" />
+              <col />
+              <col className="w-[214px]" />
+            </colgroup>
+            <thead>
+              <tr className="text-left text-[10px] font-medium text-faint">
+                <th scope="col" className="px-3.5 py-2"><span className="sr-only">客户端</span></th>
+                <th scope="col" className="px-3.5 py-2">写入记录</th>
+                <th scope="col" className="px-3.5 py-2 text-right">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleEntries.map(entry => {
+                const backup = backups.find(item => item.id === entry.id)
+                const restored = entry.action === 'restore'
+                return (
+                  <tr key={entry.id} className="border-t border-line-soft hover:bg-surface-2">
+                    <td className="px-3.5 py-2.5 align-top">
+                      <span className="grid size-7 place-items-center rounded-md bg-accent-soft font-mono text-[9px] font-semibold text-primary" aria-hidden="true">
+                        {(TARGET_LABEL[entry.target] ?? '?').slice(0, 2).toUpperCase()}
                       </span>
-                    </div>
-                    <p className="mt-0.5 text-[10px] text-muted-foreground">
-                      {formatTime(entry.createdAtMs)} · {entry.modelCount} 个模型 · <code className="font-mono text-[9px] text-faint">{entry.path}</code>
-                    </p>
-                    {entry.warnings.length > 0 ? (
-                      <p className="mt-0.5 text-[10px] text-warning">{entry.warnings[0]}</p>
-                    ) : null}
-                  </div>
-                  <div className="flex items-center gap-0.5">
-                    {entry.diff ? (
-                      <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-muted-foreground" onClick={() => setViewing(entry)}>
-                        变更
+                    </td>
+                    <td className="min-w-0 px-3.5 py-2.5 align-top">
+                      <div className="flex items-center gap-2">
+                        <strong className="text-[12px] font-semibold text-text">{TARGET_LABEL[entry.target] ?? entry.target}</strong>
+                      </div>
+                      <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
+                        <span>{formatTime(entry.createdAtMs)}</span>
+                        <span aria-hidden="true">·</span>
+                        <span>{entry.modelCount} 个模型</span>
+                        <span aria-hidden="true">·</span>
+                        <span className={cn('rounded px-1.5 py-px text-[9px]', restored ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')}>
+                          {restored ? '已恢复' : '成功'}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px]">
+                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">配置</span>
+                        <code className="min-w-0 truncate font-mono text-[9px] text-text" title={entry.path}>{entry.path}</code>
+                      </div>
+                      <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
+                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">备份</span>
+                        {entry.backupPath ? (
+                          <>
+                            <code className="min-w-0 truncate font-mono text-[9px] text-text" title={entry.backupPath}>{backupName(entry.backupPath)}</code>
+                            <span className="shrink-0 text-[9px] text-faint">{backup?.size !== undefined ? formatBytes(backup.size) : ''}</span>
+                          </>
+                        ) : (
+                          <span className="text-[9px] text-faint">没有可用的备份文件</span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-3.5 py-2.5 text-right align-top">
+                      {entry.diff ? (
+                        <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-muted-foreground" title="只读查看这次写入改了什么" onClick={() => setViewing(entry)}>
+                          查看差异
+                        </Button>
+                      ) : null}
+                      <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-muted-foreground" title="在 Finder 中打开配置所在目录" onClick={() => onOpenDirectory(entry.path)}>
+                        打开目录
                       </Button>
-                    ) : null}
-                    {entry.backupPath ? (
-                      <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-primary" onClick={() => setPending(entry)}>
-                        恢复
-                      </Button>
-                    ) : null}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <aside className="overflow-hidden rounded-lg border border-line-soft bg-surface">
-          <div className="flex items-center justify-between border-b border-line-soft px-3.5 py-2.5">
-            <h2 className="text-[12px] font-semibold text-text">备份文件</h2>
-            <span className="text-[10px] text-faint">本机</span>
-          </div>
-          {visibleBackups.length === 0 ? (
-            <div className="px-4 py-10 text-center text-[11px] text-faint">还没有备份文件。</div>
-          ) : (
-            <div className="flex flex-col">
-              {visibleBackups.map(backup => (
-                <BackupRow key={`${backup.id}-${backup.backupPath}`} backup={backup} restoring={restoringId === backup.id} onRestore={() => setPending(entries.find(entry => entry.id === backup.id) ?? null)} />
-              ))}
-            </div>
-          )}
-          <p className="border-t border-line-soft px-3.5 py-2.5 text-[9px] leading-relaxed text-faint">
-            写入前自动备份；恢复前会再次备份当前文件，失败不会覆盖。
-          </p>
-        </aside>
-      </div>
+                      {entry.backupPath ? (
+                        <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-primary" onClick={() => setPending(entry)}>
+                          恢复
+                        </Button>
+                      ) : null}
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+        <p className="border-t border-line-soft px-3.5 py-2.5 text-[9px] leading-relaxed text-faint">
+          写入前自动备份；恢复前会再次备份当前文件，失败不会覆盖。
+        </p>
+      </section>
 
       <div className="mt-3 flex items-center gap-1.5 text-[9px] text-faint">
         <ShieldCheck className="size-3.5" />
@@ -252,32 +265,25 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
       <Dialog open={viewing !== null} onOpenChange={open => { if (!open) setViewing(null) }}>
         <DialogContent className="max-w-[620px] gap-0 border-line bg-surface p-0">
           <DialogHeader className="border-b border-line px-5 py-4 text-left">
-            <DialogTitle className="text-[15px] font-semibold text-text">变更预览</DialogTitle>
+            <DialogTitle className="text-[15px] font-semibold text-text">查看差异</DialogTitle>
             <DialogDescription className="text-[11px] text-muted-foreground">
-              {viewing ? `${TARGET_LABEL[viewing.target]} · ${formatTime(viewing.createdAtMs)}` : ''}
+              {viewing ? `${TARGET_LABEL[viewing.target]} · ${formatTime(viewing.createdAtMs)} · ${viewing.path}` : ''}
             </DialogDescription>
           </DialogHeader>
           <pre className="max-h-[360px] overflow-auto bg-code px-4 py-3 font-mono text-[10px] leading-relaxed text-code-text">
             {viewing?.diff || '没有可显示的 diff。'}
           </pre>
+          <DialogFooter className="border-t border-line px-5 py-3">
+            <Button type="button" variant="outline" size="sm" onClick={() => onOpenDirectory(viewing?.path ?? '')} disabled={!viewing}>
+              打开目录
+            </Button>
+            <Button type="button" size="sm" className="bg-primary text-primary-foreground" onClick={() => setViewing(null)}>
+              关闭
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </main>
-  )
-}
-
-function BackupRow({ backup, restoring, onRestore }: { backup: ImportBackupSnapshot; restoring: boolean; onRestore: () => void }) {
-  const name = backup.backupPath.split('/').pop() ?? backup.backupPath
-  return (
-    <div className="border-b border-line-soft px-3.5 py-2.5 last:border-b-0 hover:bg-surface-2">
-      <span className="block truncate font-mono text-[10px] text-text" title={backup.backupPath}>{name}</span>
-      <div className="mt-1 flex items-center justify-between gap-2 text-[9px] text-faint">
-        <span>{TARGET_LABEL[backup.target]} · {formatTime(backup.createdAtMs)} · {backup.size ? formatBytes(backup.size) : '大小未知'}</span>
-        <button type="button" className="rounded px-1.5 py-0.5 text-primary hover:bg-hover" onClick={onRestore} disabled={restoring}>
-          {restoring ? '恢复中…' : '恢复'}
-        </button>
-      </div>
-    </div>
   )
 }
 

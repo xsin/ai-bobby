@@ -164,6 +164,7 @@ export interface AiBobbyApi {
   onUpdateAvailable(listener: (info: UpdateInfo) => void): () => void
   onUpdateProgress(listener: (progress: UpdateProgress) => void): () => void
   openExternal(url: string): Promise<void>
+  openDirectory(path: string): Promise<void>
   copyText(text: string): Promise<void>
   quit(): Promise<void>
 }

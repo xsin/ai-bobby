@@ -17,9 +17,6 @@ export function SourceHead({ source, selectedCount, globalSelectedCount, probing
   return (
     <section className="flex items-start justify-between gap-6 border-b border-line pb-4">
       <div className="min-w-0">
-        <p className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.09em] text-faint">
-          {source.eyebrow}
-        </p>
         <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-text">{source.title}</h2>
         <p className="mt-1 text-[12px] text-muted-foreground">{source.subtitle}</p>
         <div className="mt-3 flex items-center gap-2">

@@ -205,6 +205,10 @@ function registerIpc(): void {
     if (/^https?:\/\//i.test(url)) await shell.openExternal(url)
   })
 
+  ipcMain.handle('app:open-directory', (_event, path: string) => {
+    if (String(path).trim() !== '') shell.showItemInFolder(String(path))
+  })
+
   ipcMain.handle('app:copy-text', (_event, text: string) => {
     clipboard.writeText(String(text))
   })

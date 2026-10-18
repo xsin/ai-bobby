@@ -10,6 +10,7 @@ import { SourceHead } from '@/components/source-head'
 import { StatusBar } from '@/components/status-bar'
 import { Sidebar, type NavPage } from '@/components/sidebar'
 import { HistoryPage } from '@/components/history-page'
+import { OverviewPage } from '@/components/overview-page'
 import { AboutPage } from '@/components/about-page'
 import { SettingsPage } from '@/components/settings-page'
 import { FloatingAvatar } from '@/components/floating-avatar'
@@ -39,6 +40,7 @@ import type {
 } from '@shared/api'
 
 const PAGE_META: Record<NavPage, { section: string; title: string }> = {
+  overview: { section: '总览', title: '概览' },
   opencode: { section: '模型来源', title: 'OpenCode' },
   workbuddy: { section: '模型来源', title: 'WorkBuddy' },
   wbi: { section: '模型来源', title: 'WorkBuddy AI' },
@@ -264,6 +266,11 @@ function AppInner() {
   const openExternal = useCallback((url: string) => {
     if (window.aiBobby) void window.aiBobby.openExternal(url)
     else window.open(url, '_blank', 'noopener,noreferrer')
+  }, [])
+
+  const openDirectory = useCallback((path: string) => {
+    if (window.aiBobby) void window.aiBobby.openDirectory(path)
+    else toast.info(`浏览器预览：不会打开 ${path}`)
   }, [])
 
   const playTrack = useCallback(async (track: MusicTrack) => {
@@ -771,7 +778,15 @@ function AppInner() {
             />
           ) : null}
 
-          {page === 'opencode' || page === 'workbuddy' || page === 'wbi' ? (
+          {page === 'overview' ? (
+            <OverviewPage
+              sources={sources}
+              status={realStatus}
+              history={history}
+              onNavigate={navigate}
+              onRefresh={() => handleAction('refresh')}
+            />
+          ) : page === 'opencode' || page === 'workbuddy' || page === 'wbi' ? (
             <main className="min-h-0 flex-1 overflow-auto px-5 pt-4">
               <SourceHead
                 source={source}
@@ -831,6 +846,7 @@ function AppInner() {
               restoringId={restoringId}
               onRefresh={() => void loadHistory()}
               onRestore={restoreBackup}
+              onOpenDirectory={openDirectory}
             />
           ) : page === 'about' ? (
             <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={track => void playTrack(track)} onOpenAlbum={album => void openAlbum(album)} onOpenExternal={openExternal} />

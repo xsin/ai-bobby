@@ -30,6 +30,7 @@ const api: AiBobbyApi = {
     return () => ipcRenderer.removeListener('update:progress', handler)
   },
   openExternal: url => ipcRenderer.invoke('app:open-external', url),
+  openDirectory: path => ipcRenderer.invoke('app:open-directory', path),
   copyText: text => ipcRenderer.invoke('app:copy-text', text),
   quit: () => ipcRenderer.invoke('app:quit'),
 }

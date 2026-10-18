@@ -4,6 +4,7 @@ import {
   Globe2,
   Hexagon,
   History,
+  LayoutDashboard,
   Settings,
   Terminal,
   UserRound,
@@ -12,7 +13,7 @@ import { BrandMark } from '@/components/brand-mark'
 import { cn } from '@/lib/utils'
 import type { ProviderId } from '@/lib/demo-data'
 
-export type NavPage = ProviderId | 'history' | 'about' | 'settings'
+export type NavPage = ProviderId | 'overview' | 'history' | 'about' | 'settings'
 
 interface SidebarProps {
   page: NavPage
@@ -87,8 +88,21 @@ export function Sidebar({
 
       <nav className="min-h-0 flex-1 overflow-auto px-2 py-3">
         {!collapsed ? (
-          <div className="px-2 pb-1.5 pt-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">模型来源</div>
+          <div className="px-2 pb-1.5 pt-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">总览</div>
         ) : null}
+        <button
+          type="button"
+          className={cn(itemClass(page === 'overview'), 'mb-0.5')}
+          onClick={() => onNavigate('overview')}
+          title="概览"
+          aria-current={page === 'overview' ? 'page' : undefined}
+        >
+          <LayoutDashboard className={cn('size-[17px] shrink-0', page === 'overview' ? 'text-primary' : 'text-faint group-hover:text-muted-foreground')} />
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">概览</span> : null}
+        </button>
+        {!collapsed ? (
+          <div className="px-2 pb-1.5 pt-4 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">模型来源</div>
+        ) : <div className="my-2 h-px bg-line-soft" />}
         {SOURCE_ITEMS.map(item => {
           const Icon = item.icon
           const active = page === item.id

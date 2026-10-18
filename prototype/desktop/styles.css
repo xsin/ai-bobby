@@ -1037,12 +1037,13 @@ body[data-theme="light"] .diff .del { color: #b42318; }
 .side-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .side-count {
   margin-left: auto;
-  min-width: 20px;
-  padding: 1px 5px;
+  min-width: 32px;
+  padding: 1px 6px;
   border-radius: 5px;
   background: var(--surface-3);
   color: var(--faint);
   font: 9px/1.4 var(--mono);
+  font-variant-numeric: tabular-nums;
   text-align: center;
 }
 .side-item.active .side-count { background: var(--surface); color: var(--accent); }
@@ -1657,7 +1658,6 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 /* ---------------------------------------------------------------------------
    v0.2.2 second feedback round: overview, merged history table, login guide
    --------------------------------------------------------------------------- */
-.metrics-selection { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); }
 .metric-unit { margin-left: 3px; color: var(--faint); font-size: 12px; font-weight: 400; letter-spacing: 0; }
 
 .overview-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
