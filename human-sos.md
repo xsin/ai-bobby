@@ -63,4 +63,3 @@ Agent 已用 Codex 0.154、Claude Code 2.1、OpenCode 免费模型在本机跑�
 - [ ] **账号库当前是 `0600` 明文**：
       Electron `safeStorage` 在启动时会阻塞 Keychain，已回退；如要求加密落盘，
       需要你确认接受一次 Keychain 授权弹窗，或指定其他密钥方案。
-
