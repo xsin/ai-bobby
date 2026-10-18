@@ -8,7 +8,7 @@
 
 - 最后更新：2026-10-18
 - 当前阶段：**v0.2.1 已发布；主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
-  落地页视觉稿待用户确认；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
+  落地页已实现并上线 `/website/`；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
@@ -272,6 +272,7 @@ WorkBuddy 上游
 
 - 落地页视觉稿确认并实现 `apps/website`：WebGL、中英文 i18n、PWA 更新提示、
   gh-pages `/website/` 工作流，并保留根目录安装通道。
+- 线上验证：`/website/`、manifest、sw.js、PWA 图标均 200；`/releases/latest/install.sh` 仍 200。
 - marketing 拆分为同级独立项目 `ai-lucia/`，等 AI Bobby 完结后再启动。
 - `prototype/` 已按 `desktop/`、`website/` 分目录。
 - 第三方依赖版本收归 `pnpm-workspace.yaml` 的 `catalog:`，package.json 改为 `catalog:`；

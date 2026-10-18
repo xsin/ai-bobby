@@ -286,7 +286,7 @@ refs/                 只读参考实现（.gitignore，不发布）
 - [handsoff.md](./handsoff.md) — 实施计划、决策、进度、跨会话记忆
 - [docs/prd.md](./docs/prd.md) — 产品范围、FR、界面、验收
 - [docs/tech.md](./docs/tech.md) — 架构、协议、登录/多账号、更新/分发、测试
-- [docs/prd-landing.md](./docs/prd-landing.md) — 落地页 PRD（待视觉确认）
+- [docs/prd-landing.md](./docs/prd-landing.md) — 落地页 PRD（已实现）
 - [docs/tech-landing.md](./docs/tech-landing.md) — 落地页技术方案（React/Vite/Three/PWA）
 - [human-sos.md](./human-sos.md) — **需要人工完成/确认的交付事项**
 - [prototype/](./prototype/) — 视觉稿：`desktop/` 控制面板、`website/` 落地页
