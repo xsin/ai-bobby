@@ -308,6 +308,33 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 只允许一个方向：Ant Design → shadcn/Tailwind。不允许两套并行定义。
 
 
+### 5.4 尺寸与间距：4px 网格
+
+固定尺寸与间距统一使用 **4px 基准网格**；页面级节奏优先取 8px 的倍数，形成 4px 细调、8px 主节奏的层级。
+
+适用范围：
+
+- `padding`、`margin`、`gap`、固定 `width` / `height`、圆角、图标容器尺寸，优先使用 4 的倍数：4 / 8 / 12 / 16 / 20 / 24 / 32 / 40 / 48px。
+- Tailwind 中优先使用 `1 / 2 / 3 / 4 / 5 / 6 / 8 / 10 / 12` 等步进（`1 = 4px`）；不要动辄写 `p-[7px]`、`gap-[10px]` 这类任意值。
+- 组件内部密集排列用 4px 步进；区块之间用 8 / 16 / 24 / 32px 拉开层级。避免 6 / 10 / 14px 这类“看起来差不多”的间距。
+- 表单标签与控件、开关与文字标签之间，统一用 8px；小图标与文字之间可用 4px。
+
+允许的例外：
+
+- 1px 描边、0.5px 分隔线、焦点环等渲染细节，不计入布局间距。
+- 紧凑控件内部的 2px 光学内边距可以保留；它用于让滑块/图标在轨道内视觉居中，不应扩散到布局间距。
+- 字体大小不强制 4px 倍数（受字体度量与可读性约束）；行高、图标视觉居中允许 1px 级光学修正。
+- 资产固有尺寸（应用图标、图片、iframe 播放器）不受此限制；其外层容器仍按 4px 网格布局。
+
+新增或修改 UI 时，如果必须偏离网格，应在代码注释或 PR 说明里写清原因，不能默默使用随意值。
+
+设计依据：
+
+- [The 8-Point Grid（Spec.fm）](https://spec.fm/specifics/8-pt-grid)：用 8 的倍数定义尺寸、padding 和 margin；建议 8pt UI 网格配合 4pt 文字基线。
+- [IBM Carbon 2x Grid](https://www.carbondesignsystem.com/building-blocks/foundations/2x-grid/overview)：以 8px mini unit 为基本单位，margin / padding 使用 mini unit 的固定倍数。
+- [Material Design 3 · Grids & spacing](https://m3.material.io/foundations/layout/grids-spacing/spacing)：以 4 / 8dp 为基准的 spacing 体系。
+
+
 ## 6. Agent 行为约束（逐条遵守）
 
 1. **MCP 优先**：生成任何 antd 或 ProComponents 代码前，先调用 antd_info / antd_doc / antd_changelog（或降级到 antd CLI）核实当前版本 API。禁止凭记忆生成。
@@ -322,6 +349,7 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 10. **ProComponents 版本必须与 package.json 锁定版本一致**：3.0.0-beta.1 按 3.x API 生成，2.8.10 按 2.x API 生成，禁止混用。
 11. **shadcn CLI 命令使用 shadcn**，新组件通过 npx shadcn@latest add <component> 添加，不得使用旧的 shadcn-ui 命令。
 12. **shadcn 组件新增前，优先通过 shadcn MCP 确认 registry 中存在该组件**；不得猜测组件名称或手动编写非标准实现。
+13. **尺寸与间距遵循 4px 网格**：padding / margin / gap / 固定宽高优先取 4px 的倍数；布局节奏优先 8px；偏离网格必须说明原因（见第 5.4 节）。
 
 
 ## 7. 快速判定表
@@ -352,4 +380,5 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 7. **检查 toast**：如果从 shadcn 引入了 toast，替换为 sonner。
 8. **检查 ProComponents 版本与 API 一致性**：确认 package.json 中的 ProComponents 版本，确保代码 API 与该版本匹配。
 9. **检查 shadcn CLI 命名**：文档和脚本中不应再出现 shadcn-ui 命令。
+10. **检查间距网格**：搜索 `p-[`、`m-[`、`gap-[` 等任意值；除 1px 描边、2px 光学内边距和资产尺寸外，改为 4px 倍数的标准步进。
 ```

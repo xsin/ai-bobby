@@ -13,7 +13,7 @@
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
 - 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.1>
-- 当前 HEAD：`98babc4`（本地 commit；未 push、未 tag）
+- 当前 HEAD：最新提交见 `git log -1`；工作区 clean（未 push、未 tag）
 - 工具链：Node v26.3.0、pnpm 10.15.1
 
 ---
@@ -352,8 +352,10 @@ WorkBuddy 上游
 ### 2026-10-18 Round 4.1：设置页开关对比度修复
 
 - 浅色下 checked 状态的白色滑块与页面背景融合；共享 `Switch` 轨道改用 `border-line`，
-  默认尺寸调整为 `36×22` + `p-0.5` 内边距，滑块四周保留轨道边；label 间距 6px → 10px。
+  默认尺寸调整为 `36×24` + `p-0.5` 内边距，滑块四周保留轨道边；label 间距 6px → 8px。
 - 审计所有 `Switch` 使用点：当前仅设置页“自动检查”一个；导入抽屉的 Checkbox 不受影响。
 - 浅色/深色 checked、unchecked 四种状态截图检查；desktop typecheck、12 项测试、build 通过。
 - 提交：`98babc4 fix(desktop): give switches a visible border and label spacing`。
+- 收尾：`ui-guideline.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
+  设计依据引用 Spec.fm 8-Point Grid、IBM Carbon 2x Grid、Material Design 3 spacing。
 - 工作区 clean；未 push、未 tag、未创建 release。
