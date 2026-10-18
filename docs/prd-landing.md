@@ -1,8 +1,8 @@
 # AI Bobby 落地页 PRD（prd-landing）
 
-- 版本：v0.1（视觉方向评审稿）
+- 当前版本：v0.2.1
 - 日期：2026-10-18
-- 状态：**视觉已确认；已实现于 `apps/website`**
+- 状态：**已实现并部署到 gh-pages 根路径**
 - 关联：[README.md](../README.md)、[handsoff.md](../handsoff.md)、[tech-landing.md](./tech-landing.md)
 - 视觉稿：[prototype/website/index.html](../prototype/website/index.html)
 - 实现：[apps/website](../apps/website)
@@ -163,7 +163,7 @@ PWA install prompt + update toast
 ### FR-7 SEO / 分享
 
 - 标题/描述/OG/Twitter Card。
-- `lang=zh-CN`；关键文案中英混排。
+- `lang=zh-CN` 默认；页面提供中英文切换，切换后同步 `html lang`/title/description。
 - 语义化 section、唯一 H1、图片 alt。
 - 提供 `robots.txt` + `sitemap.xml`（部署在根路径）。
 
@@ -222,22 +222,14 @@ Three.js 与 shader 场景必须动态 `import()`；首屏先渲染 HTML/CSS，�
 
 ## 10. 验收
 
-- [ ] 视觉稿经用户确认（本 PRD 的核心前置条件）。
+- [x] 视觉稿经用户确认。
 - [ ] 桌面/移动/浅色/深色（landing 只做深色，但需在浅色系统下仍可读）。
 - [ ] 首屏 CTA 可复制、GitHub/Release 链接正确。
 - [ ] 三个协议 tab 切换正确。
 - [ ] PWA 可安装；新版本能出现更新提示并刷新。
 - [ ] `prefers-reduced-motion` 下无动画但内容完整。
 - [ ] WebGL 失败时仍可用。
-- [ ] GitHub Actions 发布到根路径，不破坏 `/releases/latest/`。
+- [x] GitHub Actions 发布到根路径，不破坏 `/releases/latest/`。
 - [ ] 通过性能预算与基础 a11y 检查。
 
 ---
-
-## 11. 待确认
-
-1. 视觉方向：当前“克莱因蓝能量核心 + 近黑 + 玻璃终端”是否接受？
-2. 语言：Hero 英文 + 正文中文，还是全中文/全英文？
-3. 部署路径：接受 `https://xsin.github.io/ai-bobby/`，还是希望 landing 占根路径（需要迁移安装通道）？
-4. PWA 安装提示频率：7 天是否合适？
-5. 首屏是否要放真实截图（控制面板）还是保持纯 Web3D + 终端卡片？

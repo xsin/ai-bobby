@@ -1,6 +1,6 @@
 # AI Bobby 落地页技术方案（tech-landing）
 
-- 版本：v0.1（视觉方向评审稿）
+- 当前版本：v0.2.1
 - 日期：2026-10-18
 - 状态：**已确认并实现（`apps/website`）**
 - 关联：[prd-landing.md](./prd-landing.md)、[README.md](../README.md)、[handsoff.md](../handsoff.md)
@@ -267,9 +267,18 @@ on:
     GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   run: |
     SITE="$RUNNER_TEMP/gh-pages"
-    git clone -q --depth 1 --branch gh-pages \
-      "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$SITE"
+    rm -rf "$SITE"
+    if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+      git clone -q --branch gh-pages \
+        "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$SITE"
+    else
+      mkdir -p "$SITE"
+      git -C "$SITE" init -q
+      git -C "$SITE" checkout -q -b gh-pages
+    fi
     cd "$SITE"
+    git config user.name "github-actions[bot]"
+    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
     rm -rf website
     cp -R "$GITHUB_WORKSPACE/apps/website/dist/." .
     touch .nojekyll
@@ -296,7 +305,7 @@ on:
 - `og.png` 1200×630，放在 `public/`。
 - `robots.txt` 允许抓取；`sitemap.xml` 只含 `/ai-bobby/`。
 - 结构化数据：`SoftwareApplication` JSON-LD（name、operatingSystem、offers 免费）。
-- 不生成多语言路由；v1 中英混排，后续再加 i18n。
+- 不生成多语言路由；v1 用 React 字典切换中英文（`zh`/`en`），后续需要 SEO 分语言时再做路由级 i18n。
 
 ---
 
@@ -339,7 +348,7 @@ CI 至少跑 typecheck + unit test + build；Lighthouse CI 可作为非阻塞报
 
 ## 11. 里程碑
 
-1. 视觉稿确认（当前）。
+1. 视觉稿确认（已完成）。
 2. 创建 `apps/website` + catalog 接入 + 静态页面（无 WebGL）。
 3. Hero WebGL + shader + 降级。
 4. PWA + 更新提示。
