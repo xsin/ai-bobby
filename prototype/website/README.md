@@ -5,15 +5,18 @@ AI Bobby 落地页的视觉稿。目标是在确认视觉方向后再创建 `app
 
 ## 打开
 
-页面用了 ES module + import map，需要静态服务器：
+直接双击 `index.html` 即可，**不需要静态服务器，也不需要网络**。
 
-```sh
-cd /path/to/ai-bobby
-python3 -m http.server 8790 --bind 127.0.0.1 --directory prototype/website
-# http://127.0.0.1:8790/
+页面入口是 `app.bundle.js`（classic script），Three.js、字体都已放在
+`vendor/` 并打进 bundle；这样可以从 `file://` 打开，不会触发 ES module CORS。
+如果编辑了 `app.js`，重新生成 bundle：
+
+```bash
+./build.sh
 ```
 
-Three.js 从 jsDelivr CDN 加载；离线时会退化为 CSS 渐变背景。
+> 源码 `app.js` 仍是 ES module（方便阅读/后续迁移 React）；只有
+> `app.bundle.js` 被 `index.html` 加载。
 
 ## 演示参数
 

@@ -9,20 +9,7 @@
       content="AI Bobby — 把 OpenCode、WorkBuddy 与 WorkBuddy AI 收进一个本机端点。"
     />
     <title>AI Bobby — All your models. One endpoint.</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
     <link rel="stylesheet" href="./styles.css" />
-    <script type="importmap">
-      {
-        "imports": {
-          "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
-        }
-      }
-    </script>
   </head>
   <body>
     <div class="boot" id="boot">
@@ -397,6 +384,6 @@
 
     <div class="command-toast" id="commandToast">Install command copied to clipboard</div>
 
-    <script type="module" src="./app.js"></script>
+    <script defer src="./app.bundle.js"></script>
   </body>
 </html>

@@ -74,8 +74,9 @@ apps/website/
         └── index.css
 ```
 
-视觉稿当前是 vanilla HTML/CSS/JS；生产实现按上面拆成 React 组件，
-CSS 变量、排版、间距与视觉稿保持同源。
+视觉稿当前是 vanilla HTML/CSS/JS，入口为 `app.bundle.js`：Three.js 与字体放在
+`prototype/website/vendor/`，用 esbuild 打成 classic IIFE，因此可从 `file://` 直接打开。
+生产实现按上面拆成 React 组件；CSS 变量、排版、间距与视觉稿保持同源。
 
 ---
 
@@ -134,7 +135,7 @@ Layer 4  固定 UI             nav、scroll progress、PWA toast
   - Toast 用 shadcn/sonner，PWA 提示也用同一套视觉；
   - Dialog 仅在需要“安装说明”时使用，默认非模态。
 - 字体：生产环境自托管 `Space Grotesk` / `JetBrains Mono` 的 woff2 子集，
-  避免 Google Fonts 第三方请求；视觉稿允许 CDN 以便评审。
+  避免 Google Fonts 第三方请求；视觉稿已把字体/Three.js 本地化到 `vendor/`。
 - 动效使用 CSS `transform/opacity`，避免布局抖动；`will-change` 只给 hero 层。
 - 所有交互元素有 `:focus-visible` 样式；移动菜单管理 `aria-expanded`。
 
@@ -316,7 +317,7 @@ CI 至少跑 typecheck + unit test + build；Lighthouse CI 可作为非阻塞报
 1. **WebGL 在低端/远程桌面不可用**：CSS 降级必须完整。
 2. **Safari 的 PWA 支持差异**：安装提示用文字引导；更新仍由 SW 控制。
 3. **gh-pages 与安装通道冲突**：必须保留 `/releases/latest/`；release workflow 需要同步改。
-4. **字体/Three CDN**：生产自托管，避免第三方可用性影响。
+4. **字体/Three 第三方依赖**：生产自托管；视觉稿已本地 vendor + bundle，避免 CDN/离线问题。
 5. **视觉稿与生产实现漂移**：以视觉稿 token/组件为基准，组件化后做截图对比。
 6. **“酷炫”拖慢首屏**：Three 永远懒加载，LCP 由 HTML/CSS 承担。
 

@@ -1,3 +1,5 @@
+import * as THREE from './vendor/three.module.min.js'
+
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -254,14 +256,6 @@ const canvas = $('#webgl');
 
 async function initWebGL() {
   if (!canvas || reduceMotion) {
-    document.body.classList.add('no-webgl');
-    return;
-  }
-
-  let THREE;
-  try {
-    THREE = await import('three');
-  } catch {
     document.body.classList.add('no-webgl');
     return;
   }
