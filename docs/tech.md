@@ -2,8 +2,9 @@
 
 - 版本：v0.1（对齐稿）
 - 日期：2026-10-18
-- 状态：待用户评审
-- 关联：[prd.md](./prd.md)、[handsoff.md](./handsoff.md)
+- 状态：已评审（实现进度见 [handsoff.md](../handsoff.md)）
+- 关联：[prd.md](./prd.md)、[handsoff.md](../handsoff.md)
+- 用户侧安装/使用/接入说明：[README.md](../README.md)
 - 目标：把 PRD 落成可实现的模块边界、协议、数据结构与测试策略。
 
 ---
@@ -43,6 +44,10 @@
 - 需要 `BrowserWindow` 和 Electron `safeStorage`；
 - token 只在主进程解密，网关通过 IPC 拿到运行时快照；
 - 账号库由主进程唯一写入，避免多个进程竞争。
+
+> **实现状态（2026-10-18）**：当前网关在主进程内直接启动，未 fork 子进程；UI 通过 IPC
+> 读主进程快照，不读 `status.json`。账号库为 `0600` 明文，`safeStorage` 因启动时阻塞
+> Keychain 暂未默认启用。图中的子进程/safeStorage 是设计目标，后续硬化时再拆。
 
 ### 1.2 数据流
 
@@ -89,7 +94,7 @@
 | YAML | `yaml` **2.9.1**（Document API） | 保留 DSH 配置注释 |
 | TOML | `smol-toml` **1.9.1** 解析 + 标记块写入 | 保留 Codex 配置注释/其他 provider |
 | JSON | `JSON.parse` + 稳定序列化 | Claude/WorkBuddy 配置 |
-| 加密 | Electron `safeStorage` | macOS Keychain / Windows DPAPI |
+| 加密 | Electron `safeStorage`（设计） | 当前实现为 `0600` 明文；`safeStorage` 启动时会阻塞 Keychain，待显式启用 |
 | 版本比较 | `semver` **7.8.5** | 更新检查 |
 | 签名 | `@electron/osx-sign` **2.7.1** + `codesign` | ad-hoc，由内到外 |
 | 日志 | 自研结构化 logger + 脱敏 | 不引入重依赖 |
@@ -105,8 +110,8 @@ ai-bobby/
 ├── package.json
 ├── pnpm-workspace.yaml
 ├── tsconfig.base.json
-├── prd.md
-├── tech.md
+├── docs/prd.md
+├── docs/tech.md
 ├── handsoff.md
 ├── apps/
 │   ├── desktop/
@@ -599,6 +604,10 @@ Origin/Referer/UA 同上
 - `secret` 只在主进程解密；`status.json` 不含 secret。
 - CLI 模式：`secretKind: "plain"`，文件 `0600`，启动时打印一次警告。
 - `safeStorage.isEncryptionAvailable() === false` 时降级为 `plain` 并在 UI 提示。
+
+> **实现状态（2026-10-18）**：当前实际实现为单个 `<dataDir>/accounts.json`，
+> token 以 `0600` 明文落盘；上面的分 realm 文件与 `safeStorage` 信封是设计目标，
+> 待解决 Keychain 启动阻塞后再迁移。
 - 删除账号：删除该条并重写文件；不留 token。
 - 账号去重：`realm + uid`；重新登录同一 uid 更新 token，不新增。
 

@@ -689,7 +689,7 @@ function AppInner() {
               groups: payload.groups,
               modelIds: payload.modelIds,
               defaultModelId: payload.defaultModelId,
-              setAsDefault: true,
+              setAsDefault: payload.setAsDefault,
             }))
           }
           const changed = plans.filter(plan => plan.changed)

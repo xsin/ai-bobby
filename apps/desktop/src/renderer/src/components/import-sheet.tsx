@@ -35,7 +35,7 @@ interface ImportSheetProps {
   selectedIdsByGroup: Record<ProviderId, string[]>
   selectedTotal: number
   onApplied: () => void
-  onApply?: (payload: { clients: ClientId[]; groups: ProviderId[]; modelIds: string[]; defaultModelId: string }) => Promise<void> | void
+  onApply?: (payload: { clients: ClientId[]; groups: ProviderId[]; modelIds: string[]; defaultModelId: string; setAsDefault: boolean }) => Promise<void> | void
 }
 
 type ClientId = ImportClient['id']
@@ -112,6 +112,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
           groups: activeGroups,
           modelIds,
           defaultModelId: defaultModel,
+          setAsDefault,
         })
         onOpenChange(false)
       } catch (error) {

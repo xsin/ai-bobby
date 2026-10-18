@@ -1,12 +1,13 @@
 # @ai-bobby/desktop
 
-Electron 桌面应用：窗口 + 托盘 + 后台服务生命周期。
+Electron 桌面应用：窗口 + 托盘 + 本机网关生命周期 + 控制面板。
 
-计划：
+当前实现：
 
-- 主进程拉起 `@ai-bobby/gateway` 子进程，读 `status.json` 推给面板
-- 托盘常驻；关窗不退出；退出时清理自己导入的条目
-- 控制面板沿用 OC Ferry 的视觉语言，增加三来源筛选与四客户端导入
-- 受限 preload，只暴露状态订阅与固定动作
+- 主进程启动 `@ai-bobby/gateway`（46890），renderer 通过 IPC 读真实模型/账号状态
+- 托盘常驻；关窗不退出；退出时停止网关与 OpenCode 运行时
+- 内嵌 WorkBuddy 官方登录窗口；导入 importer IPC
+- 受限 preload，只暴露状态、登录、导入、更新等固定动作
 
-界面细节在 `handsoff.md` 的 UI 阶段对齐后再定。
+用户侧使用说明见 [README.md](../../README.md)；实现细节见
+[handsoff.md](../../handsoff.md) 与 [docs/tech.md](../../docs/tech.md)。

@@ -2,8 +2,9 @@
 
 - 版本：v0.1（对齐稿）
 - 日期：2026-10-18
-- 状态：待用户评审
-- 关联：[handsoff.md](./handsoff.md)（实施计划 / 决策 / 进度）、[tech.md](./tech.md)（技术方案）
+- 状态：已评审（实现进度见 [handsoff.md](../handsoff.md)）
+- 关联：[handsoff.md](../handsoff.md)（实施计划 / 决策 / 进度）、[tech.md](./tech.md)（技术方案）
+- 用户侧安装/使用/接入说明：[README.md](../README.md)
 - 一句话：**把 OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版三个来源，收敛成一个本机端点、一把 Key、一个控制面板，并一键导入四个客户端。**
 
 ---
