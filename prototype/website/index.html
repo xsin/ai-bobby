@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#05070d" />
+    <meta
+      name="description"
+      content="AI Bobby — 把 OpenCode、WorkBuddy 与 WorkBuddy AI 收进一个本机端点。"
+    />
+    <title>AI Bobby — All your models. One endpoint.</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div class="boot" id="boot">
+      <div class="boot-mark">AB</div>
+      <div class="boot-line"><span></span></div>
+      <p>initializing local gateway</p>
+    </div>
+
+    <div class="scroll-progress" id="scrollProgress"></div>
+    <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+
+    <header class="nav" id="nav">
+      <a class="brand" href="#top" aria-label="AI Bobby home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32" fill="none">
+            <rect x="2" y="2" width="28" height="28" rx="8" fill="#1e4fff" />
+            <path d="M10 20.5V11.5h5.2c3.2 0 5.3 1.8 5.3 4.5s-2.1 4.5-5.3 4.5H10Z" stroke="#fff" stroke-width="1.8" />
+            <path d="M10 16h5.1" stroke="#fff" stroke-width="1.8" />
+            <circle cx="23.5" cy="9" r="1.5" fill="#8ff7ff" />
+          </svg>
+        </span>
+        <span>AI Bobby</span>
+      </a>
+      <nav class="nav-links" aria-label="Main">
+        <a href="#sources">Sources</a>
+        <a href="#protocols">Protocols</a>
+        <a href="#clients">Import</a>
+        <a href="#security">Local-first</a>
+      </nav>
+      <div class="nav-actions">
+        <a class="nav-github" href="https://github.com/xsin/ai-bobby" target="_blank" rel="noreferrer">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .6a11.4 11.4 0 0 0-3.6 22.2c.6.1.8-.2.8-.6v-2c-3.3.7-4-1.6-4-1.6-.6-1.4-1.4-1.8-1.4-1.8-1.1-.8.1-.8.1-.8 1.2.1 1.9 1.3 1.9 1.3 1.1 1.9 2.9 1.4 3.6 1.1.1-.8.4-1.4.8-1.7-2.7-.3-5.5-1.3-5.5-5.9 0-1.3.5-2.4 1.3-3.2-.2-.3-.6-1.6.1-3.3 0 0 1-.3 3.3 1.2a11.5 11.5 0 0 1 6 0c2.3-1.5 3.3-1.2 3.3-1.2.7 1.7.3 3 .1 3.3.8.8 1.3 1.9 1.3 3.2 0 4.6-2.8 5.6-5.5 5.9.4.4.8 1.1.8 2.2v3.3c0 .4.2.7.8.6A11.4 11.4 0 0 0 12 .6Z" fill="currentColor"/></svg>
+          <span>GitHub</span>
+        </a>
+        <a class="nav-install" href="#install">Install</a>
+      </div>
+      <button class="menu-button" id="menuButton" aria-label="Open menu" aria-expanded="false">
+        <span></span><span></span>
+      </button>
+    </header>
+
+    <main>
+      <section class="hero" id="top">
+        <div class="hero-bg" aria-hidden="true">
+          <canvas id="webgl"></canvas>
+          <div class="hero-vignette"></div>
+          <div class="hero-grid"></div>
+        </div>
+
+        <div class="hero-copy">
+          <div class="eyebrow" data-reveal>
+            <span class="pulse-dot"></span>
+            <span>LOCAL AI GATEWAY</span>
+            <span class="eyebrow-version">v0.2.1</span>
+          </div>
+          <h1 data-reveal>
+            <span class="h1-line">All your models.</span>
+            <span class="h1-line h1-gradient">One endpoint.</span>
+          </h1>
+          <p class="hero-lead" data-reveal>
+            把 <strong>OpenCode</strong>、<strong>WorkBuddy</strong> 与
+            <strong>WorkBuddy AI</strong> 收进一个只监听本机的
+            OpenAI 兼容端点。一个 Key，三种协议，零云依赖。
+          </p>
+          <div class="hero-actions" data-reveal>
+            <button class="install-button" id="copyInstall" data-copy="curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash">
+              <span class="install-prompt">$</span>
+              <code>curl -fsSL https://xsin.github.io/ai-bobby/...</code>
+              <span class="copy-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+              </span>
+              <span class="copy-done">Copied</span>
+            </button>
+            <a class="ghost-button" href="#protocols">
+              See the flow
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </div>
+          <div class="hero-meta" data-reveal>
+            <span><i class="status-dot"></i> macOS · ad-hoc signed</span>
+            <span>v0.2.1</span>
+            <span>127.0.0.1 only</span>
+          </div>
+        </div>
+
+        <div class="hero-visual" data-reveal aria-label="Three model sources converging into one local endpoint">
+          <div class="orbit-stage">
+            <svg class="orbit-lines" viewBox="0 0 620 620" fill="none" aria-hidden="true">
+              <defs>
+                <linearGradient id="lineGradient" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stop-color="#1e4fff" stop-opacity="0" />
+                  <stop offset=".5" stop-color="#5d8bff" stop-opacity=".7" />
+                  <stop offset="1" stop-color="#8ff7ff" stop-opacity="0" />
+                </linearGradient>
+                <radialGradient id="coreGlow">
+                  <stop offset="0" stop-color="#8ff7ff" stop-opacity=".45" />
+                  <stop offset=".45" stop-color="#1e4fff" stop-opacity=".18" />
+                  <stop offset="1" stop-color="#1e4fff" stop-opacity="0" />
+                </radialGradient>
+              </defs>
+              <circle cx="310" cy="310" r="238" stroke="#1e4fff" stroke-opacity=".09" />
+              <circle cx="310" cy="310" r="176" stroke="#1e4fff" stroke-opacity=".13" stroke-dasharray="2 8" />
+              <circle cx="310" cy="310" r="112" stroke="#8ff7ff" stroke-opacity=".12" stroke-dasharray="1 7" />
+              <circle cx="310" cy="310" r="82" fill="url(#coreGlow)" />
+              <path d="M88 180C190 112 270 160 310 310" stroke="url(#lineGradient)" stroke-width="1.4" />
+              <path d="M532 180C430 112 350 160 310 310" stroke="url(#lineGradient)" stroke-width="1.4" />
+              <path d="M310 560C310 450 310 390 310 310" stroke="url(#lineGradient)" stroke-width="1.4" />
+              <path d="M150 430C230 400 270 360 310 310" stroke="url(#lineGradient)" stroke-width="1" />
+              <path d="M470 430C390 400 350 360 310 310" stroke="url(#lineGradient)" stroke-width="1" />
+            </svg>
+            <div class="orbit-core">
+              <span class="core-ring"></span>
+              <span class="core-ring core-ring-2"></span>
+              <span class="core-label">AB</span>
+            </div>
+            <div class="orbit-node node-opencode">
+              <span class="node-icon">OC</span>
+              <span class="node-name">OpenCode</span>
+              <span class="node-sub">free models</span>
+            </div>
+            <div class="orbit-node node-workbuddy">
+              <span class="node-icon">WB</span>
+              <span class="node-name">WorkBuddy</span>
+              <span class="node-sub">CN · multi-account</span>
+            </div>
+            <div class="orbit-node node-wbi">
+              <span class="node-icon">WI</span>
+              <span class="node-name">WorkBuddy AI</span>
+              <span class="node-sub">global</span>
+            </div>
+            <div class="orbit-chip chip-chat">Chat</div>
+            <div class="orbit-chip chip-responses">Responses</div>
+            <div class="orbit-chip chip-messages">Messages</div>
+          </div>
+
+          <div class="terminal-card">
+            <div class="terminal-bar">
+              <span class="terminal-dots"><i></i><i></i><i></i></span>
+              <span>ai-bobby — gateway</span>
+              <span class="terminal-live"><i></i> live</span>
+            </div>
+            <div class="terminal-body">
+              <div class="term-line"><span class="term-prompt">$</span><span>curl 127.0.0.1:46890/health</span></div>
+              <div class="term-out">{"status":"ok","version":"0.2.1"}</div>
+              <div class="term-line"><span class="term-prompt">$</span><span>curl /v1/models</span></div>
+              <div class="term-out term-models">
+                <span>oc/space-bunny-free</span>
+                <span>wb/hy3</span>
+                <span>wbi/glm-5.3</span>
+                <span class="term-more">+ 7 more</span>
+              </div>
+              <div class="term-cursor"><span></span></div>
+            </div>
+            <div class="terminal-foot"><span>127.0.0.1:46890</span><span>one key · three protocols</span></div>
+          </div>
+        </div>
+
+        <div class="scroll-cue" aria-hidden="true">
+          <span>SCROLL TO EXPLORE</span>
+          <i></i>
+        </div>
+      </section>
+
+      <section class="section sources" id="sources">
+        <div class="section-head">
+          <div>
+            <p class="kicker" data-reveal>01 / SOURCES</p>
+            <h2 data-reveal>Three sources.<br /><span class="text-dim">One key.</span></h2>
+          </div>
+          <p class="section-aside" data-reveal>
+            每个来源独立登录、独立刷新、独立冷却；网关只暴露合并后的模型清单。
+            登录失败不会拖垮其他来源。
+          </p>
+        </div>
+        <div class="source-grid">
+          <article class="source-card" data-reveal>
+            <div class="source-top">
+              <span class="source-tag">OC</span>
+              <span class="source-status"><i></i> no login</span>
+            </div>
+            <h3>OpenCode</h3>
+            <p>自动准备隔离运行时，按价格字段筛出真正免费的模型。</p>
+            <div class="source-stat"><strong data-count="10">0</strong><span>free models</span></div>
+            <div class="source-line"><span style="width: 92%"></span></div>
+            <code>oc/&lt;model&gt;</code>
+          </article>
+          <article class="source-card" data-reveal>
+            <div class="source-top">
+              <span class="source-tag">WB</span>
+              <span class="source-status"><i></i> official login</span>
+            </div>
+            <h3>WorkBuddy</h3>
+            <p>官方登录页扫码，多账号 round-robin；401 刷新、429/402 换号。</p>
+            <div class="source-stat"><strong>∞</strong><span>accounts · round robin</span></div>
+            <div class="source-line"><span style="width: 74%"></span></div>
+            <code>wb/&lt;model&gt;</code>
+          </article>
+          <article class="source-card" data-reveal>
+            <div class="source-top">
+              <span class="source-tag">WI</span>
+              <span class="source-status"><i></i> global realm</span>
+            </div>
+            <h3>WorkBuddy AI</h3>
+            <p>国际版独立 realm 与模型目录，和国内版可同时在线。</p>
+            <div class="source-stat"><strong data-count="1">0</strong><span>global realm</span></div>
+            <div class="source-line"><span style="width: 58%"></span></div>
+            <code>wbi/&lt;model&gt;</code>
+          </article>
+        </div>
+      </section>
+
+      <section class="section protocols" id="protocols">
+        <div class="section-head">
+          <div>
+            <p class="kicker" data-reveal>02 / PROTOCOLS</p>
+            <h2 data-reveal>Every protocol<br /><span class="text-dim">your stack speaks.</span></h2>
+          </div>
+          <p class="section-aside" data-reveal>
+            不用给每个客户端各配一个代理。Chat、Responses、Anthropic Messages
+            共用一条 Canonical 事件流。
+          </p>
+        </div>
+
+        <div class="protocol-shell" data-reveal>
+          <div class="protocol-tabs" role="tablist" aria-label="Protocol examples">
+            <button class="protocol-tab active" role="tab" aria-selected="true" data-protocol="chat">Chat Completions</button>
+            <button class="protocol-tab" role="tab" aria-selected="false" data-protocol="responses">Responses</button>
+            <button class="protocol-tab" role="tab" aria-selected="false" data-protocol="messages">Anthropic Messages</button>
+            <span class="protocol-client" id="protocolClient">WorkBuddy · DSH · any OpenAI client</span>
+          </div>
+          <div class="protocol-body">
+            <div class="protocol-code">
+              <div class="code-head"><span>POST <b id="protocolPath">/v1/chat/completions</b></span><span class="code-lang">bash</span></div>
+              <pre id="protocolCode"></pre>
+            </div>
+            <div class="protocol-side">
+              <div class="protocol-stat"><span>Endpoint</span><code>127.0.0.1:46890/v1</code></div>
+              <div class="protocol-stat"><span>Auth</span><code>Authorization: Bearer sk-…</code></div>
+              <div class="protocol-stat"><span>Streaming</span><strong>SSE · canonical</strong></div>
+              <div class="protocol-pills"><span>tools</span><span>images</span><span>reasoning</span><span>usage</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section clients" id="clients">
+        <div class="section-head">
+          <div>
+            <p class="kicker" data-reveal>03 / IMPORT</p>
+            <h2 data-reveal>One click.<br /><span class="text-dim">Every client.</span></h2>
+          </div>
+          <p class="section-aside" data-reveal>
+            dry-run 先看 diff，写入前备份，只动 AI Bobby 标记的条目。
+            重复导入是幂等的，不会覆盖你手写的配置。
+          </p>
+        </div>
+
+        <div class="marquee" data-reveal>
+          <div class="marquee-track">
+            <span class="client-pill"><b>WB</b> WorkBuddy</span>
+            <span class="client-pill"><b>CX</b> Codex</span>
+            <span class="client-pill"><b>CC</b> Claude Code</span>
+            <span class="client-pill"><b>DS</b> DeepSeek Harness</span>
+            <span class="client-pill"><b>OC</b> OpenCode</span>
+            <span class="client-pill"><b>WB</b> WorkBuddy</span>
+            <span class="client-pill"><b>CX</b> Codex</span>
+            <span class="client-pill"><b>CC</b> Claude Code</span>
+            <span class="client-pill"><b>DS</b> DeepSeek Harness</span>
+            <span class="client-pill"><b>OC</b> OpenCode</span>
+          </div>
+        </div>
+
+        <div class="import-grid">
+          <div class="import-copy" data-reveal>
+            <h3>Write once.<br />Keep your config.</h3>
+            <p>Codex 写标记块，Claude 合并 env，DSH 合并 provider；WorkBuddy 排除自身分组，避免自环。</p>
+            <a class="text-link" href="https://github.com/xsin/ai-bobby#导入目标" target="_blank" rel="noreferrer">See target paths <span>↗</span></a>
+          </div>
+          <div class="import-diff" data-reveal>
+            <div class="diff-head"><span>~/.codex/config.toml</span><span>dry-run</span></div>
+            <pre><span class="diff-add">+ # &gt;&gt;&gt; ai-bobby:start</span>
+<span class="diff-add">+ [model_providers.ai-bobby]</span>
+<span class="diff-add">+ base_url = "http://127.0.0.1:46890/v1"</span>
+<span class="diff-add">+ wire_api = "responses"</span>
+<span class="diff-add">+ # &lt;&lt;&lt; ai-bobby:end</span>
+<span class="diff-dim">  model = "gpt-5"</span>
+<span class="diff-dim">  [model_providers.other]</span></pre>
+            <div class="diff-foot"><span><i></i> backup ready</span><span>+5 lines</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section security" id="security">
+        <div class="section-head">
+          <div>
+            <p class="kicker" data-reveal>04 / LOCAL-FIRST</p>
+            <h2 data-reveal>Yours.<br /><span class="text-dim">Not the cloud's.</span></h2>
+          </div>
+          <p class="section-aside" data-reveal>
+            AI Bobby 只监听回环地址；API Key、账号、模型目录都在本机。
+            没有账号系统，没有云端会话历史。
+          </p>
+        </div>
+        <div class="security-grid">
+          <article data-reveal>
+            <span class="security-icon">◉</span>
+            <h3>127.0.0.1 only</h3>
+            <p>浏览器 Origin 直接 403；端口不暴露到局域网。</p>
+          </article>
+          <article data-reveal>
+            <span class="security-icon">⌁</span>
+            <h3>Keys stay local</h3>
+            <p>随机 API Key 落盘 0600；日志与状态只出现掩码。</p>
+          </article>
+          <article data-reveal>
+            <span class="security-icon">↻</span>
+            <h3>Failover, not failure</h3>
+            <p>单账号 429 冷却换号；流式开始后不中途切换。</p>
+          </article>
+          <article data-reveal>
+            <span class="security-icon">◌</span>
+            <h3>No telemetry</h3>
+            <p>没有产品分析 SDK；更新检查只请求 latest.json。</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="cta" id="install">
+        <div class="cta-glow" aria-hidden="true"></div>
+        <p class="kicker" data-reveal>READY WHEN YOU ARE</p>
+        <h2 data-reveal>Stop juggling<br /><span class="h1-gradient">five proxies.</span></h2>
+        <p data-reveal>macOS · ad-hoc signed · 自动更新 · 一条命令安装。</p>
+        <button class="install-button cta-install" data-copy="curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash" data-reveal>
+          <span class="install-prompt">$</span>
+          <code>curl -fsSL https://xsin.github.io/ai-bobby/...</code>
+          <span class="copy-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></span>
+          <span class="copy-done">Copied</span>
+        </button>
+        <div class="cta-links" data-reveal>
+          <a href="https://github.com/xsin/ai-bobby" target="_blank" rel="noreferrer">GitHub</a>
+          <span>·</span>
+          <a href="https://github.com/xsin/ai-bobby/releases/tag/v0.2.1" target="_blank" rel="noreferrer">Release notes</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-brand"><span class="brand-mark small">AB</span><span>AI Bobby</span></div>
+      <p>Local AI gateway. Built for people who run their own stack.</p>
+      <div class="footer-links">
+        <a href="https://github.com/xsin/ai-bobby" target="_blank" rel="noreferrer">GitHub</a>
+        <a href="https://github.com/xsin/ai-bobby#readme" target="_blank" rel="noreferrer">Docs</a>
+        <a href="https://github.com/xsin/ai-bobby/releases" target="_blank" rel="noreferrer">Releases</a>
+      </div>
+      <span class="footer-note">Not affiliated with Tencent, WorkBuddy or DeepSeek.</span>
+    </footer>
+
+    <div class="toast toast-install" id="installToast" role="status">
+      <div class="toast-icon">↓</div>
+      <div><strong>Install AI Bobby</strong><span>Add the local gateway to your dock.</span></div>
+      <button class="toast-action">Install</button>
+      <button class="toast-close" aria-label="Dismiss">×</button>
+    </div>
+
+    <div class="toast toast-update" id="updateToast" role="status">
+      <span class="toast-pulse"></span>
+      <div><strong>New version available</strong><span>v0.2.2 · refresh to update</span></div>
+      <button class="toast-action">Refresh</button>
+      <button class="toast-close" aria-label="Dismiss">×</button>
+    </div>
+
+    <div class="command-toast" id="commandToast">Install command copied to clipboard</div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

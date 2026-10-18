@@ -19,6 +19,6 @@
     "@ai-bobby/opencode": "workspace:*"
   },
   "devDependencies": {
-    "tsx": "4.23.15"
+    "tsx": "catalog:"
   }
 }

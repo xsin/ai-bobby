@@ -3,10 +3,13 @@
 > 给下一个 agent 的跨会话记忆：目标、已确认事实、决策、进度、剩余风险。
 > **面向使用者的安装、使用、接入客户端、导入路径和故障排查在 [README.md](./README.md)。**
 > 产品范围见 [docs/prd.md](./docs/prd.md)，技术方案见 [docs/tech.md](./docs/tech.md)。
+> 落地页见 [docs/prd-landing.md](./docs/prd-landing.md) / [docs/tech-landing.md](./docs/tech-landing.md)；
+> marketing 只有脑暴 [docs/marketing-brainstorm.md](./docs/marketing-brainstorm.md)。
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化**
+- 当前阶段：**v0.2.1 已发布；主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
+  落地页视觉稿待用户确认；marketing 待脑暴对齐；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
@@ -151,10 +154,38 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P6 控制面板 | 完成 | 三 tab、真实状态、登录窗口、导入 IPC、设置真实端口/Key |
 | P7 打包/分发/更新 | 完成（macOS） | v0.2.1 发布；curl 安装与 0.1.0→0.2.0→0.2.1 更新闭环验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
+| Website | 视觉稿待确认 | `prototype/website/` + `docs/prd-landing.md` / `docs/tech-landing.md`；确认后再建 `apps/website` |
+| Marketing | 脑暴中 | `docs/marketing-brainstorm.md`；未创建 `apps/marketing`，先等用户拍板 |
 
 ---
 
-## §5 未完成与下一步
+## §5 新项目（本轮新增）
+
+### Website
+
+- 目标：Web3D 产品落地页，React + Vite + Tailwind + shadcn + TS，PWA 自动更新提醒。
+- 视觉稿：`prototype/website/index.html`（Three.js/GLSL/SVG/CSS；需静态服务器）。
+- 文档：`docs/prd-landing.md`、`docs/tech-landing.md`。
+- 部署计划：`/website/` 子路径；**不要覆盖 gh-pages 根目录的安装通道**。
+- 约束：release workflow 目前 force-push gh-pages，上线 website 前必须先改成保留 `website/`。
+- **状态：等用户确认视觉稿后再编码。**
+
+### Marketing
+
+- 定位：输入 GitHub/README，生成每天/每周/每月营销方案，人工批准后发布并复盘。
+- 试点：AI Bobby；未来抽离为独立软件。
+- 文档：`docs/marketing-brainstorm.md`。
+- **状态：只做脑暴，不创建代码项目；等用户回答目标/渠道/自主等级。**
+
+### 依赖 catalog
+
+- 所有第三方版本已收归 `pnpm-workspace.yaml` 的 `catalog:`；子项目只写 `catalog:`。
+- 新增依赖时先加 catalog 条目，再在 package.json 引用；不要写死版本。
+- 已验证 `pnpm install` 与 desktop typecheck。
+
+---
+
+## §5.1 未完成与下一步
 
 ### 必须人工
 
@@ -202,12 +233,12 @@ Headroom 式前缀缓存/压缩后置到 P8。
 
 ## §8 新会话恢复清单
 
-1. 读本文档 §0、§4、§5；用户侧说明在 README，产品/技术细节在 docs/。
+1. 读本文档 §0、§4、§5、§5.1；用户侧说明在 README，产品/技术细节在 docs/。
 2. `git status` / `git log -5` 确认工作区状态。
 3. `pnpm install`（首次或依赖变更后）。
 4. 跑 `pnpm -r typecheck && pnpm -r test`。
-5. 按 §5 的“Agent 可继续”推进；WorkBuddy 真实账号验证先看 human-sos。
-6. 每完成一项：更新 §4 表、§5 列表、§10 日志。
+5. 按 §5.1 的“Agent 可继续”推进；WorkBuddy 真实账号验证先看 human-sos。
+6. 每完成一项：更新 §4 表、§5.1 列表、§10 日志。
 
 ---
 
@@ -237,6 +268,15 @@ WorkBuddy 上游
 ---
 
 ## §10 进度日志
+
+### 2026-10-18 新项目与依赖收归
+
+- 新增落地页视觉稿 `prototype/website/`（Three.js + GLSL + SVG + CSS），
+  PRD/tech 为 `docs/prd-landing.md` / `docs/tech-landing.md`；等用户确认后再建 `apps/website`。
+- 新增 marketing 脑暴 `docs/marketing-brainstorm.md`；不编码，等用户拍板。
+- `prototype/` 已按 `desktop/`、`website/` 分目录。
+- 第三方依赖版本收归 `pnpm-workspace.yaml` 的 `catalog:`，package.json 改为 `catalog:`；
+  `pnpm install`、desktop typecheck 通过。
 
 ### 2026-10-18 早期对齐
 

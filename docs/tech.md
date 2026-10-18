@@ -100,6 +100,8 @@
 | 日志 | 自研结构化 logger + 脱敏 | 不引入重依赖 |
 
 > 版本基线：2026-10-18 查询 npm registry 的最新稳定版；精确 pin，升级走 `pnpm up --latest` 并记录。
+> 第三方版本统一在根 `pnpm-workspace.yaml` 的 `catalog:` 声明，子项目 package.json 只写
+> `"catalog:"`；workspace 包仍用 `workspace:*`。
 > 必须保持：`react/react-dom` 同版本、`@types/react*` 同代、`tailwindcss` 与 `@tailwindcss/vite` 同版本、
 > `antd` 与 `@ant-design/icons` 6.x。
 

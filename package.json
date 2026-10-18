@@ -19,9 +19,9 @@
     "dist:mac": "bash scripts/release/build-mac.sh"
   },
   "devDependencies": {
-    "@types/node": "26.6.5",
-    "typescript": "7.0.2",
-    "vitest": "5.0.5"
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

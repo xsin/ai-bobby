@@ -4,18 +4,108 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@electron/osx-sign':
+      specifier: 2.7.1
+      version: 2.7.1
+    '@swc/core':
+      specifier: 1.16.18
+      version: 1.16.18
+    '@tailwindcss/vite':
+      specifier: 4.3.3
+      version: 4.3.3
+    '@types/node':
+      specifier: 26.6.5
+      version: 26.6.5
+    '@types/react':
+      specifier: 19.3.0
+      version: 19.3.0
+    '@types/react-dom':
+      specifier: 19.3.0
+      version: 19.3.0
+    '@vitejs/plugin-react':
+      specifier: 6.1.2
+      version: 6.1.2
+    antd:
+      specifier: 6.6.6
+      version: 6.6.6
+    class-variance-authority:
+      specifier: 0.7.1
+      version: 0.7.1
+    clsx:
+      specifier: 2.1.1
+      version: 2.1.1
+    electron:
+      specifier: 44.9.0
+      version: 44.9.0
+    electron-builder:
+      specifier: 26.15.3
+      version: 26.15.3
+    electron-vite:
+      specifier: 6.0.0
+      version: 6.0.0
+    lucide-react:
+      specifier: 1.59.0
+      version: 1.59.0
+    radix-ui:
+      specifier: 1.8.1
+      version: 1.8.1
+    react:
+      specifier: 19.3.1
+      version: 19.3.1
+    react-dom:
+      specifier: 19.3.1
+      version: 19.3.1
+    smol-toml:
+      specifier: 1.9.1
+      version: 1.9.1
+    sonner:
+      specifier: 2.0.8
+      version: 2.0.8
+    tailwind-merge:
+      specifier: 3.7.0
+      version: 3.7.0
+    tailwindcss:
+      specifier: 4.3.3
+      version: 4.3.3
+    tailwindcss-scoped-preflight:
+      specifier: 4.0.6
+      version: 4.0.6
+    tar:
+      specifier: 7.5.22
+      version: 7.5.22
+    tsx:
+      specifier: 4.23.15
+      version: 4.23.15
+    typescript:
+      specifier: 7.0.2
+      version: 7.0.2
+    vite:
+      specifier: 8.3.4
+      version: 8.3.4
+    vitest:
+      specifier: 5.0.5
+      version: 5.0.5
+    yaml:
+      specifier: 2.9.1
+      version: 2.9.1
+    zod:
+      specifier: 4.6.7
+      version: 4.6.7
+
 importers:
 
   .:
     devDependencies:
       '@types/node':
-        specifier: 26.6.5
+        specifier: 'catalog:'
         version: 26.6.5
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vitest:
-        specifier: 5.0.5
+        specifier: 'catalog:'
         version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
 
   apps/cli:
@@ -34,7 +124,7 @@ importers:
         version: link:../../packages/workbuddy
     devDependencies:
       tsx:
-        specifier: 4.23.15
+        specifier: 'catalog:'
         version: 4.23.15
 
   apps/desktop:
@@ -55,79 +145,79 @@ importers:
         specifier: workspace:*
         version: link:../../packages/workbuddy
       '@electron/osx-sign':
-        specifier: 2.7.1
+        specifier: 'catalog:'
         version: 2.7.1
       '@swc/core':
-        specifier: 1.16.18
+        specifier: 'catalog:'
         version: 1.16.18
       '@tailwindcss/vite':
-        specifier: 4.3.3
+        specifier: 'catalog:'
         version: 4.3.3(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       '@types/node':
-        specifier: 26.6.5
+        specifier: 'catalog:'
         version: 26.6.5
       '@types/react':
-        specifier: 19.3.0
+        specifier: 'catalog:'
         version: 19.3.0
       '@types/react-dom':
-        specifier: 19.3.0
+        specifier: 'catalog:'
         version: 19.3.0(@types/react@19.3.0)
       '@vitejs/plugin-react':
-        specifier: 6.1.2
+        specifier: 'catalog:'
         version: 6.1.2(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       antd:
-        specifier: 6.6.6
+        specifier: 'catalog:'
         version: 6.6.6(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       class-variance-authority:
-        specifier: 0.7.1
+        specifier: 'catalog:'
         version: 0.7.1
       clsx:
-        specifier: 2.1.1
+        specifier: 'catalog:'
         version: 2.1.1
       electron:
-        specifier: 44.9.0
+        specifier: 'catalog:'
         version: 44.9.0
       electron-builder:
-        specifier: 26.15.3
+        specifier: 'catalog:'
         version: 26.15.3(electron-builder-squirrel-windows@26.15.3)
       electron-vite:
-        specifier: 6.0.0
+        specifier: 'catalog:'
         version: 6.0.0(@swc/core@1.16.18)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       lucide-react:
-        specifier: 1.59.0
+        specifier: 'catalog:'
         version: 1.59.0(@types/react@19.3.0)(react@19.3.1)
       radix-ui:
-        specifier: ^1.8.1
+        specifier: 'catalog:'
         version: 1.8.1(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       react:
-        specifier: 19.3.1
+        specifier: 'catalog:'
         version: 19.3.1
       react-dom:
-        specifier: 19.3.1
+        specifier: 'catalog:'
         version: 19.3.1(react@19.3.1)
       sonner:
-        specifier: 2.0.8
+        specifier: 'catalog:'
         version: 2.0.8(@types/react@19.3.0)(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       tailwind-merge:
-        specifier: 3.7.0
+        specifier: 'catalog:'
         version: 3.7.0
       tailwindcss:
-        specifier: 4.3.3
+        specifier: 'catalog:'
         version: 4.3.3
       tailwindcss-scoped-preflight:
-        specifier: 4.0.6
+        specifier: 'catalog:'
         version: 4.0.6(postcss@8.5.30)(tailwindcss@4.3.3)
       typescript:
-        specifier: 7.0.2
+        specifier: 'catalog:'
         version: 7.0.2
       vite:
-        specifier: 8.3.4
+        specifier: 'catalog:'
         version: 8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1)
       vitest:
-        specifier: 5.0.5
+        specifier: 'catalog:'
         version: 5.0.5(@types/node@26.6.5)(vite@8.3.4(@types/node@26.6.5)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)(yaml@2.9.1))
       zod:
-        specifier: 4.6.7
+        specifier: 'catalog:'
         version: 4.6.7
 
   packages/core: {}
@@ -144,10 +234,10 @@ importers:
         specifier: workspace:*
         version: link:../core
       smol-toml:
-        specifier: 1.9.1
+        specifier: 'catalog:'
         version: 1.9.1
       yaml:
-        specifier: 2.9.1
+        specifier: 'catalog:'
         version: 2.9.1
 
   packages/opencode:
@@ -156,7 +246,7 @@ importers:
         specifier: workspace:*
         version: link:../core
       tar:
-        specifier: 7.5.22
+        specifier: 'catalog:'
         version: 7.5.22
 
   packages/workbuddy:
@@ -3722,7 +3812,7 @@ snapshots:
       fs-extra: 10.1.0
       isbinaryfile: 4.0.10
       minimist: 1.2.8
-      plist: 3.1.0
+      plist: 3.1.1
     transitivePeerDependencies:
       - supports-color
 
@@ -3754,7 +3844,7 @@ snapshots:
       dir-compare: 4.2.0
       fs-extra: 11.4.1
       minimatch: 9.0.9
-      plist: 3.1.0
+      plist: 3.1.1
     transitivePeerDependencies:
       - supports-color
 

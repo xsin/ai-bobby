@@ -13,8 +13,8 @@
   "types": "./src/index.ts",
   "dependencies": {
     "@ai-bobby/core": "workspace:*",
-    "smol-toml": "1.9.1",
-    "yaml": "2.9.1"
+    "smol-toml": "catalog:",
+    "yaml": "catalog:"
   },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json --noEmit",
