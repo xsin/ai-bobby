@@ -4,16 +4,18 @@
 收敛成一个 `127.0.0.1:46890` 端点、一把 API Key、一个桌面控制面板，
 并支持一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness。
 
-> **状态（2026-10-18）**：`v0.2.1` 已发布。
+> **状态（2026-10-18）**：`v0.2.1` 已发布；`main` 正在进行 **v0.2.2 界面改版**，本地验收中，尚未发版。
 > 46890 网关（Chat / Responses / Messages）、OpenCode 免费模型、WorkBuddy 双版本 provider、
 > 四个 importer、自动更新与 curl 安装链路均已落地。
-> 当前 `main` 含验收中的 WorkBuddy 额度切换等修复，尚未发版；下一版需你本机确认后发布。
+> v0.2.2 改版包含：可收起左侧栏 + 多页导航、主题只在设置页、导入历史与备份恢复、
+> 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI。
+> **发布需要你本机验收后确认；在此之前不创建 tag/release。**
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
 > 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒，
 > 部署在 <https://xsin.github.io/ai-bobby/>。
 
-![OpenCode tab](docs/screenshots/01-opencode-dark.png)
+![OpenCode 页](docs/screenshots/01-opencode-dark.png)
 
 ## 模型来源
 
@@ -47,17 +49,41 @@ less install.sh && bash install.sh
 xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
 ```
 
+## 为什么会出现 Little Snitch / 防火墙提示
+
+AI Bobby 目前是 **ad-hoc 签名、未公证** 的公测版，Electron Helper 没有 Developer ID。
+Little Snitch 会把“未签名进程要联网”标成风险，这是签名状态导致的提示，不是应用在扫描局域网。
+
+它需要联网的原因只有三类：
+
+- 访问 WorkBuddy / WorkBuddy AI 上游接口（登录、模型目录、聊天、额度）
+- 首次下载 OpenCode 运行时
+- 检查 GitHub Release 更新
+
+本机网关只监听 `127.0.0.1:46890`，不会把端口暴露到局域网或公网；也不做遥测。
+
+建议：
+
+- 在 Little Snitch 提示中给 **AI Bobby / Electron Helper** 建**单独规则**，不要建 “any via-process” 的宽泛规则。
+- 只测本机网关时可先选 **Only local network**；要登录 WorkBuddy 或首次下载 OpenCode 时，需要允许对应出站连接。
+- 不要直接 Deny 整个进程，否则 WorkBuddy / OpenCode / 更新会失败。
+- 如果不想放行，退出 AI Bobby 即可；不会修改系统代理或后台常驻网络行为。
+
+> 开发环境下看到的 `DeepSeek Harness via Electron Helper` 提示来自 DSH 开发工具本身，不是 AI Bobby 的网关。
+
 ## 第一次使用
 
 1. 启动 AI Bobby。应用只监听本机 `127.0.0.1:46890`，不会暴露到局域网/公网。
-2. 在 **OpenCode** tab 点“读取模型”。首次启动会下载 OpenCode 运行时，需要网络，可能要等一会儿。
-3. 切到 **WorkBuddy** 或 **WorkBuddy AI** tab，点“添加账号”。
+2. 在左侧栏 **OpenCode** 页点“读取模型”。首次启动会下载 OpenCode 运行时，需要网络，可能要等一会儿。
+3. 切到 **WorkBuddy** 或 **WorkBuddy AI** 页，点“添加账号”。
    会打开 WorkBuddy 官方登录窗口；完成扫码/授权后窗口自动关闭，账号进入本机账号库。
-   同一个 tab 可以添加多个账号，默认 round-robin + 失败切换。
+   同一个来源可以添加多个账号，默认 round-robin + 失败切换。
 4. 勾选要暴露给客户端的模型；点右上角 **导入**，选择客户端、分组和默认模型，
    先看 diff 预览，再写入。写前会备份，只改 AI Bobby 自己标记的条目。
 5. 在底部状态条复制 **转发口** 与 **API Key**，填到 Codex / Claude Code / DSH / WorkBuddy。
-6. 设置页可以手动检查更新、切换主题、复制 Key；更新条会在启动后静默检查。
+6. **历史记录**页查看每次写入、diff 与备份，可一键恢复；恢复前会再备份当前文件。
+7. **设置**页切换主题、手动检查更新、复制网关地址/Key；**关于**页有 ZEO、音乐与赞助方式。
+8. 右下角应用 LOGO 头像可拖动，点击进入关于；播放音乐后出现全局可拖动播放器。
 
 ## 接入客户端
 
@@ -160,19 +186,34 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 
 | | |
 |---|---|
-| ![WorkBuddy tab](docs/screenshots/02-workbuddy-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
+| ![OpenCode](docs/screenshots/01-opencode-dark.png) | ![History](docs/screenshots/07-history-dark.png) |
+| 左侧栏多页导航 + 模型清单 | 导入历史、diff 与备份恢复 |
+| ![About](docs/screenshots/08-about-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
+| 关于 ZEO、音乐与赞助 | 非模态更新条 |
+| ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
 | WorkBuddy 多账号与额度 | 全局导入：dry-run 预览 |
-| ![Login](docs/screenshots/04-login-light.png) | ![Update](docs/screenshots/05-update-dark.png) |
-| 官方登录页（多账号） | 非模态更新条 |
 
 浅色主题：![Light](docs/screenshots/06-opencode-light.png)
+
+更多截图：[全局播放器](docs/screenshots/09-music-player-dark.png)、
+[设置页（主题唯一入口）](docs/screenshots/10-settings-dark.png)、
+[收起的侧边栏](docs/screenshots/11-collapsed-dark.png)、
+[登录弹窗](docs/screenshots/04-login-light.png)。
+
+## 导入历史与备份
+
+- 每次实际写入客户端前，importer 会先备份目标文件；每个目标保留最近 5 份。
+- **历史记录**页展示最近 30 天的导入/恢复记录，可按客户端筛选、按路径搜索、查看 diff。
+- 点“恢复”会先备份当前文件，再把历史备份写回；失败不会覆盖当前文件。
+- 记录与备份只在本机：`import-history.json` 为 `0600`，diff 中的 Key/token 会先脱敏。
+- 重复导入且内容未变时返回 `changed:false`，不会新增历史或备份。
 
 ## 数据目录与安全
 
 - 数据目录：macOS `~/Library/Application Support/AI Bobby`；可用 `AI_BOBBY_DATA_DIR` 覆盖。
-- `api-key`、账号库等敏感文件以 `0600` 保存在本机。
+- `api-key`、账号库、`import-history.json` 等敏感文件以 `0600` 保存在本机。
 - 账号库当前是 `0600` 明文；Electron `safeStorage` 因启动时可能阻塞 Keychain 暂未默认启用。
-- 日志与状态不记录 access token / refresh token / API Key 明文。
+- 日志与状态不记录 access token / refresh token / API Key 明文；导入历史 diff 同样脱敏。
 - WorkBuddy 登录在官方页面完成，AI Bobby 不接触密码；但后续接口不是公开 API，请遵守上游条款。
 
 ## 故障排查

@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="dark light">
   <title>AI Bobby — 界面原型</title>
+  <link rel="icon" href="./assets/app-logo.svg" type="image/svg+xml">
   <link rel="stylesheet" href="./styles.css">
 </head>
 <body data-theme="dark">
@@ -20,165 +21,485 @@
         <div class="titlebar-right"><span class="window-mode">本地网关</span></div>
       </div>
 
-      <div class="app-shell">
-        <header class="app-toolbar">
-          <div class="brand">
-            <span class="brand-icon" aria-hidden="true">
-              <svg viewBox="0 0 32 32">
-                <rect width="32" height="32" rx="9" fill="currentColor"/>
-                <rect x="7" y="11" width="18" height="13" rx="4.5" fill="#fff"/>
-                <circle cx="12.5" cy="17" r="1.7" fill="currentColor"/>
-                <circle cx="19.5" cy="17" r="1.7" fill="currentColor"/>
-                <path d="M12.8 21.1c1.8 1.2 4.6 1.2 6.4 0" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-                <path d="M16 6.6v3.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
-                <circle cx="16" cy="5.7" r="1.5" fill="#fff"/>
-              </svg>
+      <div class="app-shell" id="app-shell">
+        <aside class="sidebar" id="sidebar" aria-label="主导航">
+          <div class="sidebar-head">
+            <button class="sidebar-brand" type="button" data-page="opencode" title="AI Bobby">
+              <span class="brand-icon" aria-hidden="true">
+                <img src="./assets/app-logo.svg" alt="" width="27" height="27">
+              </span>
+              <span class="brand-copy"><strong>AI Bobby</strong><span>LOCAL GATEWAY</span></span>
+            </button>
+            <button class="sidebar-toggle" id="toggle-sidebar" type="button" aria-label="收起侧边栏" title="收起侧边栏">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12.5 5 7.5 10l5 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
+          </div>
+
+          <nav class="sidebar-nav">
+            <div class="nav-group-label">模型来源</div>
+            <button class="side-item active" type="button" data-page="opencode" title="OpenCode">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5.5h12M4 10h8M4 14.5h10" stroke-linecap="round"/><circle cx="15.5" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg>
+              </span>
+              <span class="side-label">OpenCode</span>
+              <span class="side-count" data-count="opencode">7</span>
+            </button>
+            <button class="side-item" type="button" data-page="workbuddy" title="WorkBuddy">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m10 2.8 6.2 3.6v7.2L10 17.2l-6.2-3.6V6.4L10 2.8Z"/><path d="m6.8 10 2.1 2.1 4.4-4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="side-label">WorkBuddy</span>
+              <span class="side-count" data-count="workbuddy">8</span>
+            </button>
+            <button class="side-item" type="button" data-page="wbi" title="WorkBuddy AI">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6.8"/><path d="M3.5 10h13M10 3.2c2.2 2 3.2 4.4 3.2 6.8s-1 4.8-3.2 6.8c-2.2-2-3.2-4.4-3.2-6.8S7.8 5.2 10 3.2Z"/></svg>
+              </span>
+              <span class="side-label">WorkBuddy AI</span>
+              <span class="side-count" data-count="wbi">6</span>
+            </button>
+
+            <div class="nav-group-label">其他</div>
+            <button class="side-item" type="button" data-page="history" title="导入历史">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6.7"/><path d="M10 6.2V10l2.6 1.7M4.2 5.3l-1.1 2.4 2.5.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+              <span class="side-label">历史记录</span>
+              <span class="nav-badge">3</span>
+            </button>
+            <button class="side-item" type="button" data-page="about" title="关于">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="7" r="3"/><path d="M4.2 16c.7-2.8 2.8-4.2 5.8-4.2s5.1 1.4 5.8 4.2" stroke-linecap="round"/></svg>
+              </span>
+              <span class="side-label">关于</span>
+            </button>
+          </nav>
+
+          <div class="sidebar-foot">
+            <button class="side-item" type="button" data-page="settings" title="设置">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+              </span>
+              <span class="side-label">设置</span>
+            </button>
+            <div class="sidebar-status">
+              <span class="dot success" aria-hidden="true"></span>
+              <span class="side-label">运行中</span>
+              <code>46890</code>
+            </div>
+          </div>
+        </aside>
+
+        <div class="main-shell">
+          <header class="app-toolbar">
+            <div class="toolbar-context">
+              <span class="toolbar-eyebrow" id="toolbar-eyebrow">模型来源</span>
+              <span class="toolbar-title" id="toolbar-title">OpenCode</span>
+            </div>
+            <div class="toolbar-controls">
+              <span class="toolbar-live"><span class="dot success" aria-hidden="true"></span> 网关运行中</span>
+              <button class="icon-button" id="open-settings" type="button" title="设置" aria-label="设置">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"/>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"/>
+                </svg>
+              </button>
+              <button class="primary import-open" id="open-import" type="button">
+                <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
+                  <path d="M10 3v8m-3-3 3 3 3-3M4 12.5V16h12v-3.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                导入
+                <span class="badge" id="import-badge">7</span>
+              </button>
+            </div>
+          </header>
+
+          <section class="update-banner" id="update-banner" hidden aria-live="polite">
+            <span class="update-mark" aria-hidden="true">
+              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 3v9m-3-3 3 3 3-3M4 14v2h12v-2" stroke-linecap="round" stroke-linejoin="round"/></svg>
             </span>
-            <h1>AI Bobby</h1>
-            <span class="toolbar-divider" aria-hidden="true"></span>
-            <nav class="source-tabs" role="tablist" aria-label="模型来源">
-              <button class="source-tab active" data-tab="opencode" role="tab" aria-selected="true">
-                OpenCode <span class="tab-count" data-count="opencode">7</span>
-              </button>
-              <button class="source-tab" data-tab="workbuddy" role="tab" aria-selected="false">
-                WorkBuddy <span class="tab-count" data-count="workbuddy">12</span>
-              </button>
-              <button class="source-tab" data-tab="wbi" role="tab" aria-selected="false">
-                WorkBuddy AI <span class="tab-count" data-count="wbi">9</span>
-              </button>
-            </nav>
-          </div>
-
-          <div class="toolbar-controls">
-            <div class="theme-control" role="group" aria-label="界面主题">
-              <button type="button" data-theme-choice="system" aria-pressed="false">系统</button>
-              <button type="button" data-theme-choice="light" aria-pressed="false">浅色</button>
-              <button type="button" data-theme-choice="dark" aria-pressed="true">深色</button>
+            <div class="update-copy">
+              <div class="update-title-row">
+                <strong id="update-title">发现新版本 0.2.2</strong>
+                <span class="update-pill">NEW</span>
+              </div>
+              <span id="update-sub">当前 0.2.1 · 42.6 MB · WorkBuddy 稳定性、历史记录与体验修复</span>
+              <div class="update-progress" id="update-progress" hidden><span id="update-bar"></span></div>
             </div>
-            <span class="toolbar-divider" aria-hidden="true"></span>
-            <button class="icon-button" id="open-settings" type="button" title="设置" aria-label="设置">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                <circle cx="10" cy="10" r="2.6"/>
-                <path d="M10 2.8v1.6M10 15.6v1.6M2.8 10h1.6M15.6 10h1.6M4.9 4.9l1.1 1.1M14 14l1.1 1.1M15.1 4.9 14 6M6 14l-1.1 1.1" stroke-linecap="round"/>
-              </svg>
-            </button>
-            <button class="primary import-open" id="open-import" type="button">
-              <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6">
-                <path d="M10 3v8m-3-3 3 3 3-3M4 12.5V16h12v-3.5" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              导入
-              <span class="badge" id="import-badge">7</span>
-            </button>
-          </div>
-        </header>
+            <div class="update-actions" id="update-actions">
+              <button type="button" id="update-later">稍后</button>
+              <button type="button" class="primary" id="update-start">立即更新</button>
+            </div>
+          </section>
 
-        <main class="workspace">
-          <section class="source-head">
-            <div class="source-copy">
-              <div class="eyebrow" id="source-eyebrow">OPENCODE · 免费模型</div>
-              <h2 id="source-title">OpenCode 免费模型</h2>
-              <p id="source-subtitle">把 OpenCode 的免费模型接入统一网关</p>
-              <div class="source-actions" id="source-actions">
-                <button type="button" id="refresh">
-                  <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M15.7 7A6 6 0 1 0 16 12M16 3v4h-4" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <span>读取模型</span>
+          <div class="content-shell">
+            <main class="workspace" id="page-models">
+              <section class="source-head">
+                <div class="source-copy">
+                  <div class="eyebrow" id="source-eyebrow">OPENCODE · 免费模型</div>
+                  <h2 id="source-title">OpenCode 免费模型</h2>
+                  <p id="source-subtitle">把 OpenCode 的免费模型接入统一网关</p>
+                  <div class="source-actions" id="source-actions">
+                    <button type="button" id="refresh">
+                      <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M15.7 7A6 6 0 1 0 16 12M16 3v4h-4" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>读取模型</span>
+                    </button>
+                    <button type="button" id="probe">
+                      <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M3 10h3l2-5 4 10 2-5h3" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                      <span>检测全部</span>
+                    </button>
+                  </div>
+                </div>
+                <div class="source-side">
+                  <dl class="metrics" id="metrics"></dl>
+                  <div class="selection-summary">
+                    <span class="selection-dot" aria-hidden="true"></span>
+                    本页已选 <strong id="selected-count">7</strong>
+                    <span class="global-selection">全局 <strong id="global-selected">7</strong></span>
+                  </div>
+                </div>
+              </section>
+
+              <section class="account-strip" id="account-strip" hidden aria-label="WorkBuddy 账号">
+                <div class="account-strip-head">
+                  <span class="account-label">账号</span>
+                  <span class="account-note" id="account-note">round-robin · 失败自动切换</span>
+                </div>
+                <div class="account-list" id="account-list"></div>
+                <button class="account-add" id="add-account" type="button">
+                  <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>
+                  添加账号
                 </button>
-                <button type="button" id="probe">
-                  <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M3 10h3l2-5 4 10 2-5h3" stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                  <span>检测全部</span>
-                </button>
-              </div>
-            </div>
-            <div class="source-side">
-              <dl class="metrics" id="metrics"></dl>
-              <div class="selection-summary">
-                <span class="selection-dot" aria-hidden="true"></span>
-                本页已选 <strong id="selected-count">7</strong>
-                <span class="global-selection">全局 <strong id="global-selected">7</strong></span>
-              </div>
-            </div>
-          </section>
+              </section>
 
-          <section class="account-strip" id="account-strip" hidden aria-label="WorkBuddy 账号">
-            <div class="account-strip-head">
-              <span class="account-label">账号</span>
-              <span class="account-note" id="account-note">round-robin · 失败自动切换</span>
-            </div>
-            <div class="account-list" id="account-list"></div>
-            <button class="account-add" id="add-account" type="button">
-              <svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>
-              添加账号
-            </button>
-          </section>
+              <div class="feedback" id="feedback" role="status" aria-live="polite">
+                <span class="feedback-icon" aria-hidden="true">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 10.5 3.2 3L15 6.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span id="feedback-text">配置已是最新，共 7 个模型，无需重复写入。</span>
+                <button class="feedback-close" type="button" aria-label="关闭提示">×</button>
+              </div>
 
-          <div class="feedback" id="feedback" role="status" aria-live="polite">
-            <span class="feedback-icon" aria-hidden="true">
-              <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 10.5 3.2 3L15 6.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span id="feedback-text">配置已是最新，共 7 个模型，无需重复写入。</span>
-            <button class="feedback-close" type="button" aria-label="关闭提示">×</button>
+              <section class="model-section" aria-labelledby="models-heading">
+                <div class="list-toolbar">
+                  <div class="list-title">
+                    <h3 id="models-heading">模型清单</h3>
+                    <p id="table-hint">勾选决定导入，点击行查看详情。</p>
+                  </div>
+                  <div class="list-meta"><span id="list-meta-text">最近刷新 2 分钟前</span></div>
+                </div>
+
+                <div class="table-wrap" tabindex="0" role="region" aria-label="可滚动的模型清单">
+                  <table class="model-table" aria-describedby="table-hint">
+                    <colgroup>
+                      <col class="check-column">
+                      <col class="name-column">
+                      <col class="capability-column">
+                      <col class="status-column">
+                      <col class="timing-column">
+                    </colgroup>
+                    <thead>
+                      <tr>
+                        <th scope="col" class="check-heading"><span class="visually-hidden">是否导入</span></th>
+                        <th scope="col">模型</th>
+                        <th scope="col">能力</th>
+                        <th scope="col">状态</th>
+                        <th scope="col" class="timing-heading">耗时</th>
+                      </tr>
+                    </thead>
+                    <tbody id="model-rows"></tbody>
+                  </table>
+                </div>
+
+                <div class="table-footer">
+                  <span id="table-footer-text">7 个可用 · 3 个仅对话 / 不可用</span>
+                  <button class="link-button" id="select-all" type="button">全选可用</button>
+                </div>
+              </section>
+            </main>
+
+            <main class="page" id="page-history" hidden>
+              <div class="page-head">
+                <div>
+                  <div class="eyebrow">OTHER · HISTORY</div>
+                  <h1>导入历史</h1>
+                  <p>每次写入都会先备份；在这里查看变更、找回旧配置或恢复备份。</p>
+                </div>
+                <div class="page-actions">
+                  <button type="button" id="history-compare">对比当前配置</button>
+                  <button type="button" class="primary import-open">导入新配置</button>
+                </div>
+              </div>
+
+              <div class="history-stats">
+                <div class="stat-card"><span>最近写入</span><strong>今天 13:42</strong><small>WorkBuddy · 7 个模型</small></div>
+                <div class="stat-card"><span>可恢复备份</span><strong>5</strong><small>每个目标保留最近 5 份</small></div>
+                <div class="stat-card"><span>备份占用</span><strong>1.8 MB</strong><small>只存本机，不上传</small></div>
+              </div>
+
+              <div class="history-toolbar">
+                <div class="filter-tabs" role="group" aria-label="按客户端筛选">
+                  <button class="filter-tab active" data-filter="all" type="button">全部</button>
+                  <button class="filter-tab" data-filter="workbuddy" type="button">WorkBuddy</button>
+                  <button class="filter-tab" data-filter="codex" type="button">Codex</button>
+                  <button class="filter-tab" data-filter="claude" type="button">Claude</button>
+                  <button class="filter-tab" data-filter="dsh" type="button">DSH</button>
+                </div>
+                <label class="search-field">
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="9" r="5.5"/><path d="m13.2 13.2 3.3 3.3" stroke-linecap="round"/></svg>
+                  <input id="history-search" type="search" placeholder="搜索备份 / 模型 / 客户端" aria-label="搜索导入历史">
+                </label>
+              </div>
+
+              <div class="history-layout">
+                <section class="panel history-panel" aria-labelledby="history-heading">
+                  <div class="panel-head"><h2 id="history-heading">导入记录</h2><span>最近 30 天</span></div>
+                  <div class="history-list" id="history-list"></div>
+                </section>
+                <aside class="panel backup-panel" aria-labelledby="backup-heading">
+                  <div class="panel-head"><h2 id="backup-heading">备份文件</h2><span>本机</span></div>
+                  <div class="backup-list" id="backup-list"></div>
+                  <p class="panel-note">写入前自动备份；恢复前会再次生成当前文件的备份。</p>
+                </aside>
+              </div>
+            </main>
+
+            <main class="page about-page" id="page-about" hidden>
+              <section class="about-hero">
+                <div class="about-portrait">
+                  <span class="portrait-orbit" aria-hidden="true"></span>
+                  <img src="./assets/zeo-avatar.png" alt="ZEO" width="152" height="152">
+                  <span class="portrait-tag">ZEO</span>
+                </div>
+                <div class="about-copy">
+                  <div class="eyebrow">ABOUT THE MAKER</div>
+                  <h1>ZEO</h1>
+                  <p class="about-roles">独立开发者 <span>/</span> 独立音乐人 <span>/</span> AI 驭龙师</p>
+                  <p class="about-mission">“如果说 AI 是巨龙，我就是那个驭龙者。”</p>
+                  <p class="about-lead">做 AI Bobby，是为了把散落的模型、账号和协议收进一个本机入口。少一点配置，多一点创造；驾驭 AI，创造美好生活。</p>
+                  <div class="about-links">
+                    <a href="https://github.com/aispin/aispin" target="_blank" rel="noreferrer">GitHub · aispin ↗</a>
+                    <a href="https://xsin.github.io/ai-bobby/" target="_blank" rel="noreferrer">AI Bobby 官网 ↗</a>
+                  </div>
+                </div>
+                <div class="about-facts">
+                  <div><span>PROJECT</span><strong>AI Bobby</strong></div>
+                  <div><span>VERSION</span><strong>0.2.1</strong></div>
+                  <div><span>MODE</span><strong>Local-first</strong></div>
+                </div>
+              </section>
+
+              <section class="about-project">
+                <div>
+                  <div class="eyebrow">THE PROJECT</div>
+                  <h2>把三个来源，收进一个本机端点。</h2>
+                </div>
+                <p>OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。AI Bobby 不托管你的账号，也不替你做云上决策。</p>
+              </section>
+
+                            <section class="music-section" aria-labelledby="music-heading">
+                <div class="music-copy">
+                  <div class="eyebrow">SUPPORT MY MUSIC</div>
+                  <h2 id="music-heading">Support my music</h2>
+                  <p>写代码之外，我也做音乐。最近两张专辑：《Electro Surge》关于速度、夜色和电子颗粒，《ZEO》更贴近卧室里的轻声与留白。点一首听听。</p>
+                  <div class="music-albums">
+                    <a class="music-album-card" href="https://music.163.com/#/album?id=393292034" target="_blank" rel="noreferrer">
+                      <img src="./assets/music-electro-surge.jpg" alt="Electro Surge 专辑封面" width="66" height="66" loading="lazy">
+                      <div class="music-album-meta"><span>LATEST EP</span><strong>Electro Surge</strong><small>2026.08.17 · 6 tracks</small></div>
+                      <span class="album-arrow" aria-hidden="true">↗</span>
+                    </a>
+                    <a class="music-album-card" href="https://music.163.com/#/album?id=389248836" target="_blank" rel="noreferrer">
+                      <img src="./assets/music-zeo-album.jpg" alt="ZEO 专辑封面" width="66" height="66" loading="lazy">
+                      <div class="music-album-meta"><span>PREVIOUS ALBUM</span><strong>ZEO</strong><small>2026.07.26 · 7 tracks</small></div>
+                      <span class="album-arrow" aria-hidden="true">↗</span>
+                    </a>
+                  </div>
+                </div>
+                <div class="music-tracklist">
+                  <div class="music-list-head">
+                    <div class="music-tabs" role="tablist" aria-label="歌曲列表">
+                      <button class="music-tab active" type="button" role="tab" aria-selected="true" aria-controls="music-list-latest" data-music-list="latest">最新歌曲</button>
+                      <button class="music-tab" type="button" role="tab" aria-selected="false" aria-controls="music-list-hot" data-music-list="hot">最热歌曲</button>
+                    </div>
+                    <a href="https://music.163.com/#/artist?id=49232788" target="_blank" rel="noreferrer">全部作品 ↗</a>
+                  </div>
+                  <ol class="music-tracks" id="music-list-latest" role="tabpanel">
+                    <li><button class="music-track" type="button" data-song-id="3440589170" data-song-title="Universe's NO.1(摇摇领先)" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">01</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Universe's NO.1(摇摇领先)</strong><span>Electro Surge</span></span><span class="track-duration">3:06</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="3431310016" data-song-title="Cyber Speed(极品飞车版)" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">02</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Cyber Speed(极品飞车版)</strong><span>Electro Surge</span></span><span class="track-duration">3:13</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="3433629221" data-song-title="Skyward Haze(灰穹之烬)" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">03</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Skyward Haze(灰穹之烬)</strong><span>Electro Surge</span></span><span class="track-duration">2:59</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="3437272141" data-song-title="MotoGP 19" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">04</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>MotoGP 19</strong><span>Electro Surge</span></span><span class="track-duration">2:20</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="3423097060" data-song-title="牛来牛来" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">05</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>牛来牛来</strong><span>Electro Surge</span></span><span class="track-duration">2:08</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="3440601250" data-song-title="Universe's NO.1(摇摇领先) 伴奏" data-song-album="Electro Surge" data-song-cover="./assets/music-electro-surge.jpg">
+                      <span class="track-index">06</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Universe's NO.1(摇摇领先) 伴奏</strong><span>Electro Surge</span></span><span class="track-duration">3:06</span>
+                    </button></li>
+                  </ol>
+                  <ol class="music-tracks" id="music-list-hot" role="tabpanel" hidden>
+                    <li><button class="music-track" type="button" data-song-id="2056583375" data-song-title="Action, Health and Achievement" data-song-album="Spiritual Healing" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">01</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Action, Health and Achievement</strong><span>Spiritual Healing</span></span><span class="track-duration">14:47</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="1896609096" data-song-title="Bb - Rooftop's rain" data-song-album="Phrygian" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">02</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Bb - Rooftop's rain</strong><span>Phrygian</span></span><span class="track-duration">2:00</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="1868713773" data-song-title="Flying pets" data-song-album="Kepler 22B" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">03</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Flying pets</strong><span>Kepler 22B</span></span><span class="track-duration">1:54</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="2059873745" data-song-title="Avalokitesvara Heart Mantra（观音心咒/六字箴言）" data-song-album="Spiritual Healing" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">04</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Avalokitesvara Heart Mantra（观音心咒/六字箴言）</strong><span>Spiritual Healing</span></span><span class="track-duration">14:48</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="2061419394" data-song-title="Panpipe sound in subtropical woods" data-song-album="Spiritual Healing" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">05</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Panpipe sound in subtropical woods</strong><span>Spiritual Healing</span></span><span class="track-duration">10:00</span>
+                    </button></li>
+                    <li><button class="music-track" type="button" data-song-id="2115258264" data-song-title="Bruce Wind" data-song-album="Focusing" data-song-cover="./assets/music-zeo-album.jpg">
+                      <span class="track-index">06</span><span class="track-play" aria-hidden="true"><svg viewBox="0 0 20 20" fill="currentColor"><path d="M7.2 5.2v9.6L15 10 7.2 5.2Z"/></svg></span>
+                      <span class="track-meta"><strong>Bruce Wind</strong><span>Focusing</span></span><span class="track-duration">9:14</span>
+                    </button></li>
+                  </ol>
+                </div>
+              </section>
+
+              <section class="sponsor-section" aria-labelledby="sponsor-heading">
+                <div class="sponsor-copy">
+                  <div class="eyebrow">SUPPORT THE WORK</div>
+                  <h2 id="sponsor-heading">充点词元，<br>收获更好的产品体验。</h2>
+                  <p>如果 AI Bobby 帮你省下了配置时间，欢迎请我喝杯咖啡，或者给我的模型充点词元。你的支持会变成下一次迭代的燃料。</p>
+                  <span class="sponsor-sign">— ZEO</span>
+                </div>
+                <div class="sponsor-codes">
+                  <figure class="sponsor-card">
+                    <img src="./assets/sponsor-alipay.jpg" alt="支付宝赞助收款码" loading="lazy">
+                    <figcaption><strong>支付宝</strong><span>扫码支持</span></figcaption>
+                  </figure>
+                  <figure class="sponsor-card">
+                    <img src="./assets/sponsor-wechat.jpg" alt="微信赞助收款码" loading="lazy">
+                    <figcaption><strong>微信</strong><span>扫码支持</span></figcaption>
+                  </figure>
+                  <figure class="sponsor-card">
+                    <img src="./assets/sponsor-qr.svg" alt="更多赞助方式收款码" loading="lazy">
+                    <figcaption><strong>更多方式</strong><span>扫码支持</span></figcaption>
+                  </figure>
+                </div>
+              </section>
+
+              <footer class="about-footer">
+                <span>AI Bobby · built in public</span>
+                <span>Made with stubbornness &amp; localhost.</span>
+              </footer>
+            </main>
+
+            <main class="page settings-page" id="page-settings" hidden>
+              <div class="page-head">
+                <div>
+                  <div class="eyebrow">PREFERENCES</div>
+                  <h1>设置</h1>
+                  <p>主界面不再放主题切换；外观与网关配置都在这里。</p>
+                </div>
+              </div>
+
+              <section class="settings-card">
+                <div class="settings-row">
+                  <div><h2>外观</h2><p>主题只影响本机控制面板，不影响网关行为。</p></div>
+                  <div class="theme-control settings-theme" role="group" aria-label="界面主题">
+                    <button type="button" data-theme-choice="system" aria-pressed="false">系统</button>
+                    <button type="button" data-theme-choice="light" aria-pressed="false">浅色</button>
+                    <button type="button" data-theme-choice="dark" aria-pressed="true">深色</button>
+                  </div>
+                </div>
+                <div class="settings-row">
+                  <div><h2>本地网关</h2><p>只监听回环地址，浏览器请求默认拒绝。</p></div>
+                  <div class="settings-value"><code>http://127.0.0.1:46890/v1</code><button type="button" id="settings-copy-endpoint">复制</button></div>
+                </div>
+                <div class="settings-row">
+                  <div><h2>API Key</h2><p>客户端使用同一把 Key；不会写入日志。</p></div>
+                  <div class="settings-value"><code>sk-…f3a2</code><button type="button" id="settings-copy-key">复制</button></div>
+                </div>
+                <div class="settings-row settings-update-row">
+                  <div>
+                    <h2>版本与更新</h2>
+                    <p>当前 v0.2.1；新版本先提示，不静默替换。</p>
+                    <p class="settings-update-source">更新源 <code>https://xsin.github.io/ai-bobby/releases/latest/latest.json</code></p>
+                  </div>
+                  <div class="settings-update-controls">
+                    <label class="switch-row"><input type="checkbox" id="auto-update" checked><span class="switch-track" aria-hidden="true"></span><span>自动检查</span></label>
+                    <button type="button" id="settings-check-update">检查更新</button>
+                  </div>
+                </div>
+              </section>
+
+              <section class="settings-card settings-about">
+                <div class="settings-row">
+                  <div><h2>关于</h2><p>AI Bobby 是本地优先的 AI 服务网关。</p></div>
+                  <button type="button" data-page="about">关于 ↗</button>
+                </div>
+              </section>
+            </main>
           </div>
 
-          <section class="model-section" aria-labelledby="models-heading">
-            <div class="list-toolbar">
-              <div class="list-title">
-                <h3 id="models-heading">模型清单</h3>
-                <p id="table-hint">勾选决定导入，点击行查看详情。</p>
-              </div>
-              <div class="list-meta"><span id="list-meta-text">最近刷新 2 分钟前</span></div>
+          <footer class="statusbar">
+            <div class="status-left">
+              <span class="dot success" id="service-dot" aria-hidden="true"></span>
+              <span id="service-text" role="status">运行中 · 10 个免费模型</span>
+              <span class="status-sep" aria-hidden="true"></span>
+              <span class="status-muted" id="service-sub">2 个账号在线</span>
             </div>
-
-            <div class="table-wrap" tabindex="0" role="region" aria-label="可滚动的模型清单">
-              <table class="model-table" aria-describedby="table-hint">
-                <colgroup>
-                  <col class="check-column">
-                  <col class="name-column">
-                  <col class="capability-column">
-                  <col class="status-column">
-                  <col class="timing-column">
-                </colgroup>
-                <thead>
-                  <tr>
-                    <th scope="col" class="check-heading"><span class="visually-hidden">是否导入</span></th>
-                    <th scope="col">模型</th>
-                    <th scope="col">能力</th>
-                    <th scope="col">状态</th>
-                    <th scope="col" class="timing-heading">耗时</th>
-                  </tr>
-                </thead>
-                <tbody id="model-rows"></tbody>
-              </table>
+            <div class="status-right">
+              <span class="endpoint-fact"><span class="status-muted">转发口</span> <code id="endpoint">http://127.0.0.1:46890/v1</code></span>
+              <button class="key-button" id="copy-key" type="button" title="复制 API Key">
+                <span class="status-muted">Key</span> <code id="key-mask">sk-…f3a2</code>
+                <svg class="copy-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" stroke-linecap="round"/></svg>
+              </button>
+              <span class="version">AI Bobby 0.2.1</span>
             </div>
-
-            <div class="table-footer">
-              <span id="table-footer-text">7 个可用 · 3 个仅对话 / 不可用</span>
-              <button class="link-button" id="select-all" type="button">全选可用</button>
-            </div>
-          </section>
-        </main>
-
-        <footer class="statusbar">
-          <div class="status-left">
-            <span class="dot success" id="service-dot" aria-hidden="true"></span>
-            <span id="service-text" role="status">运行中 · 10 个免费模型</span>
-            <span class="status-sep" aria-hidden="true"></span>
-            <span class="status-muted" id="service-sub">2 个账号在线</span>
-          </div>
-          <div class="status-right">
-            <span class="endpoint-fact"><span class="status-muted">转发口</span> <code id="endpoint">http://127.0.0.1:46890/v1</code></span>
-            <button class="key-button" id="copy-key" type="button" title="复制 API Key">
-              <span class="status-muted">Key</span> <code id="key-mask">sk-…f3a2</code>
-              <svg class="copy-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" stroke-linecap="round"/></svg>
-            </button>
-            <span class="version">AI Bobby 0.1.0</span>
-          </div>
-        </footer>
+          </footer>
+        </div>
       </div>
     </div>
+
+    <div class="floating-player" id="floating-player" hidden role="region" aria-label="音乐播放器">
+      <div class="player-handle" id="player-handle" title="拖动播放器">
+        <span class="player-grip" aria-hidden="true">⋮⋮</span>
+        <span class="player-name">MUSIC</span>
+        <button class="player-close" id="close-music" type="button" aria-label="关闭播放器">×</button>
+      </div>
+      <iframe id="music-frame" title="网易云音乐播放器" width="330" height="86" frameborder="no" border="0" marginwidth="0" marginheight="0" allow="autoplay"></iframe>
+    </div>
+
+    <button class="zeo-fab" id="zeo-fab" type="button" aria-label="关于" title="关于">
+      <span class="zeo-halo" aria-hidden="true"></span>
+      <span class="zeo-logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32" fill="none">
+          <rect x="2" y="2" width="28" height="28" rx="8" fill="#1e4fff"/>
+          <path d="M10 20.5V11.5h5.2c3.2 0 5.3 1.8 5.3 4.5s-2.1 4.5-5.3 4.5H10Z" stroke="#fff" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M10 16h5.1" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/>
+          <circle class="logo-dot" cx="23.5" cy="9" r="1.5" fill="#8ff7ff"/>
+        </svg>
+      </span>
+      <span class="zeo-label">ZEO</span>
+    </button>
 
     <div class="scrim" id="scrim" hidden></div>
 
@@ -227,7 +548,22 @@
       </div>
     </aside>
 
-    <div class="modal" id="login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal restore-modal" id="restore-modal" hidden role="dialog" aria-modal="true" aria-labelledby="restore-title">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div><h2 id="restore-title">恢复备份</h2><p id="restore-subtitle">恢复前会先备份当前文件。</p></div>
+          <button class="icon-button" id="close-restore" type="button" aria-label="关闭恢复窗口">×</button>
+        </div>
+        <div class="restore-details" id="restore-details"></div>
+        <div class="modal-note">原型演示：真实版本会写入目标配置，并生成一条新的导入历史。</div>
+        <div class="modal-foot">
+          <button type="button" id="cancel-restore">取消</button>
+          <button type="button" class="primary" id="confirm-restore">恢复此备份</button>
+        </div>
+      </div>
+    </div>
+
+        <div class="modal" id="login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-title"> hidden role="dialog" aria-modal="true" aria-labelledby="login-title">
       <div class="modal-card">
         <div class="modal-head">
           <div>

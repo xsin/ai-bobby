@@ -3,6 +3,7 @@ import { join } from 'node:path'
 import type { UpdateCheckResult, UpdateInfo } from '../shared/api'
 import { checkForUpdates, downloadUpdate, installUpdate, updateSource } from './updater'
 import { Services } from './services'
+import { appVersion } from './version'
 
 const isMac = process.platform === 'darwin'
 let mainWindow: BrowserWindow | undefined
@@ -133,6 +134,16 @@ function registerIpc(): void {
     return services.importRollback(target)
   })
 
+  ipcMain.handle('import:history', async () => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.getImportHistory()
+  })
+
+  ipcMain.handle('import:restore-backup', async (_event, id: string) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.restoreImportBackup(id)
+  })
+
   ipcMain.handle('app:copy-api-key', () => {
     if (services) clipboard.writeText(services.apiKey())
   })
@@ -153,7 +164,7 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('app:get-info', () => ({
-    version: app.getVersion(),
+    version: appVersion(),
     platform: process.platform,
     arch: process.arch,
     packaged: app.isPackaged,

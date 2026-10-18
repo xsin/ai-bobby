@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { chmod, mkdir, open, readdir, rename, rm, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
+import { appVersion } from './version'
 import { execFile, spawn } from 'node:child_process'
 import { promisify } from 'node:util'
 import { randomUUID } from 'node:crypto'
@@ -42,14 +43,15 @@ export async function checkForUpdates(): Promise<UpdateCheckResult> {
     if (!verifyManifestSignature(manifest)) {
       return { ok: false, error: '更新清单签名校验失败，已取消' }
     }
-    if (compareVersions(manifest.version, app.getVersion()) <= 0) {
+    const currentVersion = appVersion()
+    if (compareVersions(manifest.version, currentVersion) <= 0) {
       return { ok: true, update: null }
     }
     const asset = pickAsset(manifest)
     return {
       ok: true,
       update: {
-        currentVersion: app.getVersion(),
+        currentVersion,
         version: manifest.version,
         notes: manifest.notes,
         pubDate: manifest.pub_date,

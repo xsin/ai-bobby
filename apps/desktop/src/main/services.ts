@@ -1,7 +1,8 @@
 import { app, BrowserWindow, shell } from 'electron'
-import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
+import { appVersion } from './version'
 import { ModelRegistry, createLogger } from '@ai-bobby/core'
 import { GatewayService } from '@ai-bobby/gateway'
 import { OpenCodeProvider } from '@ai-bobby/opencode'
@@ -13,8 +14,28 @@ import {
   startLogin,
   variantFor,
 } from '@ai-bobby/workbuddy'
-import type { AccountSnapshot, GatewayStatus, ImportPlanSnapshot, ImportSelectionPayload, ImportTargetName, ModelSnapshot } from '../shared/api'
-import { ClaudeImporter, CodexImporter, DshImporter, WorkBuddyImporter, type Importer } from '@ai-bobby/importers'
+import type {
+  AccountSnapshot,
+  GatewayStatus,
+  ImportBackupSnapshot,
+  ImportHistoryEntry,
+  ImportHistorySnapshot,
+  ImportPlanSnapshot,
+  ImportSelectionPayload,
+  ImportTargetName,
+  ModelSnapshot,
+} from '../shared/api'
+import {
+  ClaudeImporter,
+  CodexImporter,
+  DshImporter,
+  WorkBuddyImporter,
+  atomicWrite,
+  backup,
+  exists,
+  readText,
+  type Importer,
+} from '@ai-bobby/importers'
 
 const logger = createLogger('info')
 
@@ -30,11 +51,13 @@ export class Services {
   private refreshTimer: ReturnType<typeof setInterval> | undefined
   private key = ''
   private readonly importers: Record<ImportTargetName, Importer>
+  private readonly historyFile: string
 
   private readonly dataDir: string
 
   constructor(private readonly mainWindow: () => BrowserWindow | undefined) {
     this.dataDir = process.env.AI_BOBBY_DATA_DIR?.trim() || app.getPath('userData')
+    this.historyFile = join(this.dataDir, 'import-history.json')
     // AccountStore is 0600 for now. safeStorage.isEncryptionAvailable() can
     // block on a locked Keychain during headless startup, so encryption is an
     // explicit future opt-in rather than a startup dependency.
@@ -64,7 +87,7 @@ export class Services {
       adapters: this.adapters,
       apiKey: this.key,
       port: Number.isFinite(port) ? port : 46890,
-      version: app.getVersion(),
+      version: appVersion(),
       logger,
     })
     try {
@@ -133,7 +156,7 @@ export class Services {
       ...(model.billing === undefined ? {} : { billing: model.billing }),
     }))
     return {
-      version: app.getVersion(),
+      version: appVersion(),
       gateway: this.gatewayState,
       models,
       accounts: accounts.map(accountSnapshot),
@@ -208,11 +231,112 @@ export class Services {
       { groups: selection.groups as never, modelIds: selection.modelIds, ...(selection.defaultModelId === undefined ? {} : { defaultModelId: selection.defaultModelId }), ...(selection.setAsDefault === undefined ? {} : { setAsDefault: selection.setAsDefault }) },
       this.importContext(),
     )
+    if (plan.changed) {
+      await this.recordHistory({
+        id: randomUUID(),
+        action: 'import',
+        target,
+        path: plan.path,
+        createdAtMs: Date.now(),
+        modelCount: selection.modelIds.length,
+        ...(plan.backupPath === undefined ? {} : { backupPath: plan.backupPath }),
+        warnings: plan.warnings,
+        ...(plan.diff === '' ? {} : { diff: redactSecrets(plan.diff) }),
+      }).catch(error => logger.warn('failed to record import history', { error: String(error) }))
+    }
     return snapshotPlan(plan)
   }
 
   async importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot> {
-    return snapshotPlan(await this.importers[target].rollback())
+    const plan = await this.importers[target].rollback()
+    if (plan.changed) {
+      await this.recordHistory({
+        id: randomUUID(),
+        action: 'restore',
+        target,
+        path: plan.path,
+        createdAtMs: Date.now(),
+        modelCount: 0,
+        ...(plan.backupPath === undefined ? {} : { backupPath: plan.backupPath }),
+        warnings: plan.warnings,
+      }).catch(error => logger.warn('failed to record rollback history', { error: String(error) }))
+    }
+    return snapshotPlan(plan)
+  }
+
+  async getImportHistory(): Promise<ImportHistorySnapshot> {
+    const entries = await this.loadHistory()
+    const backups: ImportBackupSnapshot[] = []
+    const seen = new Set<string>()
+    for (const entry of entries) {
+      if (entry.backupPath === undefined || seen.has(entry.backupPath)) continue
+      if (!(await exists(entry.backupPath))) continue
+      seen.add(entry.backupPath)
+      const info = await stat(entry.backupPath).catch(() => undefined)
+      backups.push({
+        id: entry.id,
+        target: entry.target,
+        path: entry.path,
+        backupPath: entry.backupPath,
+        createdAtMs: entry.createdAtMs,
+        ...(info === undefined ? {} : { size: info.size }),
+      })
+    }
+    return {
+      entries: [...entries].sort((a, b) => b.createdAtMs - a.createdAtMs),
+      backups: backups.sort((a, b) => b.createdAtMs - a.createdAtMs),
+    }
+  }
+
+  async restoreImportBackup(id: string): Promise<ImportPlanSnapshot> {
+    const entries = await this.loadHistory()
+    const entry = entries.find(item => item.id === id)
+    if (entry?.backupPath === undefined) throw new Error('找不到可恢复的备份')
+    const content = await readText(entry.backupPath)
+    if (content === undefined) throw new Error('备份文件不存在')
+    const currentBackup = await backup(entry.path)
+    await atomicWrite(entry.path, content, 0o600)
+    await this.recordHistory({
+      id: randomUUID(),
+      action: 'restore',
+      target: entry.target,
+      path: entry.path,
+      createdAtMs: Date.now(),
+      modelCount: entry.modelCount,
+      ...(currentBackup === undefined ? {} : { backupPath: currentBackup }),
+      warnings: [],
+    }).catch(error => logger.warn('failed to record restore history', { error: String(error) }))
+    return {
+      target: entry.target,
+      path: entry.path,
+      detected: true,
+      changed: true,
+      diff: `已从 ${entry.backupPath} 恢复`,
+      warnings: [],
+      requiresRestart: true,
+      ...(currentBackup === undefined ? {} : { backupPath: currentBackup }),
+    }
+  }
+
+  private async loadHistory(): Promise<ImportHistoryEntry[]> {
+    try {
+      const raw = await readFile(this.historyFile, 'utf8')
+      const parsed = JSON.parse(raw) as { version?: number; entries?: unknown }
+      if (parsed.version !== 1 || !Array.isArray(parsed.entries)) return []
+      return parsed.entries.filter(isHistoryEntry)
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return []
+      logger.warn('failed to read import history', { error: String(error) })
+      return []
+    }
+  }
+
+  private async recordHistory(entry: ImportHistoryEntry): Promise<void> {
+    const entries = await this.loadHistory()
+    entries.push(entry)
+    const trimmed = entries.slice(-200)
+    const payload = { version: 1, entries: trimmed }
+    await atomicWrite(this.historyFile, `${JSON.stringify(payload, null, 2)}\n`, 0o600)
   }
 
   private importContext() {
@@ -230,6 +354,31 @@ export class Services {
   maskedKey(): string {
     return maskKey(this.key)
   }
+}
+
+function isHistoryEntry(value: unknown): value is ImportHistoryEntry {
+  if (typeof value !== 'object' || value === null) return false
+  const entry = value as Record<string, unknown>
+  return (
+    typeof entry['id'] === 'string' &&
+    (entry['action'] === 'import' || entry['action'] === 'restore') &&
+    ['workbuddy', 'workbuddy-ai', 'codex', 'claude', 'dsh'].includes(String(entry['target'])) &&
+    typeof entry['path'] === 'string' &&
+    typeof entry['createdAtMs'] === 'number' &&
+    typeof entry['modelCount'] === 'number' &&
+    Array.isArray(entry['warnings']) &&
+    (entry['backupPath'] === undefined || typeof entry['backupPath'] === 'string') &&
+    (entry['diff'] === undefined || typeof entry['diff'] === 'string')
+  )
+}
+
+function redactSecrets(text: string): string {
+  return text
+    .replace(/sk-[A-Za-z0-9_-]{6,}/g, 'sk-…')
+    .replace(
+      /((?:api[-_]?key|auth[-_]?token|access[-_]?token|experimental_bearer_token|ANTHROPIC_AUTH_TOKEN)["']?\s*[:=]\s*["']?)([^"'\s,}]+)/gi,
+      '$1[redacted]',
+    )
 }
 
 function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' | 'intl'; enabled: boolean; expiresAtMs: number; credits?: { total: number } }): AccountSnapshot {

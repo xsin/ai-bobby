@@ -1,7 +1,7 @@
 # Desktop prototype
 
-早期桌面控制面板的静态可点击稿，已被 `apps/desktop` 的 React 实现取代；
-保留用于视觉对照。没有后端、不会写文件，模型/账号/额度都是演示数据。
+v0.2.2 界面改版的可点击设计稿，用于确认信息架构与交互，**不是生产实现**。
+没有后端、不会写文件；模型、账号、额度、导入历史都是演示数据。
 
 ## 打开方式
 
@@ -12,33 +12,61 @@ python3 -m http.server 8765 --bind 127.0.0.1
 # http://127.0.0.1:8765/prototype/desktop/index.html
 ```
 
-## 可交互内容
+## 本次设计
 
-- 三个来源 tab：`OpenCode` / `WorkBuddy` / `WorkBuddy AI`
-- 勾选模型、行内展开详情、全选/取消全选
-- WorkBuddy / WBI 的账号条、`添加账号` 内嵌登录弹窗（可模拟登录）
-- 全局「导入」抽屉：客户端、分组、默认模型、dry-run diff
-- 主题切换：系统 / 浅色 / 深色
-- 底部转发口与 API Key 复制
+- 经典左侧栏，可收起为图标栏；默认展开，状态记在 `localStorage`。
+- 多页结构：三个模型来源、历史记录、关于、设置。
+- 主界面去掉主题切换；系统/浅色/深色只放在设置页。
+- 右下角应用 LOGO 动态头像（保留 ZEO 标签装饰），可拖动；点击进入关于页。
+- 关于页：ZEO 个人 IP、项目介绍、音乐模块（两张最新专辑 + 最新/最热歌曲 tab + 右下角浮动 iframe 播放器）、支付宝/微信/更多方式赞助码。
+- 音乐播放在点击歌曲后出现于右下角，作为全局单例播放器；可拖动、可关闭，不阻塞页面。
+- 历史记录：导入记录、备份文件、恢复确认弹窗。
+- 版本更新：顶部非模态更新条，支持发现新版本、下载进度、校验完成、稍后/立即重启；设置页有自动检查开关、手动检查与更新源。
+- 三个来源页仍保留模型勾选、详情、账号条、导入抽屉。
 
 ## 深链接
 
 ```text
-?tab=workbuddy           # 默认打开 WorkBuddy tab
-?tab=wbi                 # 默认打开 WorkBuddy AI tab
+?page=opencode           # 模型来源
+?page=workbuddy
+?page=wbi
+?page=history            # 历史记录
+?page=about              # 关于
+?page=settings           # 设置
+?tab=workbuddy           # 兼容旧链接
 ?drawer=1                # 打开导入抽屉
 ?login=1                 # 打开添加账号弹窗
 ?theme=light             # 浅色主题
+?update=1                # 展示“发现新版本”状态
 ```
 
-可组合，例如 `?tab=workbuddy&drawer=1`。
+可组合，例如 `?page=history&theme=light`。
 
 ## 截图
 
 | 文件 | 内容 |
 |---|---|
-| `screenshot-dark.png` | OpenCode tab（深色，默认） |
-| `screenshot-workbuddy.png` | WorkBuddy tab + 账号条 |
+| `screenshot-dark.png` | 首页（深色，默认） |
+| `screenshot-workbuddy.png` | WorkBuddy + 账号条 |
+| `screenshot-history.png` | 导入历史 + 备份恢复 |
+| `screenshot-about.png` | 关于 + 赞助码 |
+| `screenshot-music.png` | Support my music + 两张专辑 + 最新歌曲 |
+| `screenshot-music-hot.png` | 最热歌曲 tab |
+| `screenshot-music-player.png` | 右下角浮动网易云 iframe 播放器（可拖动） |
+| `screenshot-settings.png` | 设置页（主题只在这里） |
+| `screenshot-update-available.png` | 发现新版本 0.2.2 |
+| `screenshot-update-downloading.png` | 下载并校验中 |
+| `screenshot-update-ready.png` | 更新已就绪，等待重启 |
+| `screenshot-collapsed.png` | 收起的侧边栏 |
 | `screenshot-import.png` | 全局导入抽屉 |
 | `screenshot-login.png` | 添加账号弹窗 |
 | `screenshot-light.png` | 浅色主题 |
+| `screenshot-mobile.png` | 390px 移动布局 |
+
+## 资源
+
+- `assets/app-logo.svg`：应用当前使用的品牌 logo（侧边栏、favicon、浮动头像同源）。
+- `assets/zeo-avatar.png`：关于页的 ZEO 头像。
+- `assets/music-electro-surge.jpg`：最新 EP《Electro Surge》封面。
+- `assets/music-zeo-album.jpg`：上一张专辑《ZEO》封面。
+- `assets/sponsor-alipay.jpg` / `assets/sponsor-wechat.jpg` / `assets/sponsor-qr.svg`：赞助收款码，已本地化。

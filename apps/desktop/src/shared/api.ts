@@ -99,6 +99,32 @@ export interface ImportPlanSnapshot {
   backupPath?: string
 }
 
+export interface ImportHistoryEntry {
+  id: string
+  action: 'import' | 'restore'
+  target: ImportTargetName
+  path: string
+  createdAtMs: number
+  modelCount: number
+  backupPath?: string
+  warnings: string[]
+  diff?: string
+}
+
+export interface ImportBackupSnapshot {
+  id: string
+  target: ImportTargetName
+  path: string
+  backupPath: string
+  createdAtMs: number
+  size?: number
+}
+
+export interface ImportHistorySnapshot {
+  entries: ImportHistoryEntry[]
+  backups: ImportBackupSnapshot[]
+}
+
 export interface AiBobbyApi {
   getAppInfo(): Promise<AppInfo>
   getStatus(): Promise<GatewayStatus>
@@ -108,6 +134,8 @@ export interface AiBobbyApi {
   importPreview(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
+  getImportHistory(): Promise<ImportHistorySnapshot>
+  restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
   checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
   setAutoCheck(enabled: boolean): Promise<void>
   downloadUpdate(): Promise<UpdateActionResult>

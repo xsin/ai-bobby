@@ -7,10 +7,11 @@ interface StatusBarProps {
   source: DemoSource
   appInfo: AppInfo | null
   keyMask: string
+  port: number
   onCopyKey: () => void
 }
 
-export function StatusBar({ source, appInfo, keyMask, onCopyKey }: StatusBarProps) {
+export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusBarProps) {
   return (
     <footer className="flex h-[42px] shrink-0 items-center justify-between gap-3 border-t border-line bg-toolbar px-5 text-[10px]">
       <div className="flex min-w-0 items-center gap-2">
@@ -25,7 +26,7 @@ export function StatusBar({ source, appInfo, keyMask, onCopyKey }: StatusBarProp
       <div className="flex min-w-0 items-center gap-2.5">
         <span className="flex items-center gap-1.5 whitespace-nowrap">
           <span className="text-faint">转发口</span>
-          <code className="font-mono text-[10px] text-muted-foreground">http://127.0.0.1:46890/v1</code>
+          <code className="font-mono text-[10px] text-muted-foreground">http://127.0.0.1:{port}/v1</code>
         </span>
         <Button
           type="button"
@@ -39,7 +40,7 @@ export function StatusBar({ source, appInfo, keyMask, onCopyKey }: StatusBarProp
           <code className="font-mono text-[10px]">{keyMask}</code>
           <Copy className="size-3" />
         </Button>
-        <span className="whitespace-nowrap text-faint">AI Bobby {appInfo?.version ?? '0.1.0'}</span>
+        <span className="whitespace-nowrap text-faint">AI Bobby {appInfo?.version ?? '0.2.1'}</span>
       </div>
     </footer>
   )

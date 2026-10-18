@@ -3,18 +3,22 @@ import { CheckCircle2, Download, Settings, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { AntdProvider } from '@/components/antd-provider'
 import { AccountStrip } from '@/components/account-strip'
-import { BrandMark } from '@/components/brand-mark'
 import { ImportSheet } from '@/components/import-sheet'
 import { LoginDialog } from '@/components/login-dialog'
 import { ModelTable } from '@/components/model-table'
-import { SettingsDialog } from '@/components/settings-dialog'
 import { SourceHead } from '@/components/source-head'
-import { SourceTabs } from '@/components/source-tabs'
 import { StatusBar } from '@/components/status-bar'
+import { Sidebar, type NavPage } from '@/components/sidebar'
+import { HistoryPage } from '@/components/history-page'
+import { AboutPage } from '@/components/about-page'
+import { SettingsPage } from '@/components/settings-page'
+import { FloatingAvatar } from '@/components/floating-avatar'
+import { FloatingMusicPlayer } from '@/components/floating-music-player'
 import { UpdateBanner } from '@/components/update-banner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
-import { ThemeProvider, useTheme } from '@/lib/theme'
+import type { MusicTrack } from '@/lib/music'
+import { ThemeProvider } from '@/lib/theme'
 import {
   SOURCES,
   isUsable,
@@ -28,24 +32,27 @@ import type {
   AppInfo,
   GatewayStatus,
   ModelSnapshot,
-  ThemeChoice,
+  ImportHistorySnapshot,
   UpdateInfo,
   UpdateProgress,
 } from '@shared/api'
 
+const PAGE_META: Record<NavPage, { section: string; title: string }> = {
+  opencode: { section: '模型来源', title: 'OpenCode' },
+  workbuddy: { section: '模型来源', title: 'WorkBuddy' },
+  wbi: { section: '模型来源', title: 'WorkBuddy AI' },
+  history: { section: '其他', title: '历史记录' },
+  about: { section: 'ABOUT', title: '关于' },
+  settings: { section: '偏好', title: '设置' },
+}
+
 const APP_FALLBACK: AppInfo = {
-  version: '0.1.0',
+  version: '0.2.1',
   platform: 'darwin',
   arch: 'arm64',
   packaged: false,
   updateSource: 'https://xsin.github.io/ai-bobby/releases/latest/latest.json',
 }
-
-const THEME_OPTIONS: Array<{ id: ThemeChoice; label: string }> = [
-  { id: 'system', label: '系统' },
-  { id: 'light', label: '浅色' },
-  { id: 'dark', label: '深色' },
-]
 
 function emptySources(): Record<ProviderId, DemoSource> {
   const copy = typeof structuredClone === 'function'
@@ -104,12 +111,15 @@ function toDemoAccount(account: AccountSnapshot): DemoAccount {
 }
 
 function AppInner() {
-  const { choice, setChoice } = useTheme()
   const [sources, setSources] = useState(cloneSources)
   const [realStatus, setRealStatus] = useState<GatewayStatus | null>(null)
   const hydrated = useRef(false)
   const lastModelCount = useRef(0)
   const [active, setActive] = useState<ProviderId>('opencode')
+  const [page, setPage] = useState<NavPage>('opencode')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
+    try { return localStorage.getItem('ai-bobby-sidebar') === '1' } catch { return false }
+  })
   const [selected, setSelected] = useState(initialSelection)
   const [accounts, setAccounts] = useState<Record<'workbuddy' | 'wbi', DemoAccount[]>>({
     workbuddy: SOURCES.workbuddy.accounts ?? [],
@@ -119,7 +129,6 @@ function AppInner() {
   const [probing, setProbing] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
   const [loginOpen, setLoginOpen] = useState(false)
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null)
   const [autoCheck, setAutoCheck] = useState(() => {
     try {
@@ -136,6 +145,12 @@ function AppInner() {
   const [downloading, setDownloading] = useState(false)
   const [downloaded, setDownloaded] = useState(false)
   const [installing, setInstalling] = useState(false)
+  const updateVersion = useRef<string | null>(null)
+  const dismissedVersion = useRef<string | null>(null)
+  const [history, setHistory] = useState<ImportHistorySnapshot | null>(null)
+  const [historyLoading, setHistoryLoading] = useState(false)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
+  const [musicTrack, setMusicTrack] = useState<MusicTrack | null>(null)
 
   const source = sources[active]
   const accountRealm = active === 'workbuddy' ? 'workbuddy' : active === 'wbi' ? 'wbi' : undefined
@@ -160,6 +175,79 @@ function AppInner() {
     }),
     [selected],
   )
+
+  const counts = useMemo<Record<ProviderId, number>>(
+    () => ({
+      opencode: sources.opencode.models.filter(model => model.status === 'available').length,
+      workbuddy: sources.workbuddy.models.filter(model => model.status === 'available').length,
+      wbi: sources.wbi.models.filter(model => model.status === 'available').length,
+    }),
+    [sources],
+  )
+
+  const navigate = useCallback(
+    (next: NavPage) => {
+      setPage(next)
+      if (next === 'opencode' || next === 'workbuddy' || next === 'wbi') {
+        setActive(next)
+        setFeedback(sources[next].feedback)
+      }
+    },
+    [sources],
+  )
+
+  const loadHistory = useCallback(async () => {
+    const api = window.aiBobby
+    if (!api) {
+      setHistory({ entries: [], backups: [] })
+      return
+    }
+    setHistoryLoading(true)
+    try {
+      setHistory(await api.getImportHistory())
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error))
+    } finally {
+      setHistoryLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    try { localStorage.setItem('ai-bobby-sidebar', sidebarCollapsed ? '1' : '0') } catch { /* ignore */ }
+  }, [sidebarCollapsed])
+
+  useEffect(() => {
+    void loadHistory()
+  }, [loadHistory])
+
+  useEffect(() => {
+    if (page === 'history') void loadHistory()
+  }, [page, loadHistory])
+
+  const openAbout = useCallback(() => navigate('about'), [navigate])
+  const openExternal = useCallback((url: string) => {
+    if (window.aiBobby) void window.aiBobby.openExternal(url)
+    else window.open(url, '_blank', 'noopener,noreferrer')
+  }, [])
+
+  const restoreBackup = useCallback(async (id: string) => {
+    const api = window.aiBobby
+    if (!api) {
+      toast.info('浏览器预览：不会写入真实配置')
+      return
+    }
+    setRestoringId(id)
+    try {
+      const plan = await api.restoreImportBackup(id)
+      toast.success(`已恢复 ${plan.path.split('/').pop() ?? plan.path}`)
+      setFeedback(`已恢复一个导入备份；当前文件已再次备份。`)
+      await loadHistory()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : String(error))
+    } finally {
+      setRestoringId(null)
+    }
+  }, [loadHistory])
 
   const applyStatus = useCallback((status: GatewayStatus) => {
     const groups: Record<ProviderId, ModelSnapshot[]> = { opencode: [], workbuddy: [], wbi: [] }
@@ -205,6 +293,10 @@ function AppInner() {
         ? cn.length > 0 ? `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。` : '还没有 WorkBuddy 账号；点击“添加账号”开始。'
         : intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
     if (!hydrated.current) {
+      if (total === 0) {
+        setFeedback(summary)
+        return
+      }
       hydrated.current = true
       lastModelCount.current = total
       setSelected({
@@ -252,9 +344,16 @@ function AppInner() {
     }
     void api.getAppInfo().then(setAppInfo)
     const offAvailable = api.onUpdateAvailable(info => {
+      if (updateVersion.current !== info.version) {
+        updateVersion.current = info.version
+        setDownloaded(false)
+        setUpdateProgress(null)
+      }
       setUpdate(info)
-      setUpdateDismissed(false)
-      toast.info(`发现新版本 ${info.version}`)
+      if (dismissedVersion.current !== info.version) {
+        setUpdateDismissed(false)
+        toast.info(`发现新版本 ${info.version}`)
+      }
     })
     const offProgress = api.onUpdateProgress(progress => setUpdateProgress(progress))
     return () => {
@@ -275,42 +374,40 @@ function AppInner() {
   useEffect(() => {
     if (window.aiBobby) return
     const params = new URLSearchParams(window.location.search)
+    const requestedPage = params.get('page')
+    if (requestedPage === 'history' || requestedPage === 'about' || requestedPage === 'settings') {
+      setPage(requestedPage)
+    }
     const tab = params.get('tab')
-    if (tab === 'workbuddy' || tab === 'wbi') setActive(tab)
-    const theme = params.get('theme')
-    if (theme === 'light' || theme === 'dark' || theme === 'system') setChoice(theme)
+    if (tab === 'opencode' || tab === 'workbuddy' || tab === 'wbi') {
+      setActive(tab)
+      setPage(tab)
+    }
     if (params.get('drawer') === '1') setImportOpen(true)
-    if (params.get('settings') === '1') setSettingsOpen(true)
+    if (params.get('settings') === '1') setPage('settings')
     if (params.get('login') === '1') {
       setActive('workbuddy')
+      setPage('workbuddy')
       setLoginOpen(true)
     }
     if (params.get('demoUpdate') === '1') {
       setUpdate({
-        currentVersion: '0.1.0',
-        version: '0.2.0',
-        notes: '新增更新器、账号切换与导入预览；修复浅色主题下表头对比度。',
+        currentVersion: '0.2.1',
+        version: '0.2.2',
+        notes: 'WorkBuddy 稳定性、历史记录与体验修复。',
         pubDate: new Date().toISOString(),
         asset: {
-          url: 'https://xsin.github.io/ai-bobby/releases/0.2.0/AI-Bobby-0.2.0-arm64.zip',
+          url: 'https://xsin.github.io/ai-bobby/releases/0.2.2/AI-Bobby-0.2.2-arm64.zip',
           sha256: '0'.repeat(64),
-          size: 18_400_000,
+          size: 42_600_000,
         },
       })
     }
-  }, [setChoice])
+  }, [])
 
   const showFeedback = useCallback((message: string) => {
     setFeedback(message)
   }, [])
-
-  const handleTab = useCallback(
-    (next: ProviderId) => {
-      setActive(next)
-      setFeedback(sources[next].feedback)
-    },
-    [sources],
-  )
 
   const handleSelection = useCallback(
     (next: Set<string>) => {
@@ -456,6 +553,11 @@ function AppInner() {
       return
     }
     if (result.update) {
+      if (updateVersion.current !== result.update.version) {
+        updateVersion.current = result.update.version
+        setDownloaded(false)
+        setUpdateProgress(null)
+      }
       setUpdate(result.update)
       setUpdateDismissed(false)
       setLastCheckMessage(`发现新版本 ${result.update.version}`)
@@ -478,7 +580,7 @@ function AppInner() {
     setDownloading(false)
     if (result.ok) {
       setDownloaded(true)
-      setUpdateProgress({ stage: 'verifying', downloaded: 1, total: 1 })
+      setUpdateProgress(null)
       toast.success('下载完成，可以安装并重启')
     } else {
       setUpdateProgress(null)
@@ -511,153 +613,165 @@ function AppInner() {
     <div className="flex h-full min-h-0 flex-col bg-app text-text">
       <div className="app-drag relative flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-titlebar px-4">
         <div className="w-[68px]" aria-hidden="true" />
-        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-semibold text-muted-foreground">
-          AI Bobby
-        </div>
-        <span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">
-          本地网关
-        </span>
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-semibold text-muted-foreground">AI Bobby</div>
+        <span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">本地网关</span>
       </div>
 
-      <header className="app-no-drag flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-line bg-toolbar px-5">
-        <div className="flex min-w-0 items-center gap-2.5">
-          <BrandMark className="size-7 shrink-0 text-primary" />
-          <h1 className="hidden whitespace-nowrap text-[15px] font-semibold tracking-[-0.01em] text-text sm:block">
-            AI Bobby
-          </h1>
-          <span className="hidden h-[22px] w-px bg-line sm:block" aria-hidden="true" />
-          <SourceTabs active={active} onChange={handleTab} sources={sources} />
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden items-center gap-0.5 rounded-md border border-line bg-app p-0.5 md:flex">
-            {THEME_OPTIONS.map(theme => (
-              <button
-                key={theme.id}
-                type="button"
-                onClick={() => setChoice(theme.id)}
-                className={cn(
-                  'h-6 appearance-none rounded border-0 bg-transparent px-2 text-[11px] text-muted-foreground hover:bg-hover hover:text-text',
-                  choice === theme.id && 'border border-line bg-surface text-text shadow-sm',
-                )}
-              >
-                {theme.label}
-              </button>
-            ))}
-          </div>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label="设置"
-            className="size-8 text-muted-foreground"
-            onClick={() => setSettingsOpen(true)}
-          >
-            <Settings className="size-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            className="h-8 gap-1.5 bg-primary px-3 text-[12px] text-primary-foreground"
-            onClick={() => setImportOpen(true)}
-          >
-            <Download className="size-3.5" />
-            导入
-            {globalSelected > 0 ? (
-              <span className="min-w-[18px] rounded-full bg-white/20 px-1.5 text-[10px] leading-4 text-primary-foreground">
-                {globalSelected}
-              </span>
-            ) : null}
-          </Button>
-        </div>
-      </header>
-
-      {update && !updateDismissed ? (
-        <UpdateBanner
-          info={update}
-          progress={updateProgress}
-          downloading={downloading}
-          downloaded={downloaded}
-          installing={installing}
-          onDownload={() => void downloadUpdate()}
-          onInstall={() => void installUpdate()}
-          onDismiss={() => setUpdateDismissed(true)}
-        />
-      ) : null}
-
-      <main className="min-h-0 flex-1 overflow-auto px-5 pt-4">
-        <SourceHead
-          source={source}
-          selectedCount={selectedSet.size}
-          globalSelectedCount={globalSelected}
-          probing={probing}
-          onAction={handleAction}
+      <div className="app-no-drag flex min-h-0 flex-1">
+        <Sidebar
+          page={page}
+          counts={counts}
+          historyCount={history?.entries.length ?? 0}
+          collapsed={sidebarCollapsed}
+          gatewayRunning={realStatus?.gateway.state === 'ready'}
+          port={realStatus?.gateway.port ?? 46890}
+          onToggle={() => setSidebarCollapsed(value => !value)}
+          onNavigate={navigate}
         />
 
-        {accountRealm ? (
-          <AccountStrip
-            source={source}
-            accounts={accountsForSource}
-            onAdd={() => setLoginOpen(true)}
-          />
-        ) : null}
-
-        {feedback ? (
-          <div className="mt-3 flex items-center gap-2 rounded-md border border-success/20 bg-success-soft px-2.5 py-2 text-[11px] text-success">
-            <CheckCircle2 className="size-4 shrink-0" />
-            <span className="flex-1">{feedback}</span>
-            <button
-              type="button"
-              aria-label="关闭提示"
-              className="appearance-none rounded border-0 bg-transparent p-0.5 text-success/70 hover:bg-success/10 hover:text-success"
-              onClick={() => setFeedback(null)}
-            >
-              <X className="size-3.5" />
-            </button>
-          </div>
-        ) : null}
-
-        <section className="flex min-h-0 flex-col pt-3">
-          <div className="mb-2 flex items-end justify-between gap-3">
-            <div>
-              <h3 className="text-[13px] font-semibold text-text">模型清单</h3>
-              <p className="mt-0.5 text-[11px] text-muted-foreground">勾选决定导入，点击行查看详情。</p>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-line bg-toolbar px-5">
+            <div className="flex min-w-0 flex-col gap-px">
+              <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-faint">{PAGE_META[page].section}</span>
+              <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-text">{PAGE_META[page].title}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="whitespace-nowrap text-[10px] text-faint">{source.listMeta}</span>
+            <div className="flex shrink-0 items-center gap-2.5">
+              <span className="hidden items-center gap-1.5 text-[10px] text-muted-foreground md:flex">
+                <span className={cn('size-1.5 rounded-full', realStatus?.gateway.state === 'ready' ? 'bg-success' : 'bg-warning')} />
+                网关{realStatus?.gateway.state === 'ready' ? '运行中' : '未就绪'}
+              </span>
               <Button
                 type="button"
                 variant="ghost"
-                size="sm"
-                className="h-6 px-1.5 text-[10px] text-primary"
-                onClick={selectAll}
+                size="icon"
+                aria-label="设置"
+                title="设置"
+                className="size-8 text-muted-foreground"
+                onClick={() => navigate('settings')}
               >
-                全选可用
+                <Settings className="size-4" />
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                className="h-8 gap-1.5 bg-primary px-3 text-[12px] text-primary-foreground"
+                onClick={() => setImportOpen(true)}
+              >
+                <Download className="size-3.5" />
+                导入
+                {globalSelected > 0 ? (
+                  <span className="min-w-[18px] rounded-full bg-white/20 px-1.5 text-[10px] leading-4 text-primary-foreground">{globalSelected}</span>
+                ) : null}
               </Button>
             </div>
-          </div>
+          </header>
 
-          <div className="overflow-hidden rounded-lg border border-line bg-surface">
-            <ModelTable
-              key={active}
-              source={source}
-              models={source.models}
-              selected={selectedSet}
-              onSelectionChange={handleSelection}
-              onProbe={handleProbeOne}
+          {update && !updateDismissed ? (
+            <UpdateBanner
+              info={update}
+              progress={updateProgress}
+              downloading={downloading}
+              downloaded={downloaded}
+              installing={installing}
+              onDownload={() => void downloadUpdate()}
+              onInstall={() => void installUpdate()}
+              onDismiss={() => {
+                dismissedVersion.current = update?.version ?? null
+                setUpdateDismissed(true)
+              }}
             />
-          </div>
+          ) : null}
 
-          <div className="flex items-center justify-between py-2 text-[10px] text-faint">
-            <span>
-              {available} 个可用 · {abnormal} 个仅对话 / 待检测 / 不可用
-            </span>
-            <span>共 {source.models.length} 个模型</span>
-          </div>
-        </section>
-      </main>
+          {page === 'opencode' || page === 'workbuddy' || page === 'wbi' ? (
+            <main className="min-h-0 flex-1 overflow-auto px-5 pt-4">
+              <SourceHead
+                source={source}
+                selectedCount={selectedSet.size}
+                globalSelectedCount={globalSelected}
+                probing={probing}
+                onAction={handleAction}
+              />
 
-      <StatusBar source={source} appInfo={appInfo} keyMask={realStatus?.apiKeyMasked ?? 'sk-…f3a2'} onCopyKey={() => void copyKey()} />
+              {accountRealm ? (
+                <AccountStrip source={source} accounts={accountsForSource} onAdd={() => setLoginOpen(true)} />
+              ) : null}
+
+              {feedback ? (
+                <div className="mt-3 flex items-center gap-2 rounded-md border border-success/20 bg-success-soft px-2.5 py-2 text-[11px] text-success">
+                  <CheckCircle2 className="size-4 shrink-0" />
+                  <span className="flex-1">{feedback}</span>
+                  <button type="button" aria-label="关闭提示" className="appearance-none rounded border-0 bg-transparent p-0.5 text-success/70 hover:bg-success/10 hover:text-success" onClick={() => setFeedback(null)}>
+                    <X className="size-3.5" />
+                  </button>
+                </div>
+              ) : null}
+
+              <section className="flex min-h-0 flex-col pt-3">
+                <div className="mb-2 flex items-end justify-between gap-3">
+                  <div>
+                    <h3 className="text-[13px] font-semibold text-text">模型清单</h3>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">勾选决定导入，点击行查看详情。</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="whitespace-nowrap text-[10px] text-faint">{source.listMeta}</span>
+                    <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-primary" onClick={selectAll}>全选可用</Button>
+                  </div>
+                </div>
+
+                <div className="overflow-hidden rounded-lg border border-line bg-surface">
+                  <ModelTable
+                    key={active}
+                    source={source}
+                    models={source.models}
+                    selected={selectedSet}
+                    onSelectionChange={handleSelection}
+                    onProbe={handleProbeOne}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between py-2 pr-[84px] text-[10px] text-faint">
+                  <span>{available} 个可用 · {abnormal} 个仅对话 / 待检测 / 不可用</span>
+                  <span>共 {source.models.length} 个模型</span>
+                </div>
+              </section>
+            </main>
+          ) : page === 'history' ? (
+            <HistoryPage
+              history={history}
+              loading={historyLoading}
+              restoringId={restoringId}
+              onRefresh={() => void loadHistory()}
+              onRestore={restoreBackup}
+            />
+          ) : page === 'about' ? (
+            <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={setMusicTrack} onOpenExternal={openExternal} />
+          ) : (
+            <SettingsPage
+              appInfo={appInfo}
+              status={realStatus}
+              autoCheck={autoCheck}
+              onAutoCheckChange={setAutoCheck}
+              checking={checking}
+              {...(lastCheckMessage === undefined ? {} : { lastMessage: lastCheckMessage })}
+              onCheckUpdates={() => void checkUpdates()}
+              onOpenUpdateSource={openUpdateSource}
+              onCopyKey={() => void copyKey()}
+              onCopyEndpoint={() => {
+                const endpoint = `http://127.0.0.1:${realStatus?.gateway.port ?? 46890}/v1`
+                if (window.aiBobby) void window.aiBobby.copyText(endpoint)
+                else void navigator.clipboard.writeText(endpoint)
+                toast.success('网关地址已复制')
+              }}
+              onOpenAbout={() => navigate('about')}
+            />
+          )}
+
+          <StatusBar source={source} appInfo={appInfo} keyMask={realStatus?.apiKeyMasked ?? 'sk-…f3a2'} port={realStatus?.gateway.port ?? 46890} onCopyKey={() => void copyKey()} />
+        </div>
+      </div>
+
+      <FloatingAvatar onOpenAbout={openAbout} />
+      <FloatingMusicPlayer track={musicTrack} onClose={() => setMusicTrack(null)} />
 
       <ImportSheet
         open={importOpen}
@@ -668,6 +782,7 @@ function AppInner() {
         onApplied={() => {
           setFeedback('已写入客户端；重启对应客户端后生效。')
           toast.success('已写入客户端；重启对应客户端后生效')
+          void loadHistory()
         }}
         onApply={async payload => {
           const api = window.aiBobby
@@ -676,13 +791,7 @@ function AppInner() {
             setFeedback('浏览器预览：未写入任何文件。')
             return
           }
-          const targetMap = {
-            workbuddy: 'workbuddy',
-            wbi: 'workbuddy-ai',
-            codex: 'codex',
-            claude: 'claude',
-            dsh: 'dsh',
-          } as const
+          const targetMap = { workbuddy: 'workbuddy', wbi: 'workbuddy-ai', codex: 'codex', claude: 'claude', dsh: 'dsh' } as const
           const plans = []
           for (const client of payload.clients) {
             plans.push(await api.importApply(targetMap[client], {
@@ -694,38 +803,17 @@ function AppInner() {
           }
           const changed = plans.filter(plan => plan.changed)
           const warnings = plans.flatMap(plan => plan.warnings)
-          setFeedback(
-            changed.length === 0
-              ? `配置已是最新（${plans.length} 个客户端），无需重复写入。`
-              : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`,
-          )
+          setFeedback(changed.length === 0 ? `配置已是最新（${plans.length} 个客户端），无需重复写入。` : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`)
           if (warnings.length > 0) toast.warning(warnings[0]!)
           toast.success(changed.length === 0 ? '配置已是最新' : `已写入 ${changed.length} 个客户端`)
+          void loadHistory()
         }}
       />
 
-      <LoginDialog
-        open={loginOpen}
-        onOpenChange={setLoginOpen}
-        source={source}
-        onSuccess={addDemoAccount}
-      />
-
-      <SettingsDialog
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-        appInfo={appInfo}
-        status={realStatus}
-        onCopyApiKey={() => void copyKey()}
-        autoCheck={autoCheck}
-        onAutoCheckChange={setAutoCheck}
-        checking={checking}
-        lastMessage={lastCheckMessage}
-        onCheckUpdates={() => void checkUpdates()}
-        onOpenUpdateSource={openUpdateSource}
-      />
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} source={source} onSuccess={addDemoAccount} />
     </div>
   )
+
 }
 
 export default function App() {

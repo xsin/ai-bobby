@@ -281,3 +281,32 @@ button {
     scroll-behavior: auto !important;
   }
 }
+
+/* Floating app-logo avatar */
+.floating-avatar-halo {
+  position: absolute;
+  inset: -7px;
+  z-index: 0;
+  border-radius: 18px;
+  background: radial-gradient(circle at 55% 50%, rgba(30, 79, 255, 0.6), rgba(95, 224, 255, 0.16) 52%, transparent 72%);
+  filter: blur(7px);
+  animation: avatar-halo 4.2s ease-in-out infinite;
+}
+.floating-avatar-logo {
+  filter: drop-shadow(0 7px 16px rgba(0, 0, 0, 0.3));
+  animation: avatar-float 4.8s ease-in-out infinite;
+}
+@keyframes avatar-halo {
+  0%, 100% { opacity: 0.58; transform: scale(0.96); }
+  50% { opacity: 1; transform: scale(1.06); }
+}
+@keyframes avatar-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-avatar-halo,
+  .floating-avatar-logo {
+    animation: none;
+  }
+}

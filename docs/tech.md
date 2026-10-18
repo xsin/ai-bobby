@@ -1,6 +1,6 @@
 # AI Bobby 技术方案（tech.md）
 
-- 当前版本：v0.2.1（整体设计；main 验收中）
+- 当前版本：v0.2.2（界面改版开发中；当前发布 v0.2.1，本地验收通过后再发版）
 - 日期：2026-10-18
 - 状态：设计保持完整目标态；当前实现与验收状态见 [handsoff.md](../handsoff.md)
 - 关联：[prd.md](./prd.md)、[handsoff.md](../handsoff.md)
@@ -272,27 +272,30 @@ Tailwind 通过 `@theme inline` 把语义色指向 antd 变量；shadcn 的 `--b
 
 ### 2.4.4 主题
 
-- 用户选择 `system | light | dark`，存 `settings.json`。
+- 用户选择 `system | light | dark`，只存在设置页；选择写入 `localStorage` 的 `ai-bobby-theme`。
 - 解析后同时设置 `document.documentElement.dataset.theme` 与 `.dark` class；
   Antd `algorithm` 切换；CSS 变量随之更新，shadcn/Tailwind 自动跟随。
 - 首屏在 `index.html` 内联脚本里先设 `data-theme`，避免闪烁。
+- 主界面不渲染任何主题按钮；`ThemeProvider` 只提供状态与持久化。
 
-### 2.4.5 组件清单（首版）
+### 2.4.5 组件清单
 
 ```
 components/
-  app-shell.tsx          # 窗口骨架 / 标题栏 / 拖拽区
-  source-tabs.tsx        # shadcn Tabs
-  source-head.tsx        # 标题、说明、统计、动作
-  account-strip.tsx      # 账号 chip、额度、冷却
-  model-table.tsx        # antd Table（选择/展开/排序）
-  model-detail.tsx       # 展开行内容
-  import-sheet.tsx       # shadcn Sheet + 客户端/分组/默认模型/diff
-  login-dialog.tsx       # shadcn Dialog（真实登录由主进程 BrowserWindow 承载）
-  update-banner.tsx      # 非模态更新条
-  settings-dialog.tsx    # 版本/自动更新/端口/主题
-  status-bar.tsx         # 46890 / Key / 版本 / 服务状态
-  ui/*                   # shadcn CLI 生成
+  sidebar.tsx                # 左侧栏：来源/历史/关于/设置，收起持久化
+  source-head.tsx            # 来源标题、说明、统计、动作
+  account-strip.tsx          # 账号 chip、额度、冷却
+  model-table.tsx            # antd Table（选择/展开/排序）
+  import-sheet.tsx           # shadcn Sheet + 客户端/分组/默认模型/diff
+  login-dialog.tsx           # 登录提示（真实登录由主进程 BrowserWindow 承载）
+  update-banner.tsx          # 非模态更新条（发现/下载/就绪）
+  history-page.tsx           # 导入历史、备份、恢复确认、diff
+  about-page.tsx             # ZEO 个人 IP、项目、音乐、赞助
+  settings-page.tsx          # 主题、网关、Key、版本与更新
+  floating-avatar.tsx        # 可拖动应用 LOGO 头像
+  floating-music-player.tsx  # 全局单例、可拖动网易云 iframe
+  status-bar.tsx             # 46890 / Key / 版本 / 服务状态
+  ui/*                       # shadcn CLI 生成
 ```
 
 ---
@@ -1415,36 +1418,34 @@ experimental_bearer_token = "<key>"
 
 ```ts
 interface AiBobbyApi {
-  getStatus(): Promise<StatusDocument>
-  onStatus(cb: (status: StatusDocument) => void): () => void
-
-  refresh(provider: ProviderId): Promise<void>
-  probe(provider: ProviderId, modelId?: string): Promise<void>
-
-  addAccount(realm: Realm): Promise<AccountMeta>
-  cancelLogin(): Promise<void>
-  listAccounts(realm: Realm): Promise<AccountMeta[]>
-  removeAccount(realm: Realm, uid: string): Promise<void>
-  setAccountEnabled(realm: Realm, uid: string, enabled: boolean): Promise<void>
-  setAccountPreferred(realm: Realm, uid: string): Promise<void>
-  refreshCredits(realm: Realm): Promise<void>
-
-  importPreview(target: ImportTarget, selection: ImportSelection): Promise<ImportPlan>
-  importApply(target: ImportTarget, selection: ImportSelection): Promise<ImportPlan>
-  importRollback(target: ImportTarget): Promise<ImportPlan>
-
-  getApiKey(): Promise<{ masked: string }>
+  getAppInfo(): Promise<AppInfo>
+  getStatus(): Promise<GatewayStatus>
   copyApiKey(): Promise<void>
-  rotateApiKey(): Promise<void>
+  refresh(): Promise<GatewayStatus>
+  startLogin(provider: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot>
 
-  getSettings(): Promise<Settings>
-  setSettings(patch: Partial<Settings>): Promise<Settings>
-  openDataDir(): Promise<void>
+  importPreview(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
+  importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
+  importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
+  getImportHistory(): Promise<ImportHistorySnapshot>
+  restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
+
+  checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
+  setAutoCheck(enabled: boolean): Promise<void>
+  downloadUpdate(): Promise<UpdateActionResult>
+  installUpdate(): Promise<UpdateActionResult>
+  onUpdateAvailable(listener: (info: UpdateInfo) => void): () => void
+  onUpdateProgress(listener: (progress: UpdateProgress) => void): () => void
+
+  openExternal(url: string): Promise<void>
+  copyText(text: string): Promise<void>
+  quit(): Promise<void>
 }
 ```
 
 - 只暴露固定动作，不暴露任意 `fs`/`exec`/`ipcRenderer`。
 - `contextIsolation: true`、`sandbox: true`、`nodeIntegration: false`。
+- 状态由 renderer 每 3 秒调用 `getStatus()` 拉取；更新/进度用 `webContents.send` 推送。
 
 ### 8.5 Renderer
 
@@ -1452,41 +1453,46 @@ interface AiBobbyApi {
 
 ```text
 App
-├── TitleBar (traffic lights handled by OS; brand + tabs + theme)
-├── SourceTabs (OpenCode | WorkBuddy | WorkBuddy AI)
-├── CommandBar
-│   ├── SourceSummary
-│   ├── Actions (refresh/probe)
-│   └── ImportButton
-├── AccountStrip (WorkBuddy/WBI only)
-├── ModelTable
-│   ├── MetricHeader
-│   ├── ModelRow (expandable)
-│   └── Empty/Loading/Error
+├── TitleBar（macOS 红绿灯 + 应用名 + 本地网关）
+├── Sidebar
+│   ├── 来源：OpenCode / WorkBuddy / WorkBuddy AI（计数）
+│   ├── 其他：历史记录 / 关于
+│   └── 设置 + 网关状态/端口
+├── Header（页面标题、网关状态、设置、导入）
+├── UpdateBanner（发现/下载/就绪）
+├── Page
+│   ├── SourcePage（SourceHead + AccountStrip + ModelTable）
+│   ├── HistoryPage（统计、筛选、记录、备份、恢复确认、diff）
+│   ├── AboutPage（ZEO、项目、音乐、赞助）
+│   └── SettingsPage（主题、网关、Key、版本与更新）
 ├── ImportDrawer
-├── SettingsDialog
+├── FloatingAvatar（可拖动，位置持久化）
+├── FloatingMusicPlayer（全局单例 iframe）
 └── StatusBar
 ```
 
 状态：
 
-- `useStatus()`：订阅 preload 状态；500ms 推送。
-- `useSelection()`：跨 tab 的选中模型集合。
-- `useImport()`：抽屉状态、预览、写入、回滚。
-- `useAccounts()`：当前 realm 账号列表。
-- 主题：`data-theme` + CSS 变量；持久化。
+- `App` 每 3 秒拉取 `getStatus()`；模型按 provider 分组，首次非空结果填充选中集。
+- `selected`：跨来源的选中模型集合；导入抽屉共享。
+- `page`：多页导航；`sidebarCollapsed`、主题、自动检查、头像/播放器位置存 `localStorage`。
+- `history`：`getImportHistory()` 拉取；进入历史页、导入后、恢复后刷新。
+- `musicTrack`：全局单曲状态；关闭时卸载 iframe。
+- 主题：`data-theme` + CSS 变量；只在设置页修改。
 
 样式：
 
 - 复用 oc-ferry 的字体、间距、圆角、状态色、深浅色 token。
-- 新增：tab 下划线/胶囊、账号条、抽屉、diff 预览。
+- 新增：可收起左侧栏、历史统计/筛选、关于页排版、浮动头像与播放器。
+- 头像光晕/浮动动画用 CSS keyframes；`prefers-reduced-motion` 下关闭。
+- 浮动位置写入 `localStorage`，拖动/窗口缩放时夹取到可视区。
 - 表格列宽：勾选 36、模型 flex、能力 120、状态 110、耗时 140。
 - 无横向滚动；窄窗时隐藏“能力”列。
 
 ### 8.6 窗口与托盘
 
 - 主窗口：1160×860，最小 900×640；`titleBarStyle: hiddenInset`（macOS）。
-- 托盘：模板图标；菜单见 PRD。
+- 托盘菜单：显示 AI Bobby、刷新模型、检查更新、退出。
 - 关窗：隐藏窗口，不退出；托盘退出才停服务。
 - 退出：停止网关 → 停止 OpenCode → 释放单实例锁。
 
@@ -1588,12 +1594,14 @@ fi
 #### 8.7.6 UI 状态
 
 ```
-idle → checking → available → downloading → verifying → installing → restart
-                    └→ dismissed（本次会话）
+idle → checking → available → downloading → downloaded（更新已就绪）
+                    └→ dismissed（同一版本本次会话不再自动弹出）
 ```
 
-- 更新条：`发现新版本 x.y.z`，可展开 notes/size；按钮 `稍后` / `更新`。
-- 设置页：当前版本、自动检查开关、手动检查、更新源 URL、安装并重启。
+- 更新条：`发现新版本 x.y.z` / `更新已就绪`；显示当前版本、notes、体积；按钮 `稍后` / `立即更新` / `立即重启`。
+- 下载中显示进度条；成功后清空进度，避免停在“校验中 100%”。
+- 设置页：当前版本、自动检查开关、手动检查、更新源 URL；下载/安装由更新条承载。
+- 手动检查会重新打开更新条；自动检查不会覆盖本会话已“稍后”的同一版本。
 - 下载进度通过 `webContents.send('update:progress', …)` 推送。
 - 任何校验/安装失败用危险色提示，不提供“仍然安装”。
 
@@ -1607,8 +1615,10 @@ idle → checking → available → downloading → verifying → installing →
 
 #### 8.8.1 版本单一来源
 
-- 根 `package.json` 的 `version`；`scripts/release/version.mjs` 读取。
-- 构建时注入 `APP_VERSION` 环境变量；`app.getVersion()` 读取打包后的 package.json。
+- 根 `package.json` 与 `apps/desktop/package.json` 的 `version`；发布时 `scripts/release/version.mjs` 同步。
+- 主进程用 `appVersion()` 读取应用 `package.json`：打包后读 `app.asar/package.json`，
+  开发时依次回退到 `process.cwd()/package.json` 与 `out/main/../../package.json`；
+  全部失败才回退 `app.getVersion()`，避免开发模式显示 Electron 自身版本。
 - 版本号同时写入 `VERSION.txt` 和 `latest.json`，CI 断言一致。
 
 #### 8.8.2 构建
@@ -1693,8 +1703,8 @@ release/<version>/
 ```
 <dataDir>/
 ├── api-key                  0600
-├── settings.json
 ├── status.json
+├── import-history.json      0600，最多 200 条
 ├── accounts/
 │   ├── cn.json
 │   └── intl.json
@@ -1707,8 +1717,9 @@ release/<version>/
 ```
 
 - 目录 0700；敏感文件 0600。
-- 原子写；写前备份（账号库保留 3 份）。
+- 原子写；写前备份（账号库保留 3 份，导入备份每目标保留 5 份）。
 - 数据目录可由 `AI_BOBBY_DATA_DIR` 覆盖（调试）。
+- 主题、自动检查、侧边栏/头像/播放器位置在 Chromium `localStorage`，不进数据目录。
 
 ### 9.2 脱敏
 
@@ -1716,6 +1727,7 @@ release/<version>/
 - 错误：不拼接 Authorization/body 原文。
 - 诊断包：只含状态、版本、日志（已脱敏）、配置摘要；不含账号 secret。
 - `status.json`：账号只给 nickname、uid 尾号、额度、状态。
+- `import-history.json`：diff 中的 Key/token 写入前脱敏。
 
 ### 9.3 威胁模型
 
@@ -1894,8 +1906,8 @@ pnpm --filter @ai-bobby/desktop package:mac
 | P2 | WorkBuddy 登录/多账号/目录/聊天/额度/调度 | 双 realm 各两账号；流式 + 切号 |
 | P3 | OpenCode 运行时/免费筛选/检测/会话 | 自动准备运行时；检测可用 |
 | P4 | 三协议 codec + 工具调用 | Codex/Claude/DSH/WorkBuddy 真机 |
-| P5 | 四个 importer + 回滚 | 四客户端导入 + 幂等 |
-| P6 | 三 tab UI + 账号条 + 导入抽屉 | 截图风格验收 |
+| P5 | 四个 importer + 备份/回滚/历史 | 四客户端导入 + 幂等 + 恢复 |
+| P6 | 左侧栏多页 UI + 历史 + 关于/音乐 + 更新条 | 截图风格与交互验收 |
 | P7 | 打包 macOS/Windows | 安装即用 |
 
 ---

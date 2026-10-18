@@ -128,6 +128,77 @@
     { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', status: '已探测', checked: true, note: 'llm-pi-ai' },
   ];
 
+  const HISTORY = [
+    {
+      id: 'h1',
+      client: 'workbuddy',
+      clientName: 'WorkBuddy',
+      icon: 'WB',
+      date: '今天 13:42',
+      fullDate: '2026-10-18 13:42',
+      models: 7,
+      target: '~/.workbuddy/models.json',
+      status: 'success',
+      statusLabel: '成功',
+      backup: 'models.json.ai-bobby-20261018-1342.bak',
+      backupMeta: '218 KB · 第 5 份备份',
+      detail: '写入 7 个模型；保留 4 个原有自定义模型；重复导入 changed:false。',
+    },
+    {
+      id: 'h2',
+      client: 'claude',
+      clientName: 'Claude Code',
+      icon: 'CC',
+      date: '今天 13:39',
+      fullDate: '2026-10-18 13:39',
+      models: 5,
+      target: '~/.claude/settings.json',
+      status: 'warn',
+      statusLabel: '已覆盖 env',
+      backup: 'settings.json.ai-bobby-20261018-1339.bak',
+      backupMeta: '42 KB · 第 3 份备份',
+      detail: '写入 ANTHROPIC_BASE_URL / AUTH_TOKEN / MODEL；原 8787 配置已备份。',
+    },
+    {
+      id: 'h3',
+      client: 'codex',
+      clientName: 'Codex',
+      icon: 'CX',
+      date: '昨天 22:10',
+      fullDate: '2026-10-17 22:10',
+      models: 7,
+      target: '~/.codex/config.toml',
+      status: 'success',
+      statusLabel: '成功',
+      backup: 'config.toml.ai-bobby-20261017-2210.bak',
+      backupMeta: '18 KB · 第 2 份备份',
+      detail: '追加 [model_providers.ai-bobby]；未修改顶层 model / model_provider。',
+    },
+    {
+      id: 'h4',
+      client: 'dsh',
+      clientName: 'DeepSeek Harness',
+      icon: 'DS',
+      date: '昨天 22:08',
+      fullDate: '2026-10-17 22:08',
+      models: 7,
+      target: '~/.dsh/profiles/desktop/cordis.patch.yml',
+      status: 'success',
+      statusLabel: '成功',
+      backup: 'cordis.patch.yml.ai-bobby-20261017-2208.bak',
+      backupMeta: '31 KB · 第 2 份备份',
+      detail: '追加 llm-pi-ai provider ai-bobby；workbuddy2api / nvidia 保留。',
+    },
+  ];
+
+  const BACKUPS = [
+    { id: 'b1', name: 'models.json.ai-bobby-20261018-1342.bak', meta: 'WorkBuddy · 今天 13:42 · 218 KB', history: 'h1' },
+    { id: 'b2', name: 'settings.json.ai-bobby-20261018-1339.bak', meta: 'Claude Code · 今天 13:39 · 42 KB', history: 'h2' },
+    { id: 'b3', name: 'config.toml.ai-bobby-20261017-2210.bak', meta: 'Codex · 昨天 22:10 · 18 KB', history: 'h3' },
+    { id: 'b4', name: 'cordis.patch.yml.ai-bobby-20261017-2208.bak', meta: 'DSH · 昨天 22:08 · 31 KB', history: 'h4' },
+    { id: 'b5', name: 'models.json.ai-bobby-20261012-0914.bak', meta: 'WorkBuddy · 10-12 09:14 · 204 KB', history: null },
+  ];
+
   const ICONS = {
     refresh: '<svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M15.7 7A6 6 0 1 0 16 12M16 3v4h-4" stroke-linecap="round" stroke-linejoin="round"/></svg>',
     activity: '<svg class="button-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 10h3l2-5 4 10 2-5h3" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -138,7 +209,13 @@
 
   const state = {
     tab: 'opencode',
+    page: 'opencode',
     themeChoice: 'dark',
+    historyFilter: 'all',
+    historyQuery: '',
+    pendingRestore: null,
+    musicSong: null,
+    update: { status: 'idle', progress: 0, timer: null },
     selection: {
       opencode: new Set(),
       workbuddy: new Set(),
@@ -218,6 +295,7 @@
     renderTabCounts();
     updateCounts();
     renderImportDrawer();
+    renderHistory();
   }
 
   function renderSourceHead() {
@@ -272,6 +350,197 @@
       const node = $(`[data-count="${key}"]`);
       if (node) node.textContent = String(available);
     }
+  }
+
+  function setToolbar(eyebrow, title) {
+    $('#toolbar-eyebrow').textContent = eyebrow;
+    $('#toolbar-title').textContent = title;
+  }
+
+  function navigateTo(page) {
+    const isSource = Object.hasOwn(SOURCES, page);
+    if (!isSource && !['history', 'about', 'settings'].includes(page)) return;
+    state.page = page;
+    if (isSource) state.tab = page;
+
+    $('#page-models').hidden = !isSource;
+    $('#page-history').hidden = page !== 'history';
+    $('#page-about').hidden = page !== 'about';
+    $('#page-settings').hidden = page !== 'settings';
+
+    for (const item of $$('.side-item[data-page]')) {
+      item.classList.toggle('active', item.dataset.page === page);
+    }
+
+    if (isSource) {
+      setToolbar('模型来源', SOURCES[page].label);
+      renderAll();
+    } else if (page === 'history') {
+      setToolbar('其他', '历史记录');
+      renderHistory();
+    } else if (page === 'about') {
+      setToolbar('ABOUT', '关于');
+    } else {
+      setToolbar('偏好', '设置');
+      applyTheme(state.themeChoice);
+    }
+    $('.content-shell').scrollTop = 0;
+  }
+
+  function renderHistory() {
+    if (!$('#history-list')) return;
+    const query = state.historyQuery.trim().toLowerCase();
+    const records = HISTORY.filter(record => {
+      const clientOk = state.historyFilter === 'all' || record.client === state.historyFilter;
+      const queryOk = query === '' || [record.clientName, record.target, record.backup, record.detail]
+        .join(' ').toLowerCase().includes(query);
+      return clientOk && queryOk;
+    });
+
+    $('#history-list').innerHTML = records.length === 0
+      ? '<div class="history-empty">没有匹配的导入记录。</div>'
+      : records.map(record => `
+        <article class="history-row" data-history="${record.id}">
+          <span class="history-icon" aria-hidden="true">${escapeHtml(record.icon)}</span>
+          <div class="history-main">
+            <div class="history-main-head">
+              <strong>${escapeHtml(record.clientName)}</strong>
+              <span class="status-pill${record.status === 'warn' ? ' warn' : ''}">${escapeHtml(record.statusLabel)}</span>
+            </div>
+            <p>${escapeHtml(record.date)} · ${record.models} 个模型 · <code>${escapeHtml(record.target)}</code></p>
+            <p>${escapeHtml(record.detail)}</p>
+          </div>
+          <div class="history-actions">
+            <button type="button" data-history-view="${record.id}">变更</button>
+            <button class="restore" type="button" data-restore="${record.id}">恢复</button>
+          </div>
+        </article>
+      `).join('');
+
+    const filteredBackups = BACKUPS.filter(backup => {
+      const related = HISTORY.find(record => record.id === backup.history);
+      const clientOk = state.historyFilter === 'all' || related?.client === state.historyFilter;
+      const queryOk = query === '' || backup.name.toLowerCase().includes(query) || backup.meta.toLowerCase().includes(query);
+      return clientOk && queryOk;
+    });
+    $('#backup-list').innerHTML = filteredBackups.length === 0
+      ? '<div class="history-empty">没有匹配的备份。</div>'
+      : filteredBackups.map(backup => `
+        <div class="backup-row">
+          <span class="backup-name" title="${escapeHtml(backup.name)}">${escapeHtml(backup.name)}</span>
+          <div class="backup-meta">
+            <span>${escapeHtml(backup.meta)}</span>
+            <button type="button" data-backup-restore="${backup.id}">恢复</button>
+          </div>
+        </div>
+      `).join('');
+  }
+
+  function restoreFor(id) {
+    const record = HISTORY.find(item => item.id === id);
+    if (record) return record;
+    const backup = BACKUPS.find(item => item.id === id);
+    if (backup?.history) return HISTORY.find(item => item.id === backup.history);
+    return null;
+  }
+
+  function openRestore(record) {
+    if (!record) return;
+    state.pendingRestore = record;
+    $('#restore-title').textContent = `恢复 ${record.clientName} 的备份`;
+    $('#restore-subtitle').textContent = '恢复前会先备份当前文件；这不会改动其他客户端。';
+    $('#restore-details').innerHTML = `
+      <div class="restore-detail"><span>备份文件</span><code>${escapeHtml(record.backup)}</code></div>
+      <div class="restore-detail"><span>原始写入</span><strong>${escapeHtml(record.fullDate)}</strong></div>
+      <div class="restore-detail"><span>目标文件</span><code>${escapeHtml(record.target)}</code></div>
+      <div class="restore-detail"><span>影响范围</span><strong>${record.models} 个 AI Bobby 模型</strong></div>`;
+    $('#restore-modal').hidden = false;
+    $('#confirm-restore').focus();
+  }
+
+  function closeRestore() {
+    $('#restore-modal').hidden = true;
+    state.pendingRestore = null;
+  }
+
+  function openMusic(track) {
+    const id = track.dataset.songId;
+    const title = track.dataset.songTitle;
+    const album = track.dataset.songAlbum;
+    if (!id || !title) return;
+    state.musicSong = { id, title, album };
+    const player = $('#floating-player');
+    const frame = $('#music-frame');
+    player.hidden = false;
+    frame.src = `https://music.163.com/outchain/player?type=2&id=${encodeURIComponent(id)}&auto=1&height=66`;
+    $('#close-music').focus();
+  }
+
+  function closeMusic() {
+    $('#floating-player').hidden = true;
+    $('#music-frame').src = 'about:blank';
+    state.musicSong = null;
+  }
+
+  function initMusicPlayer() {
+    const player = $('#floating-player');
+    const handle = $('#player-handle');
+    let dragging = false;
+    let startX = 0;
+    let startY = 0;
+    let startLeft = 0;
+    let startTop = 0;
+
+    const clamp = () => {
+      const rect = player.getBoundingClientRect();
+      const maxLeft = Math.max(4, window.innerWidth - rect.width - 4);
+      const maxTop = Math.max(4, window.innerHeight - rect.height - 4);
+      player.style.left = `${Math.min(Math.max(parseFloat(player.style.left || rect.left), 4), maxLeft)}px`;
+      player.style.top = `${Math.min(Math.max(parseFloat(player.style.top || rect.top), 4), maxTop)}px`;
+      player.style.right = 'auto';
+      player.style.bottom = 'auto';
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('ai-bobby-player-pos') || 'null');
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+        player.style.left = `${saved.left}px`;
+        player.style.top = `${saved.top}px`;
+        player.style.right = 'auto';
+        player.style.bottom = 'auto';
+      }
+    } catch {}
+
+    handle.addEventListener('pointerdown', event => {
+      if (event.button !== 0 || event.target.closest('.player-close')) return;
+      const rect = player.getBoundingClientRect();
+      dragging = true;
+      startX = event.clientX;
+      startY = event.clientY;
+      startLeft = rect.left;
+      startTop = rect.top;
+      handle.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    handle.addEventListener('pointermove', event => {
+      if (!dragging) return;
+      player.style.left = `${startLeft + event.clientX - startX}px`;
+      player.style.top = `${startTop + event.clientY - startY}px`;
+      player.style.right = 'auto';
+      player.style.bottom = 'auto';
+    });
+    handle.addEventListener('pointerup', event => {
+      if (!dragging) return;
+      dragging = false;
+      try { handle.releasePointerCapture(event.pointerId); } catch {}
+      clamp();
+      try {
+        localStorage.setItem('ai-bobby-player-pos', JSON.stringify({ left: parseFloat(player.style.left), top: parseFloat(player.style.top) }));
+      } catch {}
+    });
+    window.addEventListener('resize', () => {
+      if (!player.hidden && player.style.left) clamp();
+    });
   }
 
   function renderAccountStrip() {
@@ -489,14 +758,8 @@
   // ---------------------------------------------------------------------------
 
   function switchTab(tab) {
-    if (!SOURCES[tab] || state.tab === tab) return;
-    state.tab = tab;
-    for (const button of $$('.source-tab')) {
-      const active = button.dataset.tab === tab;
-      button.classList.toggle('active', active);
-      button.setAttribute('aria-selected', String(active));
-    }
-    renderAll();
+    if (!SOURCES[tab]) return;
+    navigateTo(tab);
   }
 
   function toggleSelection(id, checked) {
@@ -675,13 +938,161 @@
     showToast('目录已刷新；账号与模型状态已同步');
   }
 
+  function showUpdate() {
+    const banner = $('#update-banner');
+    banner.hidden = false;
+    if (state.update.status === 'downloading') {
+      $('#update-title').textContent = '正在下载 0.2.2';
+      $('#update-sub').textContent = '42.6 MB · 正在下载并校验，完成后需要重启';
+      $('#update-progress').hidden = false;
+      $('#update-start').hidden = true;
+      $('#update-later').textContent = '后台继续';
+      return;
+    }
+    if (state.update.status === 'ready') {
+      $('#update-title').textContent = '更新已就绪';
+      $('#update-sub').textContent = '0.2.2 已下载并通过校验，重启后生效';
+      $('#update-progress').hidden = true;
+      $('#update-start').hidden = false;
+      $('#update-start').textContent = '立即重启';
+      $('#update-later').textContent = '稍后';
+      return;
+    }
+    state.update.status = 'available';
+    $('#update-title').textContent = '发现新版本 0.2.2';
+    $('#update-sub').textContent = '当前 0.2.1 · 42.6 MB · WorkBuddy 稳定性、历史记录与体验修复';
+    $('#update-progress').hidden = true;
+    $('#update-start').hidden = false;
+    $('#update-start').textContent = '立即更新';
+    $('#update-later').textContent = '稍后';
+  }
+
+  function hideUpdate() {
+    $('#update-banner').hidden = true;
+  }
+
+  function startUpdate() {
+    if (state.update.status === 'ready') {
+      showToast('原型：将重启并安装 0.2.2');
+      hideUpdate();
+      return;
+    }
+    if (state.update.status === 'downloading') return;
+    state.update.status = 'downloading';
+    state.update.progress = 0;
+    showUpdate();
+    clearInterval(state.update.timer);
+    state.update.timer = setInterval(() => {
+      state.update.progress = Math.min(100, state.update.progress + 4);
+      $('#update-bar').style.width = `${state.update.progress}%`;
+      if (state.update.progress >= 100) {
+        clearInterval(state.update.timer);
+        state.update.timer = null;
+        state.update.status = 'ready';
+        showUpdate();
+        showToast('0.2.2 已下载并通过校验，重启后生效');
+      }
+    }, 110);
+  }
+
+  function applySidebar(collapsed) {
+    $('#app-shell').classList.toggle('sidebar-collapsed', collapsed);
+    const button = $('#toggle-sidebar');
+    button.setAttribute('aria-label', collapsed ? '展开侧边栏' : '收起侧边栏');
+    button.title = collapsed ? '展开侧边栏' : '收起侧边栏';
+    button.querySelector('svg').style.transform = collapsed ? 'rotate(180deg)' : '';
+    try { localStorage.setItem('ai-bobby-sidebar', collapsed ? '1' : '0'); } catch {}
+  }
+
+  function initZeoFab() {
+    const fab = $('#zeo-fab');
+    let dragging = false;
+    let moved = false;
+    let suppressClick = false;
+    let startX = 0;
+    let startY = 0;
+    let startLeft = 0;
+    let startTop = 0;
+
+    const clamp = () => {
+      const rect = fab.getBoundingClientRect();
+      const maxLeft = Math.max(4, window.innerWidth - rect.width - 4);
+      const maxTop = Math.max(4, window.innerHeight - rect.height - 4);
+      fab.style.left = `${Math.min(Math.max(parseFloat(fab.style.left || rect.left), 4), maxLeft)}px`;
+      fab.style.top = `${Math.min(Math.max(parseFloat(fab.style.top || rect.top), 4), maxTop)}px`;
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+    };
+
+    try {
+      const saved = JSON.parse(localStorage.getItem('ai-bobby-zeo-pos') || 'null');
+      if (saved && Number.isFinite(saved.left) && Number.isFinite(saved.top)) {
+        fab.style.left = `${saved.left}px`;
+        fab.style.top = `${saved.top}px`;
+        fab.style.right = 'auto';
+        fab.style.bottom = 'auto';
+        clamp();
+      }
+    } catch {}
+
+    fab.addEventListener('pointerdown', event => {
+      if (event.button !== 0) return;
+      const rect = fab.getBoundingClientRect();
+      dragging = true;
+      moved = false;
+      startX = event.clientX;
+      startY = event.clientY;
+      startLeft = rect.left;
+      startTop = rect.top;
+      fab.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    fab.addEventListener('pointermove', event => {
+      if (!dragging) return;
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      if (Math.abs(dx) + Math.abs(dy) > 3) moved = true;
+      if (!moved) return;
+      fab.style.left = `${startLeft + dx}px`;
+      fab.style.top = `${startTop + dy}px`;
+      fab.style.right = 'auto';
+      fab.style.bottom = 'auto';
+    });
+    fab.addEventListener('pointerup', event => {
+      if (!dragging) return;
+      dragging = false;
+      suppressClick = moved;
+      try { fab.releasePointerCapture(event.pointerId); } catch {}
+      if (moved) {
+        clamp();
+        try {
+          localStorage.setItem('ai-bobby-zeo-pos', JSON.stringify({ left: parseFloat(fab.style.left), top: parseFloat(fab.style.top) }));
+        } catch {}
+        setTimeout(() => { suppressClick = false; }, 0);
+      }
+    });
+    fab.addEventListener('click', event => {
+      if (suppressClick) {
+        event.preventDefault();
+        return;
+      }
+      navigateTo('about');
+    });
+    window.addEventListener('resize', () => {
+      if (fab.style.left) clamp();
+    });
+  }
+
   // ---------------------------------------------------------------------------
   // Wire up
   // ---------------------------------------------------------------------------
 
-  for (const button of $$('.source-tab')) {
-    button.addEventListener('click', () => switchTab(button.dataset.tab));
-  }
+  document.addEventListener('click', event => {
+    const target = event.target.closest('[data-page]');
+    if (!target) return;
+    event.preventDefault();
+    navigateTo(target.dataset.page);
+  });
 
   $('#source-actions').addEventListener('click', event => {
     const button = event.target.closest('[data-action]');
@@ -734,8 +1145,89 @@
     showToast(ok ? 'API Key 已复制' : '复制失败，请在设置中查看');
   });
 
-  $('#open-settings').addEventListener('click', () => {
-    showToast('设置：端口 46890 · 数据目录 ~/Library/Application Support/AI Bobby');
+  $('#open-settings').addEventListener('click', () => navigateTo('settings'));
+
+  // Music player: click a track to open the NetEase outchain iframe.
+  document.addEventListener('click', event => {
+    const track = event.target.closest('.music-track');
+    if (track) {
+      event.preventDefault();
+      openMusic(track);
+    }
+  });
+  for (const tab of $$('[data-music-list]')) {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.musicList;
+      for (const item of $$('[data-music-list]')) {
+        const active = item === tab;
+        item.classList.toggle('active', active);
+        item.setAttribute('aria-selected', String(active));
+      }
+      $('#music-list-latest').hidden = target !== 'latest';
+      $('#music-list-hot').hidden = target !== 'hot';
+    });
+  }
+  $('#close-music').addEventListener('click', closeMusic);
+
+  // History filters and restore actions.
+  for (const button of $$('[data-filter]')) {
+    button.addEventListener('click', () => {
+      state.historyFilter = button.dataset.filter;
+      for (const item of $$('[data-filter]')) item.classList.toggle('active', item === button);
+      renderHistory();
+    });
+  }
+  $('#history-search').addEventListener('input', event => {
+    state.historyQuery = event.target.value;
+    renderHistory();
+  });
+  $('#history-compare').addEventListener('click', () => showToast('原型：会打开当前配置与最近备份的差异对比'));
+  $('#history-list').addEventListener('click', event => {
+    const restore = event.target.closest('[data-restore]');
+    if (restore) {
+      openRestore(restoreFor(restore.dataset.restore));
+      return;
+    }
+    const view = event.target.closest('[data-history-view]');
+    if (view) {
+      const record = HISTORY.find(item => item.id === view.dataset.historyView);
+      showToast(record ? `${record.clientName}：${record.detail}` : '没有可显示的变更');
+    }
+  });
+  $('#backup-list').addEventListener('click', event => {
+    const restore = event.target.closest('[data-backup-restore]');
+    if (restore) openRestore(restoreFor(restore.dataset.backupRestore));
+  });
+  $('#close-restore').addEventListener('click', closeRestore);
+  $('#cancel-restore').addEventListener('click', closeRestore);
+  $('#restore-modal').addEventListener('click', event => {
+    if (event.target === $('#restore-modal')) closeRestore();
+  });
+  $('#confirm-restore').addEventListener('click', () => {
+    const record = state.pendingRestore;
+    if (!record) return;
+    closeRestore();
+    showToast(`原型：已恢复 ${record.clientName} 的备份；当前文件已再次备份`);
+    $('#feedback').hidden = false;
+    $('#feedback-text').textContent = `已从 ${record.backup} 恢复；其他客户端未改动。`;
+  });
+
+  $('#settings-copy-endpoint').addEventListener('click', async () => {
+    const ok = await copyText('http://127.0.0.1:46890/v1');
+    showToast(ok ? '网关地址已复制' : '复制失败');
+  });
+  $('#settings-copy-key').addEventListener('click', async () => {
+    const ok = await copyText('sk-ai-bobby-demo-f3a2');
+    showToast(ok ? 'API Key 已复制' : '复制失败');
+  });
+  $('#settings-check-update').addEventListener('click', () => {
+    showUpdate();
+    showToast('已检查更新：发现 0.2.2');
+  });
+  $('#update-later').addEventListener('click', hideUpdate);
+  $('#update-start').addEventListener('click', startUpdate);
+  $('#auto-update').addEventListener('change', event => {
+    showToast(event.target.checked ? '已开启自动检查更新' : '已关闭自动检查更新');
   });
 
   $('#open-import').addEventListener('click', openDrawer);
@@ -805,9 +1297,14 @@
     button.addEventListener('click', () => applyTheme(button.dataset.themeChoice));
   }
 
+  $('#toggle-sidebar').addEventListener('click', () => {
+    applySidebar(!$('#app-shell').classList.contains('sidebar-collapsed'));
+  });
+
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
-    if (!$('#login-modal').hidden) closeLogin();
+    if (!$('#floating-player').hidden) closeMusic();
+    else if (!$('#login-modal').hidden) closeLogin();
     else if (!$('#drawer').hidden) closeDrawer();
   });
 
@@ -816,11 +1313,20 @@
   try { savedTheme = localStorage.getItem('ai-bobby-theme') || 'dark'; } catch {}
   const params = new URLSearchParams(location.search);
   applyTheme(params.get('theme') || savedTheme);
-  renderAll();
+
+  const initialTab = params.get('tab');
+  const initialPage = params.get('page') || (initialTab && SOURCES[initialTab] ? initialTab : 'opencode');
+  navigateTo(initialPage);
+  initZeoFab();
+  initMusicPlayer();
 
   // Deep links for design review screenshots.
-  const initialTab = params.get('tab');
-  if (initialTab && SOURCES[initialTab] && initialTab !== state.tab) switchTab(initialTab);
+  if (params.get('update') === '1') showUpdate();
   if (params.get('drawer') === '1') openDrawer();
   if (params.get('login') === '1') openLogin();
+
+  // Sidebar starts expanded; a collapsed rail is persisted per user.
+  let savedSidebar = '0';
+  try { savedSidebar = localStorage.getItem('ai-bobby-sidebar') || '0'; } catch {}
+  applySidebar(savedSidebar === '1');
 })();

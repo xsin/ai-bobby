@@ -44,7 +44,7 @@ export function UpdateBanner({
       </span>
       <div className="min-w-[220px] flex-1">
         <div className="flex flex-wrap items-center gap-2 text-[12px] font-semibold text-text">
-          发现新版本 {info.version}
+          {downloaded ? '更新已就绪' : `发现新版本 ${info.version}`}
           <span className="rounded bg-surface/70 px-1.5 py-px text-[10px] font-normal text-muted-foreground">
             当前 {info.currentVersion} · {size}
           </span>
@@ -73,7 +73,7 @@ export function UpdateBanner({
             onClick={onInstall}
           >
             <RotateCw className="size-3.5" />
-            {installing ? '正在安装…' : '安装并重启'}
+            {installing ? '正在安装…' : '立即重启'}
           </Button>
         ) : (
           <Button
@@ -84,7 +84,7 @@ export function UpdateBanner({
             onClick={onDownload}
           >
             <Download className="size-3.5" />
-            {downloading ? '下载中…' : '更新'}
+            {downloading ? '下载中…' : '立即更新'}
           </Button>
         )}
         <Button
