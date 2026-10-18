@@ -282,7 +282,6 @@ refs/                 只读参考实现（.gitignore，不发布）
 - [docs/tech.md](./docs/tech.md) — 架构、协议、登录/多账号、更新/分发、测试
 - [docs/prd-landing.md](./docs/prd-landing.md) — 落地页 PRD（待视觉确认）
 - [docs/tech-landing.md](./docs/tech-landing.md) — 落地页技术方案（React/Vite/Three/PWA）
-- [docs/marketing-brainstorm.md](./docs/marketing-brainstorm.md) — marketing 项目脑暴（未编码）
 - [human-sos.md](./human-sos.md) — **需要人工完成/确认的交付事项**
 - [prototype/](./prototype/) — 视觉稿：`desktop/` 控制面板、`website/` 落地页
 - [ui-guideline.md](./ui-guideline.md) — shadcn/Tailwind/antd 分层规范
@@ -292,9 +291,8 @@ refs/                 只读参考实现（.gitignore，不发布）
 - **Website（落地页）**：视觉稿已产出，见
   [`prototype/website/`](./prototype/website/)；PRD/tech 在 `docs/`；**等你确认后再创建
   `apps/website` 并编码**。
-- **Marketing（自动化营销）**：只有脑暴稿
-  [`docs/marketing-brainstorm.md`](./docs/marketing-brainstorm.md)，尚未编码；
-  需要先确认目标、渠道与自主等级。
+- **Marketing / Lucia**：已拆分为同级独立项目（`ai-lucia`），不在本仓库；
+  等 AI Bobby 完结后再启动实现。
 - **依赖版本**：所有第三方版本收敛到 `pnpm-workspace.yaml` 的 `catalog:`，
   子项目只写 `catalog:`，不再各自声明版本。
 
