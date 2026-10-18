@@ -10,7 +10,7 @@
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
 > 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒，
-> 部署在 <https://xsin.github.io/ai-bobby/website/>。
+> 部署在 <https://xsin.github.io/ai-bobby/>。
 
 ![OpenCode tab](docs/screenshots/01-opencode-dark.png)
 
@@ -297,7 +297,7 @@ refs/                 只读参考实现（.gitignore，不发布）
 - **Website（落地页）**：已实现于 [`apps/website`](./apps/website)，
   支持中英文与 PWA 自动更新提醒；视觉母版仍在
   [`prototype/website/`](./prototype/website/)。线上：
-  <https://xsin.github.io/ai-bobby/website/>。
+  <https://xsin.github.io/ai-bobby/>。
 - **Marketing / Lucia**：已拆分为同级独立项目（`ai-lucia`），不在本仓库；
   等 AI Bobby 完结后再启动实现。
 - **依赖版本**：所有第三方版本收敛到 `pnpm-workspace.yaml` 的 `catalog:`，

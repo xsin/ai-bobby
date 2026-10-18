@@ -18,7 +18,7 @@ pnpm --filter @ai-bobby/website build
 - `src/components/HeroCanvas.tsx`：Three.js + GLSL，`React.lazy` 懒加载。
 - `src/components/PwaPrompts.tsx`：PWA 安装提示 + 新版本提示；`registerType: 'prompt'`。
 - `public/`：本地 logo、PWA 图标、OG 图、robots/sitemap。
-- 构建 base 为 `/ai-bobby/website/`，由 `.github/workflows/website.yml` 发布到 gh-pages。
+- 构建 base 为 `/ai-bobby/`，由 `.github/workflows/website.yml` 发布到 gh-pages 根路径；`/releases/latest` 保留。
 
 ## 设计稿
 

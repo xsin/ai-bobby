@@ -1,2 +1,2 @@
 User-agent: *
-Allow: /ai-bobby/website/
+Allow: /ai-bobby/

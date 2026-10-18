@@ -8,7 +8,7 @@
 
 - 最后更新：2026-10-18
 - 当前阶段：**v0.2.1 已发布但处于人工验收中；未经用户本机确认，不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
-  落地页已实现并上线 `/website/`；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
+  落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
@@ -153,7 +153,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P6 控制面板 | 完成 | 三 tab、真实状态、登录窗口、导入 IPC、设置真实端口/Key |
 | P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布但验收中；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
-| Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署 `/website/` |
+| Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署根路径 |
 | Lucia | 独立项目 | 同级 `ai-lucia/`；等 AI Bobby 完结后再启动，不在本仓库实现 |
 
 ---
@@ -166,7 +166,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 - 支持 **中文/英文切换**（localStorage + 浏览器语言，`document.lang`/title 同步）。
 - PWA：`vite-plugin-pwa` prompt 模式；新版本 toast + Refresh；安装提示 7 天节流。
 - 视觉母版：`prototype/website/`（含本地 vendor + file:// bundle）。
-- 部署：`.github/workflows/website.yml` → gh-pages `/website/`；release workflow 已改为保留 `website/`。
+- 部署：`.github/workflows/website.yml` → gh-pages 根路径；release workflow 只更新 `releases/latest`，不覆盖 index。
 - 文档：`docs/prd-landing.md`、`docs/tech-landing.md`。
 - **状态：已实现并本地验证。**
 
@@ -281,8 +281,8 @@ WorkBuddy 上游
 ### 2026-10-18 新项目与依赖收归
 
 - 落地页视觉稿确认并实现 `apps/website`：WebGL、中英文 i18n、PWA 更新提示、
-  gh-pages `/website/` 工作流，并保留根目录安装通道。
-- 线上验证：`/website/`、manifest、sw.js、PWA 图标均 200；`/releases/latest/install.sh` 仍 200。
+  gh-pages 根路径工作流，并保留 `/releases/latest` 安装通道。
+- 线上验证：根路径、manifest、sw.js、PWA 图标均 200；`/releases/latest/install.sh` 仍 200。
 - marketing 拆分为同级独立项目 `ai-lucia/`，等 AI Bobby 完结后再启动。
 - `prototype/` 已按 `desktop/`、`website/` 分目录。
 - 第三方依赖版本收归 `pnpm-workspace.yaml` 的 `catalog:`，package.json 改为 `catalog:`；

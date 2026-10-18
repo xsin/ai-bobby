@@ -74,48 +74,51 @@ jobs:
       - name: Validate release manifest
         run: node scripts/release/validate.mjs "$RUNNER_TEMP/dist/${{ steps.ver.outputs.version }}"
 
-      - name: Stage Pages install channel
+      - name: Update Pages install channel
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           V="${{ steps.ver.outputs.version }}"
           SITE="$RUNNER_TEMP/site"
+          ROOT="$GITHUB_WORKSPACE"
           DIST="$RUNNER_TEMP/dist/$V"
-          mkdir -p "$SITE"
 
-          # Preserve the landing page published by website.yml. The install
-          # channel and the website share one gh-pages branch.
+          rm -rf "$SITE"
           if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
-            rm -rf "$RUNNER_TEMP/gh-pages-current"
-            git clone -q --depth 1 --branch gh-pages               "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"               "$RUNNER_TEMP/gh-pages-current"
-            if [ -d "$RUNNER_TEMP/gh-pages-current/website" ]; then
-              cp -R "$RUNNER_TEMP/gh-pages-current/website" "$SITE/website"
-            fi
+            git clone -q --branch gh-pages \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "$SITE"
+          else
+            mkdir -p "$SITE"
+            cd "$SITE"
+            git init -q
+            git checkout -q -b gh-pages
+            cd - >/dev/null
           fi
 
-          mkdir -p "$SITE/releases/latest"
-          cp scripts/release/install.sh "$SITE/releases/latest/install.sh"
-          cp "$DIST/checksums.txt" "$SITE/releases/latest/checksums.txt"
-          cp "$DIST/latest.json" "$SITE/releases/latest/latest.json"
-          cp "$DIST/VERSION.txt" "$SITE/releases/latest/VERSION.txt"
-          cp scripts/release/pages/index.html "$SITE/index.html"
-          cp scripts/release/pages/.nojekyll "$SITE/.nojekyll"
-
-      - name: Publish install channel to gh-pages
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          cd "$RUNNER_TEMP/site"
-          git init -q
+          cd "$SITE"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -q -b gh-pages
+
+          # Root is owned by website.yml. Only replace the install channel;
+          # never overwrite the landing page index.html.
+          rm -rf website
+          rm -rf releases/latest
+          mkdir -p releases/latest
+          cp "$ROOT/scripts/release/install.sh" releases/latest/install.sh
+          cp "$DIST/checksums.txt" releases/latest/checksums.txt
+          cp "$DIST/latest.json" releases/latest/latest.json
+          cp "$DIST/VERSION.txt" releases/latest/VERSION.txt
+          if [ ! -f index.html ]; then
+            cp "$ROOT/scripts/release/pages/index.html" index.html
+          fi
+          touch .nojekyll
+
           git add -A
-          git commit -q -m "release: AI Bobby ${{ steps.ver.outputs.version }} install channel"
-          git push -q --force "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages
-          echo "published install channel to gh-pages"
+          git commit -q -m "release: AI Bobby ${{ steps.ver.outputs.version }} install channel" || true
+          git push "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:gh-pages
+          echo "updated install channel without touching landing page"
 
       - name: Create GitHub Release
         env:

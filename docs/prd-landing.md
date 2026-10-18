@@ -165,7 +165,7 @@ PWA install prompt + update toast
 - 标题/描述/OG/Twitter Card。
 - `lang=zh-CN`；关键文案中英混排。
 - 语义化 section、唯一 H1、图片 alt。
-- 提供 `robots.txt` + `sitemap.xml`（部署在 `/website/` 下）。
+- 提供 `robots.txt` + `sitemap.xml`（部署在根路径）。
 
 ### FR-8 国际化（v1 必须）
 
@@ -212,11 +212,11 @@ Three.js 与 shader 场景必须动态 `import()`；首屏先渲染 HTML/CSS，�
 ## 9. 发布与路径
 
 - 生产项目：`apps/website`（`@ai-bobby/website`）。
-- 部署：GitHub Actions 构建后发布 `gh-pages` 的 **`/website/`** 子路径：
-  `https://xsin.github.io/ai-bobby/website/`
-- 不覆盖根目录的安装通道（`/releases/latest/install.sh`、`latest.json`）。
-- 原因：同一仓库的 gh-pages 已承载 curl 安装通道；根目录如果被 landing 覆盖，旧安装命令会失效。
-- 后续若有自定义域名，可把 landing 放根域、安装通道保留在 `/releases/`。
+- 部署：GitHub Actions 构建后发布到 `gh-pages` **根路径**：
+  `https://xsin.github.io/ai-bobby/`
+- 根目录的 landing 与 `/releases/latest/` 安装通道共存；website 部署必须保留 `releases/`。
+- release workflow 只更新 `releases/latest`，不得覆盖根 `index.html`（landing 归 website workflow 所有）。
+- 后续若有自定义域名，可继续保留 `/releases/` 作为安装通道。
 
 ---
 
@@ -229,7 +229,7 @@ Three.js 与 shader 场景必须动态 `import()`；首屏先渲染 HTML/CSS，�
 - [ ] PWA 可安装；新版本能出现更新提示并刷新。
 - [ ] `prefers-reduced-motion` 下无动画但内容完整。
 - [ ] WebGL 失败时仍可用。
-- [ ] GitHub Actions 发布到 `/website/`，不破坏 `/releases/latest/`。
+- [ ] GitHub Actions 发布到根路径，不破坏 `/releases/latest/`。
 - [ ] 通过性能预算与基础 a11y 检查。
 
 ---
@@ -238,6 +238,6 @@ Three.js 与 shader 场景必须动态 `import()`；首屏先渲染 HTML/CSS，�
 
 1. 视觉方向：当前“克莱因蓝能量核心 + 近黑 + 玻璃终端”是否接受？
 2. 语言：Hero 英文 + 正文中文，还是全中文/全英文？
-3. 部署路径：接受 `https://xsin.github.io/ai-bobby/website/`，还是希望 landing 占根路径（需要迁移安装通道）？
+3. 部署路径：接受 `https://xsin.github.io/ai-bobby/`，还是希望 landing 占根路径（需要迁移安装通道）？
 4. PWA 安装提示频率：7 天是否合适？
 5. 首屏是否要放真实截图（控制面板）还是保持纯 Web3D + 终端卡片？

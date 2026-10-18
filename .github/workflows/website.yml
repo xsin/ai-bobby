@@ -44,13 +44,34 @@ jobs:
       - name: Build
         run: pnpm --filter @ai-bobby/website build
 
-      - name: Deploy to gh-pages /website
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: apps/website/dist
-          destination_dir: website
-          keep_files: true
-          publish_branch: gh-pages
-          user_name: github-actions[bot]
-          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+      - name: Deploy to gh-pages root
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          SITE="$RUNNER_TEMP/gh-pages"
+          rm -rf "$SITE"
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            git clone -q --branch gh-pages \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" \
+              "$SITE"
+          else
+            mkdir -p "$SITE"
+            cd "$SITE"
+            git init -q
+            git checkout -q -b gh-pages
+            cd - >/dev/null
+          fi
+
+          cd "$SITE"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Root now serves the landing page; keep /releases/latest intact.
+          rm -rf website
+          cp -R "$GITHUB_WORKSPACE/apps/website/dist/." .
+          touch .nojekyll
+          git add -A
+          git commit -q -m "site: deploy AI Bobby landing page" || true
+          git push origin HEAD:gh-pages
+          echo "published landing page to gh-pages root"

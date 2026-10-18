@@ -24,7 +24,7 @@
 | 3D | three.js + 自定义 GLSL | 0.186.1 |
 | PWA | vite-plugin-pwa + workbox-window | 2.0.0 / 7.4.1 |
 | 测试 | Vitest | 5.0.5 |
-| 部署 | GitHub Actions → gh-pages `/website/` | — |
+| 部署 | GitHub Actions → gh-pages 根路径 | — |
 
 > 不引入 antd：landing 没有数据表格需求；shadcn/Radix 足够。
 > 不引入动画库：CSS + IntersectionObserver + 少量 JS 控制，减少首屏体积。
@@ -158,19 +158,19 @@ Layer 4  固定 UI             nav、scroll progress、PWA toast
 VitePWA({
   registerType: 'prompt',
   injectRegister: false,
-  base: '/ai-bobby/website/',
-  scope: '/ai-bobby/website/',
+  base: '/ai-bobby/',
+  scope: '/ai-bobby/',
   manifest: {
     name: 'AI Bobby',
     short_name: 'AI Bobby',
-    start_url: '/ai-bobby/website/',
+    start_url: '/ai-bobby/',
     display: 'standalone',
     background_color: '#05070d',
     theme_color: '#1e4fff',
     icons: [/* 192, 512, maskable */],
   },
   workbox: {
-    navigateFallback: '/ai-bobby/website/index.html',
+    navigateFallback: '/ai-bobby/index.html',
     globPatterns: ['**/*.{js,css,html,svg,woff2}'],
     runtimeCaching: [
       // 只缓存静态资源；不缓存 127.0.0.1 API
@@ -222,12 +222,12 @@ const updateSW = registerSW({
 ### 6.1 路径
 
 ```text
-https://xsin.github.io/ai-bobby/website/
+https://xsin.github.io/ai-bobby/
 ```
 
-- `vite.config.ts` 的 `base` 必须是 `/ai-bobby/website/`。
-- 根路径继续保留安装通道：`/releases/latest/install.sh`、`latest.json`。
-- 不在根路径部署 landing，避免覆盖 curl 安装通道。
+- `vite.config.ts` 的 `base` 必须是 `/ai-bobby/`。
+- 根路径同时承载 landing 与安装通道：`/releases/latest/install.sh`、`latest.json`。
+- website workflow 部署根路径时必须保留 `releases/`；release workflow 只更新 `releases/latest`，不覆盖根 `index.html`。
 
 ### 6.2 GitHub Actions（`.github/workflows/website.yml`）
 
@@ -259,22 +259,27 @@ on:
 - run: pnpm --filter @ai-bobby/website build
 ```
 
-发布：
+发布（自定义脚本，显式保留 `releases/`）：
 
 ```yaml
-- uses: peaceiris/actions-gh-pages@v4
-  with:
-    github_token: ${{ secrets.GITHUB_TOKEN }}
-    publish_dir: apps/website/dist
-    destination_dir: website
-    keep_files: true
-    publish_branch: gh-pages
+- name: Deploy to gh-pages root
+  env:
+    GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  run: |
+    SITE="$RUNNER_TEMP/gh-pages"
+    git clone -q --depth 1 --branch gh-pages \
+      "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "$SITE"
+    cd "$SITE"
+    rm -rf website
+    cp -R "$GITHUB_WORKSPACE/apps/website/dist/." .
+    touch .nojekyll
+    git add -A
+    git commit -q -m "site: deploy AI Bobby landing page" || true
+    git push origin HEAD:gh-pages
 ```
 
-> **必须 `keep_files: true` + `destination_dir: website`**，否则会清掉根目录的安装通道。
-> 现有 `.github/workflows/release.yml` 会 force-push gh-pages；发版前需要改成“保留 website/”
-> （从 `origin/gh-pages` 取回 `website/` 再一起发布），否则下一次 release 会删掉 landing。
-> 这是实现前必须一起改的发布脚本约束。
+> 不能使用会清空目标分支的部署方式；根目录已有 `releases/latest`，website 和 release
+> 两个 workflow 必须共享 gh-pages。`release.yml` 只替换 `releases/latest`，保留根 index。
 
 ### 6.3 缓存
 
@@ -289,7 +294,7 @@ on:
 
 - `index.html`：title、description、canonical、OG/Twitter、theme-color、apple-touch-icon。
 - `og.png` 1200×630，放在 `public/`。
-- `robots.txt` 允许抓取；`sitemap.xml` 只含 `/ai-bobby/website/`。
+- `robots.txt` 允许抓取；`sitemap.xml` 只含 `/ai-bobby/`。
 - 结构化数据：`SoftwareApplication` JSON-LD（name、operatingSystem、offers 免费）。
 - 不生成多语言路由；v1 中英混排，后续再加 i18n。
 
@@ -338,5 +343,5 @@ CI 至少跑 typecheck + unit test + build；Lighthouse CI 可作为非阻塞报
 2. 创建 `apps/website` + catalog 接入 + 静态页面（无 WebGL）。
 3. Hero WebGL + shader + 降级。
 4. PWA + 更新提示。
-5. GH Actions + `/website/` 部署；改 release workflow 保留 website。
+5. GH Actions + 根路径部署；release workflow 只更新 `releases/latest`，不覆盖 landing。
 6. Lighthouse/a11y/移动端验收。
