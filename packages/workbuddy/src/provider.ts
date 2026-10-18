@@ -383,7 +383,7 @@ export async function* parseUpstreamSse(response: Response, responseId: string):
           if (isObject(chunk['error'])) {
             const error = chunk['error']
             const message = typeof error['message'] === 'string' ? error['message'] : 'upstream error'
-            const status = number(error['status'])
+            const status = number(error['status']) || number(error['statusCode'])
             throw new UpstreamError(
               message,
               status > 0 ? status : 502,
