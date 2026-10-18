@@ -1506,6 +1506,8 @@ App
 - Renderer：`ok` 时关闭 iframe；失败时把 track 写入 `musicTrack`，由 `FloatingMusicPlayer` 显示 `outchain` iframe。
 - 局限：`orpheus://` 不是公开稳定协议，可能随客户端更新失效；“唤起成功”只代表客户端接收了 URL，
   登录、会员、版权与地区限制仍由网易云客户端处理。
+- 专辑：`{"type":"album","id":<albumId>,"cmd":"open"}` 在 3.1.12.3443 上提示“操作不支持”，
+  `cmd:"play"` 无效果；因此专辑卡片继续打开 `music.163.com` 专辑页，不调用 App。
 
 验证：macOS 网易云音乐 3.1.12.3443 实测 payload 可把播放器切到目标歌曲；
 单测覆盖 URL 生成、无 handler、handler 非网易云、打开失败、非法 ID。

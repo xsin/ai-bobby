@@ -70,7 +70,7 @@ export function AboutPage({ version, onPlay, onOpenExternal }: AboutPageProps) {
                 key={album.id}
                 type="button"
                 onClick={() => onOpenExternal(album.href)}
-                className="flex w-full items-center gap-2.5 rounded-lg border border-line-soft bg-surface p-2 text-left transition-colors hover:border-primary/30 hover:bg-accent-soft"
+                className="flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-line-soft bg-surface p-2 text-left transition-colors hover:border-primary/30 hover:bg-accent-soft"
               >
                 <img src={COVERS[index]} alt={`${album.name} 专辑封面`} className="size-[54px] shrink-0 rounded-md object-cover" />
                 <span className="flex min-w-0 flex-col gap-0.5">
@@ -114,7 +114,7 @@ export function AboutPage({ version, onPlay, onOpenExternal }: AboutPageProps) {
                 key={track.id}
                 type="button"
                 onClick={() => onPlay(track)}
-                className="grid w-full grid-cols-[20px_18px_minmax(0,1fr)_auto] items-center gap-2 border-b border-line-soft px-3 py-1.5 text-left last:border-b-0 hover:bg-hover"
+                className="grid w-full grid-cols-[20px_18px_minmax(0,1fr)_auto] items-center gap-2 border-x-0 border-t-0 border-b border-solid border-line-soft px-3 py-1.5 text-left last:border-b-0 hover:bg-hover"
               >
                 <span className="text-right font-mono text-[9px] text-faint">{String(index + 1).padStart(2, '0')}</span>
                 <span className="grid size-[18px] place-items-center rounded-full bg-surface-2 text-muted-foreground transition-colors group-hover:bg-primary">

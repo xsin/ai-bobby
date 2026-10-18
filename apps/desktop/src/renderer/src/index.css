@@ -184,6 +184,10 @@ html[data-theme="light"] {
     background-color: transparent;
     background-image: none;
   }
+  .tw-root button:not(:disabled),
+  .tw-root [role='button']:not([aria-disabled='true']) {
+    cursor: pointer;
+  }
   .tw-root input,
   .tw-root select,
   .tw-root textarea {

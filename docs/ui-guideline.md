@@ -334,6 +334,17 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 - [Material Design 3 · Grids & spacing](https://m3.material.io/foundations/layout/grids-spacing/spacing)：以 4 / 8dp 为基准的 spacing 体系。
 
 
+### 5.5 可点击元素
+
+- 可点击的 `button`、链接、`[role="button"]`、行和卡片统一使用 `cursor: pointer`；
+  禁用态使用 `not-allowed`，不要用 pointer。
+- 整行/整卡可点击时，点击区域覆盖整行/整卡，不要让用户只能点中内部文字或图标。
+- 可点击元素必须有 hover 反馈（背景、边框或颜色变化），不能只依赖手型。
+- 按钮内不要再嵌按钮；需要用 `role="button"` 时补齐键盘 Enter/Space 行为。
+- 原生 `<button>` 不写 `border` 时仍可能带入 UA 默认边框；只画单边边框时，用
+  `border-x-0 border-t-0 border-b border-solid` 明确清零其他边。
+
+
 ## 6. Agent 行为约束（逐条遵守）
 
 1. **MCP 优先**：生成任何 antd 或 ProComponents 代码前，先调用 antd_info / antd_doc / antd_changelog（或降级到 antd CLI）核实当前版本 API。禁止凭记忆生成。
@@ -349,6 +360,7 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 11. **shadcn CLI 命令使用 shadcn**，新组件通过 npx shadcn@latest add <component> 添加，不得使用旧的 shadcn-ui 命令。
 12. **shadcn 组件新增前，优先通过 shadcn MCP 确认 registry 中存在该组件**；不得猜测组件名称或手动编写非标准实现。
 13. **尺寸与间距遵循 4px 网格**：padding / margin / gap / 固定宽高优先取 4px 的倍数；布局节奏优先 8px；偏离网格必须说明原因（见第 5.4 节）。
+14. **可点击元素必须有手型与 hover 反馈**：整行/整卡可点；禁用态用 `not-allowed`；只画单边边框时显式清零其他边（见第 5.5 节）。
 
 
 ## 7. 快速判定表

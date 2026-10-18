@@ -380,3 +380,14 @@ WorkBuddy 上游
 - 文档：PRD FR-UI-10/AC-8、tech §8.5.1、README 使用说明与故障排查、issues 第 6 条。
 - 未公开协议，客户端升级可能失效；版权/会员/登录限制仍由网易云 App 处理。
 - 提交：见最新提交；未 push、未 tag、未创建 release。
+
+### 2026-10-18 Round 4.3：关于页歌曲/专辑交互修复
+
+- 歌曲行只写 `border-b` 时会保留原生 `<button>` 的 2px outset 边框，表现为每行像独立卡片且行间有缝；
+  改为 `border-x-0 border-t-0 border-b border-solid`，只保留 1px 底边。
+- 全局基础层增加 `.tw-root button:not(:disabled)` / `[role="button"]:not([aria-disabled="true"])`
+  的 `cursor: pointer`；专辑卡额外加 `cursor-pointer`。
+- 专辑深链测试：`{"type":"album","id":…,"cmd":"open"}` 在网易云 3.1.12.3443 提示“操作不支持”，
+  `cmd:"play"` 无效果；因此专辑卡继续打开 `music.163.com` 专辑页，不调用 App。
+- 文档：PRD FR-UI-10、tech §8.5.1、ui-guideline §5.5 与 Agent 约束 #14、README、issues 第 7 条。
+- 验证：浅色/深色下歌曲列表边框与手型检查；desktop typecheck/build；未 push、未 tag、未创建 release。
