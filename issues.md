@@ -1,0 +1,6 @@
+NOTE: 此文档由人类反馈应用产品的 BUG 或 FR (Feature Requests),由 Agent 收拢处理并回填对应的 commit id，更新状态。不需要填写处理细节，因为细节体现在提交记录中。 
+
+
+## v0.2.1 体验报告：  
+1、安装时Little Snitch 弹出安全提醒（大概是因为AI Bobby未签名但要访问Local Network），在readme中说明Why 和 How，避免用户错杀导致应用无法正常工作。
+2、扫码登录无法正常工作。
