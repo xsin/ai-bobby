@@ -17,6 +17,7 @@ import { FloatingMusicPlayer } from '@/components/floating-music-player'
 import { UpdateBanner } from '@/components/update-banner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { toProviderGroups } from '@/lib/import-groups'
 import type { MusicTrack } from '@/lib/music'
 import { ThemeProvider } from '@/lib/theme'
 import {
@@ -73,7 +74,45 @@ function cloneSources(): Record<ProviderId, DemoSource> {
     : (JSON.parse(JSON.stringify(SOURCES)) as Record<ProviderId, DemoSource>))
 }
 
+const SELECTION_KEY = 'ai-bobby-last-selection'
+
+function readSavedSelection(): Record<ProviderId, string[]> | null {
+  try {
+    const raw = localStorage.getItem(SELECTION_KEY)
+    if (raw === null || raw === '') return null
+    const parsed: unknown = JSON.parse(raw)
+    if (typeof parsed !== 'object' || parsed === null) return null
+    const record = parsed as Record<string, unknown>
+    const pick = (key: ProviderId): string[] => {
+      const value = record[key]
+      return Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : []
+    }
+    return { opencode: pick('opencode'), workbuddy: pick('workbuddy'), wbi: pick('wbi') }
+  } catch {
+    return null
+  }
+}
+
+function writeSavedSelection(selection: Record<ProviderId, Set<string>>): void {
+  try {
+    const payload = Object.fromEntries(
+      (Object.keys(selection) as ProviderId[]).map(key => [key, [...selection[key]]]),
+    )
+    localStorage.setItem(SELECTION_KEY, JSON.stringify(payload))
+  } catch {
+    // Persisting the selection is best effort.
+  }
+}
+
 function initialSelection(): Record<ProviderId, Set<string>> {
+  const saved = readSavedSelection()
+  if (saved !== null && saved.opencode.length + saved.workbuddy.length + saved.wbi.length > 0) {
+    return {
+      opencode: new Set(saved.opencode),
+      workbuddy: new Set(saved.workbuddy),
+      wbi: new Set(saved.wbi),
+    }
+  }
   const base = window.aiBobby ? emptySources() : SOURCES
   return {
     opencode: new Set(base.opencode.models.filter(model => model.status === 'available').map(model => model.id)),
@@ -350,6 +389,21 @@ function AppInner() {
       }
       hydrated.current = true
       lastModelCount.current = total
+      const saved = readSavedSelection()
+      if (saved !== null && saved.opencode.length + saved.workbuddy.length + saved.wbi.length > 0) {
+        const keep = (ids: string[], models: ModelSnapshot[]) =>
+          new Set(ids.filter(id => models.some(model => model.id === id)))
+        const restored = {
+          opencode: keep(saved.opencode, groups.opencode),
+          workbuddy: keep(saved.workbuddy, groups.workbuddy),
+          wbi: keep(saved.wbi, groups.wbi),
+        }
+        if (restored.opencode.size + restored.workbuddy.size + restored.wbi.size > 0) {
+          setSelected(restored)
+          setFeedback(summary)
+          return
+        }
+      }
       setSelected({
         opencode: new Set(groups.opencode.filter(model => model.status === 'available').map(model => model.id)),
         workbuddy: new Set(groups.workbuddy.filter(model => model.status === 'available').map(model => model.id)),
@@ -851,7 +905,7 @@ function AppInner() {
           const plans = []
           for (const client of payload.clients) {
             plans.push(await api.importApply(targetMap[client], {
-              groups: payload.groups,
+              groups: toProviderGroups(payload.groups),
               modelIds: payload.modelIds,
               defaultModelId: payload.defaultModelId,
               setAsDefault: payload.setAsDefault,
@@ -859,6 +913,17 @@ function AppInner() {
           }
           const changed = plans.filter(plan => plan.changed)
           const warnings = plans.flatMap(plan => plan.warnings)
+          const byProvider: Record<ProviderId, Set<string>> = {
+            opencode: new Set(),
+            workbuddy: new Set(),
+            wbi: new Set(),
+          }
+          for (const id of payload.modelIds) {
+            const prefix = id.split('/')[0]
+            const key: ProviderId = prefix === 'oc' ? 'opencode' : prefix === 'wb' ? 'workbuddy' : 'wbi'
+            byProvider[key].add(id)
+          }
+          writeSavedSelection(byProvider)
           setFeedback(changed.length === 0 ? `配置已是最新（${plans.length} 个客户端），无需重复写入。` : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`)
           if (warnings.length > 0) toast.warning(warnings[0]!)
           toast.success(changed.length === 0 ? '配置已是最新' : `已写入 ${changed.length} 个客户端`)

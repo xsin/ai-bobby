@@ -36,6 +36,14 @@
           </div>
 
           <nav class="sidebar-nav">
+            <div class="nav-group-label">总览</div>
+            <button class="side-item" type="button" data-page="overview" title="概览">
+              <span class="side-icon" aria-hidden="true">
+                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="6" height="6" rx="1.3"/><rect x="11" y="3" width="6" height="6" rx="1.3"/><rect x="3" y="11" width="6" height="6" rx="1.3"/><rect x="11" y="11" width="6" height="6" rx="1.3"/></svg>
+              </span>
+              <span class="side-label">概览</span>
+            </button>
+
             <div class="nav-group-label">模型来源</div>
             <button class="side-item active" type="button" data-page="opencode" title="OpenCode">
               <span class="side-icon" aria-hidden="true">
@@ -133,6 +141,40 @@
           </section>
 
           <div class="content-shell">
+            <main class="page overview-page" id="page-overview" hidden>
+              <div class="page-head">
+                <div>
+                  <div class="eyebrow">OVERVIEW</div>
+                  <h1>概览</h1>
+                  <p>当前网关、模型源与最近导入的一览；点卡片进入对应页面。</p>
+                </div>
+                <div class="page-actions">
+                  <button type="button" id="overview-refresh">刷新数据</button>
+                  <button type="button" class="primary import-open">导入到客户端</button>
+                </div>
+              </div>
+
+              <div class="overview-stats">
+                <div class="stat-card"><span>网关</span><strong>运行中</strong><small id="overview-gateway-sub">127.0.0.1:46890 · 28 个模型</small></div>
+                <div class="stat-card"><span>模型源</span><strong>3</strong><small id="overview-source-sub">可用 45 / 待检测 3</small></div>
+                <div class="stat-card"><span>积分</span><strong>5,624</strong><small id="overview-credit-sub">CN 2 个账号 · INTL 1 个账号</small></div>
+                <div class="stat-card"><span>最近导入</span><strong id="overview-last-time">今天 13:42</strong><small id="overview-last-sub">WorkBuddy · 7 个模型 · 成功</small></div>
+              </div>
+
+              <section class="overview-sources" id="overview-sources" aria-label="模型源"></section>
+
+              <section class="panel overview-recent" aria-labelledby="overview-recent-heading">
+                <div class="panel-head">
+                  <h2 id="overview-recent-heading">最近导入</h2>
+                  <div class="panel-head-actions">
+                    <span>最近 3 次</span>
+                    <button class="link-button" type="button" data-page="history">查看全部 →</button>
+                  </div>
+                </div>
+                <div class="recent-list" id="overview-recent-list"></div>
+              </section>
+            </main>
+
             <main class="workspace" id="page-models">
               <section class="source-head">
                 <div class="source-copy">
@@ -156,11 +198,16 @@
                 </div>
                 <div class="source-side">
                   <dl class="metrics" id="metrics"></dl>
-                  <div class="selection-summary">
-                    <span class="selection-dot" aria-hidden="true"></span>
-                    本页已选 <strong id="selected-count">7</strong>
-                    <span class="global-selection">全局 <strong id="global-selected">7</strong></span>
-                  </div>
+                  <dl class="metrics metrics-selection" aria-label="导入选择统计">
+                    <div class="metric accent">
+                      <dt>本页已选</dt>
+                      <dd><span id="selected-count">7</span><span class="metric-unit">/ <span id="selected-total">10</span></span></dd>
+                    </div>
+                    <div class="metric">
+                      <dt>全局已选</dt>
+                      <dd><span id="global-selected">7</span><span class="metric-unit">/ <span id="global-total">49</span></span></dd>
+                    </div>
+                  </dl>
                 </div>
               </section>
 
@@ -255,17 +302,31 @@
                 </label>
               </div>
 
-              <div class="history-layout">
-                <section class="panel history-panel" aria-labelledby="history-heading">
-                  <div class="panel-head"><h2 id="history-heading">导入记录</h2><span>最近 30 天</span></div>
-                  <div class="history-list" id="history-list"></div>
-                </section>
-                <aside class="panel backup-panel" aria-labelledby="backup-heading">
-                  <div class="panel-head"><h2 id="backup-heading">备份文件</h2><span>本机</span></div>
-                  <div class="backup-list" id="backup-list"></div>
-                  <p class="panel-note">写入前自动备份；恢复前会再次生成当前文件的备份。</p>
-                </aside>
-              </div>
+              <section class="panel history-panel" aria-labelledby="history-heading">
+                <div class="panel-head">
+                  <h2 id="history-heading">导入记录与备份</h2>
+                  <div class="panel-head-actions">
+                    <span>每个目标保留最近 5 份</span>
+                    <button class="link-button" type="button" id="history-compare">对比当前配置</button>
+                  </div>
+                </div>
+                <table class="history-table">
+                  <colgroup>
+                    <col class="history-icon-col">
+                    <col>
+                    <col class="history-actions-col">
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th scope="col"><span class="visually-hidden">客户端</span></th>
+                      <th scope="col">写入记录</th>
+                      <th scope="col" class="history-actions-col">操作</th>
+                    </tr>
+                  </thead>
+                  <tbody id="history-list"></tbody>
+                </table>
+                <p class="panel-note">写入前自动备份；恢复前会再次生成当前文件的备份。没有对应导入记录的旧备份单独列在末尾。</p>
+              </section>
             </main>
 
             <main class="page about-page" id="page-about" hidden>
@@ -416,7 +477,7 @@
                 <div>
                   <div class="eyebrow">PREFERENCES</div>
                   <h1>设置</h1>
-                  <p>主界面不再放主题切换；外观与网关配置都在这里。</p>
+                  <p>外观、本地网关、更新与关于都集中在这页；所有设置只作用于本机。</p>
                 </div>
               </div>
 
@@ -531,18 +592,20 @@
         <section class="drawer-section">
           <div class="section-heading"><h3>默认模型</h3><span>用于 Codex / Claude Code</span></div>
           <select id="default-model" aria-label="默认模型"></select>
-          <label class="check-row"><input type="checkbox" id="set-default"> 同时设为客户端默认模型</label>
+          <label class="check-row"><input type="checkbox" id="set-default"> 同时设为目标客户端的默认模型</label>
+          <p class="field-help">「客户端」指导入目标（Codex / Claude Code / DSH / WorkBuddy），不是 AI Bobby。这里只影响 Codex 与 Claude Code 的默认模型字段，AI Bobby 网关本身不变；WorkBuddy 与 DSH 暂不支持默认模型。</p>
         </section>
 
         <section class="drawer-section">
-          <div class="section-heading"><h3>预览变更</h3><span id="diff-target">Codex · Claude Code · WorkBuddy</span></div>
+          <div class="section-heading"><h3>变更预览</h3><span id="diff-target">自动更新 · 只读，不会写入</span></div>
+          <p class="field-help">勾选模型、切换分组或客户端时，这里会实时更新；还没有点「写入」前不会修改任何文件。</p>
           <pre class="diff" id="diff-preview"></pre>
         </section>
       </div>
       <div class="drawer-foot">
         <span id="drawer-summary">已选 7 个模型 · 5 个客户端</span>
         <div class="drawer-actions">
-          <button type="button" id="preview-import">预览变更</button>
+          <button type="button" id="cancel-import">取消</button>
           <button type="button" class="primary" id="apply-import">写入</button>
         </div>
       </div>
@@ -563,25 +626,52 @@
       </div>
     </div>
 
-        <div class="modal" id="login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-title"> hidden role="dialog" aria-modal="true" aria-labelledby="login-title">
+    <div class="modal" id="login-modal" hidden role="dialog" aria-modal="true" aria-labelledby="login-title">
       <div class="modal-card">
         <div class="modal-head">
           <div>
             <h2 id="login-title">添加 WorkBuddy 账号</h2>
-            <p>在官方登录页完成登录，AI Bobby 不接触密码。</p>
+            <p>在官方登录窗口扫码完成登录；AI Bobby 不接触密码。</p>
           </div>
           <button class="icon-button" id="close-login" type="button" aria-label="关闭登录窗口">×</button>
         </div>
-        <div class="login-preview">
-          <div class="login-brand">WorkBuddy</div>
-          <div class="qr" id="login-qr" aria-hidden="true"></div>
-          <p>请使用微信 / QQ 扫码登录</p>
-          <span class="login-url">copilot.tencent.com/login</span>
+        <div class="login-guide">
+          <div class="login-guide-head">
+            <span class="login-guide-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.4"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.4"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18z" fill="currentColor" stroke="none"/></svg>
+            </span>
+            <div>
+              <strong>在官方登录窗口扫码</strong>
+              <span class="login-url">copilot.tencent.com/login</span>
+            </div>
+          </div>
+          <ol class="login-steps">
+            <li>点击「打开官方登录页」，会弹出一个官方登录窗口。</li>
+            <li>用微信 / QQ 扫码完成登录，二维码由官方页面实时生成。</li>
+            <li>登录成功后窗口自动关闭，账号自动入库并刷新目录与额度。</li>
+          </ol>
         </div>
-        <div class="modal-note">原型演示：真实版本会打开官方登录窗口并轮询回调；token 只保存在本机。</div>
+        <div class="modal-note">官方窗口只在本机打开；token 保存在本机账号库（0600），日志不记录明文。原型会用一次模拟登录演示账号入库。</div>
         <div class="modal-foot">
           <button type="button" id="cancel-login">取消</button>
-          <button type="button" class="primary" id="mock-login">模拟登录成功</button>
+          <button type="button" class="primary" id="mock-login">打开官方登录页</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal diff-modal" id="diff-modal" hidden role="dialog" aria-modal="true" aria-labelledby="diff-title">
+      <div class="modal-card">
+        <div class="modal-head">
+          <div>
+            <h2 id="diff-title">查看差异</h2>
+            <p id="diff-subtitle">这次写入改了什么。</p>
+          </div>
+          <button class="icon-button" id="close-diff" type="button" aria-label="关闭差异窗口">×</button>
+        </div>
+        <pre class="diff diff-modal-body" id="diff-body"></pre>
+        <div class="modal-foot">
+          <button type="button" id="diff-open-dir">打开目录</button>
+          <button type="button" class="primary" id="close-diff-foot">关闭</button>
         </div>
       </div>
     </div>

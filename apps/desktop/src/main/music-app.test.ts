@@ -46,26 +46,29 @@ describe('playSongInNetease', () => {
 
   it('sends the payload once when the client is already running', async () => {
     neteaseHandler()
-    await expect(playSongInNetease(SONG_ID, running)).resolves.toEqual({ ok: true })
+    const launchClient = vi.fn()
+    await expect(playSongInNetease(SONG_ID, { ...running, launchClient })).resolves.toEqual({ ok: true })
+    expect(launchClient).not.toHaveBeenCalled()
     expect(mocks.openExternal).toHaveBeenCalledTimes(1)
     expect(mocks.openExternal).toHaveBeenCalledWith(SONG_URL)
   })
 
-  it('re-sends the payload after a cold launch', async () => {
+  it('launches the client first, then sends the payload once it is ready', async () => {
     neteaseHandler()
+    const launchClient = vi.fn().mockResolvedValue(undefined)
     const waitUntilRunning = vi.fn().mockResolvedValue(true)
     const delay = vi.fn().mockResolvedValue(undefined)
     await expect(
-      playSongInNetease(SONG_ID, { ...cold, waitUntilRunning, delay }),
+      playSongInNetease(SONG_ID, { ...cold, launchClient, waitUntilRunning, delay }),
     ).resolves.toEqual({ ok: true })
+    expect(launchClient).toHaveBeenCalledWith('/Applications/NeteaseMusic.app')
     expect(waitUntilRunning).toHaveBeenCalled()
     expect(delay).toHaveBeenCalled()
-    expect(mocks.openExternal).toHaveBeenCalledTimes(2)
-    expect(mocks.openExternal).toHaveBeenNthCalledWith(1, SONG_URL)
-    expect(mocks.openExternal).toHaveBeenNthCalledWith(2, SONG_URL)
+    expect(mocks.openExternal).toHaveBeenCalledTimes(1)
+    expect(mocks.openExternal).toHaveBeenCalledWith(SONG_URL)
   })
 
-  it('does not retry when the client never comes up', async () => {
+  it('still sends the payload when the client never reports running', async () => {
     neteaseHandler()
     await expect(
       playSongInNetease(SONG_ID, { ...cold, waitUntilRunning: () => Promise.resolve(false) }),

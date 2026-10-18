@@ -337,11 +337,6 @@
     const available = src.models.filter(model => model.status === 'available').length;
     const abnormal = src.models.length - available;
     $('#table-footer-text').textContent = `${available} 个可用 · ${abnormal} 个仅对话 / 待检测 / 不可用`;
-    $('#diff-target').textContent = [...state.clients.entries()]
-      .filter(([, checked]) => checked)
-      .map(([id]) => CLIENTS.find(client => client.id === id)?.name)
-      .filter(Boolean)
-      .join(' · ') || '未选择客户端';
   }
 
   function renderTabCounts() {
@@ -359,10 +354,11 @@
 
   function navigateTo(page) {
     const isSource = Object.hasOwn(SOURCES, page);
-    if (!isSource && !['history', 'about', 'settings'].includes(page)) return;
+    if (!isSource && !['overview', 'history', 'about', 'settings'].includes(page)) return;
     state.page = page;
     if (isSource) state.tab = page;
 
+    $('#page-overview').hidden = page !== 'overview';
     $('#page-models').hidden = !isSource;
     $('#page-history').hidden = page !== 'history';
     $('#page-about').hidden = page !== 'about';
@@ -375,6 +371,9 @@
     if (isSource) {
       setToolbar('模型来源', SOURCES[page].label);
       renderAll();
+    } else if (page === 'overview') {
+      setToolbar('总览', '概览');
+      renderOverview();
     } else if (page === 'history') {
       setToolbar('其他', '历史记录');
       renderHistory();
@@ -387,53 +386,135 @@
     $('.content-shell').scrollTop = 0;
   }
 
+  function renderOverview() {
+    const all = Object.values(SOURCES);
+    const available = all.reduce((sum, src) => sum + src.models.filter(model => model.status === 'available').length, 0);
+    const pending = all.reduce((sum, src) => sum + src.models.filter(model => model.status === 'pending').length, 0);
+    const totalModels = all.reduce((sum, src) => sum + src.models.length, 0);
+    $('#overview-source-sub').textContent = `可用 ${available} / 待检测 ${pending}`;
+    $('#overview-gateway-sub').textContent = `127.0.0.1:46890 · ${totalModels} 个模型`;
+
+    const cards = [
+      { id: 'opencode', label: 'OpenCode', note: '免费模型池', src: SOURCES.opencode, meta: '无需登录 · 按价格字段筛免费模型' },
+      { id: 'workbuddy', label: 'WorkBuddy', note: '国内版', src: SOURCES.workbuddy, meta: `${SOURCES.workbuddy.accounts.length} 个账号 · round-robin` },
+      { id: 'wbi', label: 'WorkBuddy AI', note: '国际版', src: SOURCES.wbi, meta: `${SOURCES.wbi.accounts.length} 个账号 · round-robin` },
+    ];
+    $('#overview-sources').innerHTML = cards.map(card => {
+      const usable = card.src.models.filter(model => model.status === 'available').length;
+      return `
+        <button class="overview-source" type="button" data-page="${card.id}">
+          <span class="overview-source-head"><strong>${escapeHtml(card.label)}</strong><span class="overview-source-note">${escapeHtml(card.note)}</span></span>
+          <span class="overview-source-count">${card.src.models.length}<small>个模型</small></span>
+          <span class="overview-source-meta">可用 ${usable} · ${escapeHtml(card.meta)}</span>
+          <span class="overview-source-link">查看模型 →</span>
+        </button>`;
+    }).join('');
+
+    const last = HISTORY[0];
+    if (last) {
+      $('#overview-last-time').textContent = last.date;
+      $('#overview-last-sub').textContent = `${last.clientName} · ${last.models} 个模型 · ${last.statusLabel}`;
+    }
+    $('#overview-credit-sub').textContent = `CN ${SOURCES.workbuddy.accounts.length} 个账号 · INTL ${SOURCES.wbi.accounts.length} 个账号`;
+    $('#overview-recent-list').innerHTML = HISTORY.slice(0, 3).map(record => `
+      <div class="recent-row">
+        <span class="recent-icon" aria-hidden="true">${escapeHtml(record.icon)}</span>
+        <span class="recent-main"><strong>${escapeHtml(record.clientName)}</strong><small>${escapeHtml(record.date)} · ${record.models} 个模型 · <code>${escapeHtml(record.target)}</code></small></span>
+        <span class="status-pill${record.status === 'warn' ? ' warn' : ''}">${escapeHtml(record.statusLabel)}</span>
+      </div>`).join('');
+  }
+
+  function backupOnlyRow(backup) {
+    const [clientName] = backup.meta.split(' · ');
+    return {
+      id: backup.id,
+      client: backup.client || 'workbuddy',
+      clientName: backup.clientName || clientName,
+      icon: backup.icon || clientName.slice(0, 2).toUpperCase(),
+      date: backup.date || backup.meta.split(' · ')[1] || '',
+      fullDate: backup.fullDate || backup.meta.split(' · ')[1] || '',
+      models: 0,
+      target: backup.target || '—',
+      status: 'backup',
+      statusLabel: '仅备份',
+      backup: backup.name,
+      backupMeta: backup.size || backup.meta.split(' · ')[2] || '',
+      detail: '这是没有对应导入记录的旧备份；可以恢复，但没有可对比的写入记录。',
+    };
+  }
+
   function renderHistory() {
     if (!$('#history-list')) return;
     const query = state.historyQuery.trim().toLowerCase();
-    const records = HISTORY.filter(record => {
+    const rows = [
+      ...HISTORY.map(record => ({ record, backup: BACKUPS.find(backup => backup.history === record.id) || null })),
+      ...BACKUPS.filter(backup => !backup.history).map(backup => ({ record: backupOnlyRow(backup), backup })),
+    ].filter(({ record, backup }) => {
       const clientOk = state.historyFilter === 'all' || record.client === state.historyFilter;
-      const queryOk = query === '' || [record.clientName, record.target, record.backup, record.detail]
-        .join(' ').toLowerCase().includes(query);
+      const queryOk = query === '' || [record.clientName, record.target, record.date, record.detail, backup?.name]
+        .filter(Boolean).join(' ').toLowerCase().includes(query);
       return clientOk && queryOk;
     });
 
-    $('#history-list').innerHTML = records.length === 0
-      ? '<div class="history-empty">没有匹配的导入记录。</div>'
-      : records.map(record => `
-        <article class="history-row" data-history="${record.id}">
-          <span class="history-icon" aria-hidden="true">${escapeHtml(record.icon)}</span>
-          <div class="history-main">
-            <div class="history-main-head">
-              <strong>${escapeHtml(record.clientName)}</strong>
+    $('#history-list').innerHTML = rows.length === 0
+      ? '<tr><td colspan="3"><div class="history-empty">没有匹配的导入记录或备份。</div></td></tr>'
+      : rows.map(({ record, backup }) => `
+        <tr class="history-row" data-history="${record.id}">
+          <td class="history-icon-cell"><span class="history-icon" aria-hidden="true">${escapeHtml(record.icon)}</span></td>
+          <td class="history-main">
+            <div class="history-line1"><strong>${escapeHtml(record.clientName)}</strong></div>
+            <div class="history-line2">
+              <span>${escapeHtml(record.date)}</span>
+              ${record.models > 0 ? `<span class="history-sep">·</span><span>${record.models} 个模型</span>` : ''}
+              <span class="history-sep">·</span>
               <span class="status-pill${record.status === 'warn' ? ' warn' : ''}">${escapeHtml(record.statusLabel)}</span>
             </div>
-            <p>${escapeHtml(record.date)} · ${record.models} 个模型 · <code>${escapeHtml(record.target)}</code></p>
-            <p>${escapeHtml(record.detail)}</p>
-          </div>
-          <div class="history-actions">
-            <button type="button" data-history-view="${record.id}">变更</button>
-            <button class="restore" type="button" data-restore="${record.id}">恢复</button>
-          </div>
-        </article>
-      `).join('');
+            <div class="history-line3"><span class="line-label">配置</span><code title="${escapeHtml(record.target)}">${escapeHtml(record.target)}</code></div>
+            <div class="history-line4"><span class="line-label">备份</span>${backup
+              ? `<code title="${escapeHtml(backup.name)}">${escapeHtml(backup.name)}</code><span class="line-meta">${escapeHtml(record.backupMeta || backup.meta.split(' · ')[2] || '')}</span>`
+              : '<span class="line-empty">没有可用的备份文件</span>'}</div>
+          </td>
+          <td class="history-cell-actions">
+            ${record.status !== 'backup' ? `<button type="button" data-history-view="${record.id}" title="只读查看这次写入改了什么">查看差异</button>` : ''}
+            <button type="button" data-open-dir="${record.id}" title="在 Finder 中打开配置所在目录">打开目录</button>
+            ${backup ? `<button class="restore" type="button" data-restore="${record.id}">恢复</button>` : ''}
+          </td>
+        </tr>`).join('');
+  }
 
-    const filteredBackups = BACKUPS.filter(backup => {
-      const related = HISTORY.find(record => record.id === backup.history);
-      const clientOk = state.historyFilter === 'all' || related?.client === state.historyFilter;
-      const queryOk = query === '' || backup.name.toLowerCase().includes(query) || backup.meta.toLowerCase().includes(query);
-      return clientOk && queryOk;
-    });
-    $('#backup-list').innerHTML = filteredBackups.length === 0
-      ? '<div class="history-empty">没有匹配的备份。</div>'
-      : filteredBackups.map(backup => `
-        <div class="backup-row">
-          <span class="backup-name" title="${escapeHtml(backup.name)}">${escapeHtml(backup.name)}</span>
-          <div class="backup-meta">
-            <span>${escapeHtml(backup.meta)}</span>
-            <button type="button" data-backup-restore="${backup.id}">恢复</button>
-          </div>
-        </div>
-      `).join('');
+  function openDiff(record) {
+    if (!record) return;
+    state.pendingDiff = record;
+    $('#diff-title').textContent = `查看差异 · ${record.clientName}`;
+    $('#diff-subtitle').textContent = `${record.fullDate} · ${record.models} 个模型 · ${record.target}`;
+    $('#diff-body').textContent = [
+      `# 只读预览：${record.target}`,
+      `# 备份：${record.backup || '(无)'}`,
+      '',
+      `  ${record.clientName} 原有配置`,
+      `+ 写入 ${record.models} 个 AI Bobby 模型（标记 aiBobbyOwner = ai-bobby-v1）`,
+      `+ 只改动 AI Bobby 自己的条目；手写条目保留`,
+      '',
+      record.detail,
+    ].join('\n');
+    $('#diff-modal').hidden = false;
+    $('#close-diff-foot').focus();
+  }
+
+  function closeDiff() {
+    $('#diff-modal').hidden = true;
+    state.pendingDiff = null;
+  }
+
+  function folderOf(path) {
+    const parts = String(path).split('/');
+    parts.pop();
+    return parts.join('/') || '~';
+  }
+
+  function openFolder(record) {
+    const folder = folderOf(record.target);
+    showToast(`原型：会在 Finder 中打开 ${folder}`);
   }
 
   function restoreFor(id) {
@@ -441,6 +522,7 @@
     if (record) return record;
     const backup = BACKUPS.find(item => item.id === id);
     if (backup?.history) return HISTORY.find(item => item.id === backup.history);
+    if (backup) return backupOnlyRow(backup);
     return null;
   }
 
@@ -618,10 +700,11 @@
 
   function updateCounts() {
     const selected = selectedCount();
-    $('#selected-count').textContent = String(selected);
     const total = totalSelected();
-    const globalNode = $('#global-selected');
-    if (globalNode) globalNode.textContent = String(total);
+    $('#selected-count').textContent = String(selected);
+    $('#global-selected').textContent = String(total);
+    $('#selected-total').textContent = String(source().models.length);
+    $('#global-total').textContent = String(Object.values(SOURCES).reduce((sum, src) => sum + src.models.length, 0));
     const badge = $('#import-badge');
     badge.textContent = String(total);
     badge.hidden = total === 0;
@@ -826,36 +909,10 @@
     $('#open-import').setAttribute('aria-expanded', 'false');
   }
 
-  function renderQr() {
-    const size = 21;
-    const isFinder = (x, y) => {
-      const origins = [[0, 0], [size - 7, 0], [0, size - 7]];
-      for (const [ox, oy] of origins) {
-        if (x < ox || y < oy || x >= ox + 7 || y >= oy + 7) continue;
-        const lx = x - ox;
-        const ly = y - oy;
-        if (lx === 0 || lx === 6 || ly === 0 || ly === 6) return true;
-        if (lx >= 2 && lx <= 4 && ly >= 2 && ly <= 4) return true;
-        return false;
-      }
-      return false;
-    };
-    const rects = [];
-    for (let y = 0; y < size; y += 1) {
-      for (let x = 0; x < size; x += 1) {
-        const finderZone = (x < 8 && y < 8) || (x > size - 9 && y < 8) || (x < 8 && y > size - 9);
-        const dark = isFinder(x, y) || (!finderZone && ((x * 7 + y * 13 + x * y) % 5 < 2));
-        if (dark) rects.push(`<rect x="${x}" y="${y}" width="1" height="1"/>`);
-      }
-    }
-    $('#login-qr').innerHTML = `<svg viewBox="0 0 ${size} ${size}" fill="#1d1d1f" shape-rendering="crispEdges">${rects.join('')}</svg>`;
-  }
-
   function openLogin() {
     if (state.tab === 'opencode') return;
     const src = source();
     $('#login-title').textContent = `添加 ${src.title}账号`;
-    renderQr();
     $('#login-modal').hidden = false;
     $('#mock-login').focus();
   }
@@ -1188,15 +1245,25 @@
       openRestore(restoreFor(restore.dataset.restore));
       return;
     }
+    const openDir = event.target.closest('[data-open-dir]');
+    if (openDir) {
+      const record = restoreFor(openDir.dataset.openDir);
+      if (record) openFolder(record);
+      return;
+    }
     const view = event.target.closest('[data-history-view]');
     if (view) {
       const record = HISTORY.find(item => item.id === view.dataset.historyView);
-      showToast(record ? `${record.clientName}：${record.detail}` : '没有可显示的变更');
+      if (record) openDiff(record);
     }
   });
-  $('#backup-list').addEventListener('click', event => {
-    const restore = event.target.closest('[data-backup-restore]');
-    if (restore) openRestore(restoreFor(restore.dataset.backupRestore));
+  $('#close-diff').addEventListener('click', closeDiff);
+  $('#close-diff-foot').addEventListener('click', closeDiff);
+  $('#diff-modal').addEventListener('click', event => {
+    if (event.target === $('#diff-modal')) closeDiff();
+  });
+  $('#diff-open-dir').addEventListener('click', () => {
+    if (state.pendingDiff) openFolder(state.pendingDiff);
   });
   $('#close-restore').addEventListener('click', closeRestore);
   $('#cancel-restore').addEventListener('click', closeRestore);
@@ -1231,7 +1298,15 @@
   });
 
   $('#open-import').addEventListener('click', openDrawer);
+  document.addEventListener('click', event => {
+    if (event.target.closest('.import-open') && !event.target.closest('#open-import')) openDrawer();
+  });
+  $('#overview-refresh').addEventListener('click', () => {
+    renderOverview();
+    showToast('概览数据已刷新');
+  });
   $('#close-import').addEventListener('click', closeDrawer);
+  $('#cancel-import').addEventListener('click', closeDrawer);
   $('#scrim').addEventListener('click', closeDrawer);
 
   $('#client-list').addEventListener('change', event => {
@@ -1260,12 +1335,7 @@
   });
 
   $('#set-default').addEventListener('change', () => {
-    showToast($('#set-default').checked ? '将同时设为客户端默认模型' : '只写入 provider，不改默认模型');
-  });
-
-  $('#preview-import').addEventListener('click', () => {
-    renderDiff();
-    showToast('已生成 dry-run 预览；写入前不会修改任何文件');
+    showToast($('#set-default').checked ? '将同时设为目标客户端的默认模型' : '只写入 provider，不改默认模型');
   });
 
   $('#apply-import').addEventListener('click', () => {
@@ -1304,6 +1374,7 @@
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
     if (!$('#floating-player').hidden) closeMusic();
+    else if (!$('#diff-modal').hidden) closeDiff();
     else if (!$('#login-modal').hidden) closeLogin();
     else if (!$('#drawer').hidden) closeDrawer();
   });

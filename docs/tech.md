@@ -1526,9 +1526,10 @@ App
   `cmd:"play"` 无效果；因此专辑卡片继续打开 `music.163.com` 专辑页，不调用 App。
 - IPC：`app:open-album` 负责打开网页并回报 handler 是否属于网易云；renderer 在已装 App 时提示
   “当前音乐应用不支持打开专辑，已为你打开网页版”。
-- 冷启动：客户端未运行时，第一条 `orpheus://` 会被当作启动命令吞掉。`music-app.ts` 先用
-  `pgrep -x NeteaseMusic` 判断进程，未运行则等待进程出现（最多 8s）并延迟 700ms 后再投递一次 payload；
-  已在运行则只投递一次，避免重复切歌。
+- 冷启动：客户端未运行时，第一条 `orpheus://` 会被当作启动命令吞掉，甚至连带 payload 一起丢。
+  `music-app.ts` 先用 `pgrep -x NeteaseMusic` 判断进程：未运行则**先不带 payload 启动客户端**
+  （`open -a <handler path>`，取不到路径时用 bundle id），等进程出现（最多 8s）并再等 2s 让它初始化，
+  最后投递一次 payload；已在运行则只投递一次。这样不会出现“第一次只打开 App”，也不会把正在播放的歌重启。
 
 验证：macOS 网易云音乐 3.1.12.3443 实测 payload 可把播放器切到目标歌曲；
 单测覆盖 URL 生成、无 handler、handler 非网易云、打开失败、非法 ID。

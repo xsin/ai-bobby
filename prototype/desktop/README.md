@@ -15,18 +15,23 @@ python3 -m http.server 8765 --bind 127.0.0.1
 ## 本次设计
 
 - 经典左侧栏，可收起为图标栏；默认展开，状态记在 `localStorage`。
-- 多页结构：三个模型来源、历史记录、关于、设置。
+- 多页结构：**概览**、三个模型来源、历史记录、关于、设置。
+- 概览页：网关状态、模型源数量、积分、最近一次导入四张指标卡；三个来源入口卡；最近 3 条导入记录。
 - 主界面去掉主题切换；系统/浅色/深色只放在设置页。
+- 来源页的“本页已选 / 全局已选”与“已发现 / 可用 / 待检测”同一字号与排版，当前页选中数用主色强调。
 - 右下角应用 LOGO 动态头像（保留 ZEO 标签装饰），可拖动；点击进入关于页。
 - 关于页：ZEO 个人 IP、项目介绍、音乐模块（两张最新专辑 + 最新/最热歌曲 tab + 右下角浮动 iframe 播放器）、支付宝/微信/更多方式赞助码。
 - 音乐播放在点击歌曲后出现于右下角，作为全局单例播放器；可拖动、可关闭，不阻塞页面。
-- 历史记录：导入记录、备份文件、恢复确认弹窗。
+- 历史记录：导入记录与备份合并为一张表，行内四行信息（客户端 / 日期·模型数·状态 / 配置文件 / 备份文件），操作为“查看差异 / 打开目录 / 恢复”，不再使用含义不清的“变更”。
+- 导入抽屉：客户端、分组、默认模型、变更预览；变更为**实时自动预览**，没有“预览”按钮；默认模型勾选文案写明只影响 Codex / Claude Code。
+- 登录弹窗：不展示占位二维码，改为官方登录窗口的三步引导（真实二维码由官方页面生成）。
 - 版本更新：顶部非模态更新条，支持发现新版本、下载进度、校验完成、稍后/立即重启；设置页有自动检查开关、手动检查与更新源。
 - 三个来源页仍保留模型勾选、详情、账号条、导入抽屉。
 
 ## 深链接
 
 ```text
+?page=overview           # 概览
 ?page=opencode           # 模型来源
 ?page=workbuddy
 ?page=wbi
@@ -46,9 +51,10 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 | 文件 | 内容 |
 |---|---|
+| `screenshot-overview.png` | 概览（网关、模型源、积分、最近导入） |
 | `screenshot-dark.png` | 首页（深色，默认） |
 | `screenshot-workbuddy.png` | WorkBuddy + 账号条 |
-| `screenshot-history.png` | 导入历史 + 备份恢复 |
+| `screenshot-history.png` | 导入记录与备份合并表格 |
 | `screenshot-about.png` | 关于 + 赞助码 |
 | `screenshot-music.png` | Support my music + 两张专辑 + 最新歌曲 |
 | `screenshot-music-hot.png` | 最热歌曲 tab |
@@ -58,8 +64,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 | `screenshot-update-downloading.png` | 下载并校验中 |
 | `screenshot-update-ready.png` | 更新已就绪，等待重启 |
 | `screenshot-collapsed.png` | 收起的侧边栏 |
-| `screenshot-import.png` | 全局导入抽屉 |
-| `screenshot-login.png` | 添加账号弹窗 |
+| `screenshot-import.png` | 全局导入抽屉（实时变更预览） |
+| `screenshot-login.png` | 添加账号弹窗（官方登录窗口引导） |
 | `screenshot-light.png` | 浅色主题 |
 | `screenshot-mobile.png` | 390px 移动布局 |
 
