@@ -31,7 +31,8 @@ WorkBuddy 国内版、WorkBuddy AI 国际版收敛成 `127.0.0.1:46890` 一个�
   自动更新与 curl 安装均已实现并发布 `v0.2.1`。
 - **v0.2.2 界面改版已在 main 实现并本地验证**：可收起左侧栏 + 多页导航、主题移到设置页、
   导入历史/备份/恢复、关于 ZEO + 音乐 + 全局可拖动播放器、可拖动应用 LOGO 头像、
-  更新条与设置更新 UI；设置页开关已补边框/内边距与标签间距。尚未发版，等待用户本机验收。
+  更新条与设置更新 UI；设置页开关已补边框/内边距与标签间距；关于页歌曲行边框与可点击元素手型已修。
+  尚未发版，等待用户本机验收。
 - **关于页音乐默认唤起网易云音乐 App**：用 `orpheus://base64({"type":"song","id":…,"cmd":"play"})`，
   App 不可用/唤起失败时回退 iframe；macOS 3.1.12.3443 实测可切歌。
 - 真实客户端验证：Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free`。
@@ -390,4 +391,5 @@ WorkBuddy 上游
 - 专辑深链测试：`{"type":"album","id":…,"cmd":"open"}` 在网易云 3.1.12.3443 提示“操作不支持”，
   `cmd:"play"` 无效果；因此专辑卡继续打开 `music.163.com` 专辑页，不调用 App。
 - 文档：PRD FR-UI-10、tech §8.5.1、ui-guideline §5.5 与 Agent 约束 #14、README、issues 第 7 条。
-- 验证：浅色/深色下歌曲列表边框与手型检查；desktop typecheck/build；未 push、未 tag、未创建 release。
+- 验证：浅色/深色下歌曲列表边框与手型检查；desktop typecheck/build；全量 53 项测试通过。
+- 提交：`fa61d0d fix(desktop): repair about-page track borders and pointer cursors`；工作区 clean；未 push、未 tag、未创建 release。
