@@ -63,6 +63,7 @@ export function AboutPage({ version, onPlay, onOpenExternal }: AboutPageProps) {
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">SUPPORT MY MUSIC</div>
           <h2 className="mt-1 text-[27px] font-medium leading-tight tracking-[-0.035em] text-text">Support my music</h2>
           <p className="mt-2.5 max-w-[390px] text-[11px] leading-7 text-muted-foreground">写代码之外，我也做音乐。最近两张专辑：《Electro Surge》关于速度、夜色和电子颗粒，《ZEO》更贴近卧室里的轻声与留白。点一首听听。</p>
+          <p className="mt-1 max-w-[390px] text-[10px] leading-5 text-faint">点击歌曲优先唤起网易云音乐 App；未安装或唤起失败时，使用网页播放器。</p>
           <div className="mt-3.5 flex max-w-[390px] flex-col gap-1.5">
             {ALBUMS.map((album, index) => (
               <button

@@ -1429,6 +1429,7 @@ interface AiBobbyApi {
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   getImportHistory(): Promise<ImportHistorySnapshot>
   restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
+  playInMusicApp(songId: string): Promise<MusicAppResult>
 
   checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
   setAutoCheck(enabled: boolean): Promise<void>
@@ -1477,7 +1478,7 @@ App
 - `selected`：跨来源的选中模型集合；导入抽屉共享。
 - `page`：多页导航；`sidebarCollapsed`、主题、自动检查、头像/播放器位置存 `localStorage`。
 - `history`：`getImportHistory()` 拉取；进入历史页、导入后、恢复后刷新。
-- `musicTrack`：全局单曲状态；关闭时卸载 iframe。
+- `musicTrack`：全局单曲状态；App 唤起成功时关闭，关闭 iframe 时卸载；失败时作为兜底播放。
 - 主题：`data-theme` + CSS 变量；只在设置页修改。
 
 样式：
@@ -1490,6 +1491,34 @@ App
   label 间距 8px，避免浅色下白色滑块与背景融合。
 - 表格列宽：勾选 36、模型 flex、能力 120、状态 110、耗时 140。
 - 无横向滚动；窄窗时隐藏“能力”列。
+
+### 8.5.1 关于页音乐播放
+
+优先唤起网易云音乐 macOS 客户端，失败时回退到 iframe。
+
+- 桌面深链：`orpheus://<base64(JSON)>`，payload 为
+  `{"type":"song","id":<songId>,"cmd":"play"}`。
+- 不要使用移动端的 `orpheus://song/<id>`：在 macOS 客户端上只会把应用带到前台，不会切歌。
+- `src/main/music-app-core.ts` 校验歌曲 ID 并生成 URL；`music-app.ts` 负责检测 handler 与打开。
+- handler 检测：`app.getApplicationInfoForProtocol(url)`，名称/路径需匹配 `netease|网易云`；不匹配返回 `no-app`。
+- 打开：`shell.openExternal(url)`；失败返回 `open-failed`。仅 macOS 实现，其他平台返回 `unsupported-platform`。
+- IPC：`app:play-music`；preload 暴露 `playInMusicApp(songId)`，返回 `{ ok: true }` 或 `{ ok:false, reason, error? }`。
+- Renderer：`ok` 时关闭 iframe；失败时把 track 写入 `musicTrack`，由 `FloatingMusicPlayer` 显示 `outchain` iframe。
+- 局限：`orpheus://` 不是公开稳定协议，可能随客户端更新失效；“唤起成功”只代表客户端接收了 URL，
+  登录、会员、版权与地区限制仍由网易云客户端处理。
+
+验证：macOS 网易云音乐 3.1.12.3443 实测 payload 可把播放器切到目标歌曲；
+单测覆盖 URL 生成、无 handler、handler 非网易云、打开失败、非法 ID。
+
+参考：
+
+- `ncm-cli` 对桌面端 `orpheus://base64(json)` 的说明：
+  <https://github.com/Davied-H/ncm-cli/blob/main/docs/ncm-api-exploration.md>
+- `ncm-cli` URL 生成实现：
+  <https://github.com/Davied-H/ncm-cli/blob/main/internal/desktop/orpheus.go>
+- Electron `app.getApplicationInfoForProtocol`：
+  <https://www.electronjs.org/docs/latest/api/app#appgetapplicationinfoforprotocolurl>
+- 本机网易云音乐 3.1.12.3443 `Info.plist` 注册 `orpheus` scheme（`com.netease.163music`）。
 
 ### 8.6 窗口与托盘
 

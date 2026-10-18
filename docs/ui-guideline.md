@@ -2,7 +2,6 @@
 
 ---
 
-```markdown
 # UI Guidelines: shadcn/ui + Tailwind CSS v4 + Ant Design 6.x 混合使用规范
 
 本仓库采用 shadcn/ui、Tailwind CSS v4 与 Ant Design 6.x 共存的架构。两套组件体系不是自由选择关系，而是按控制权分层使用，并通过 MCP（Model Context Protocol）在生成代码前强制查证实时 API。违反以下规则视为错误，必须在提交前修正。
@@ -381,4 +380,3 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 8. **检查 ProComponents 版本与 API 一致性**：确认 package.json 中的 ProComponents 版本，确保代码 API 与该版本匹配。
 9. **检查 shadcn CLI 命名**：文档和脚本中不应再出现 shadcn-ui 命令。
 10. **检查间距网格**：搜索 `p-[`、`m-[`、`gap-[` 等任意值；除 1px 描边、2px 光学内边距和资产尺寸外，改为 4px 倍数的标准步进。
-```

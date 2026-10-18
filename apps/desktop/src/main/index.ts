@@ -2,6 +2,7 @@ import { app, BrowserWindow, clipboard, ipcMain, Menu, nativeImage, shell, Tray 
 import { join } from 'node:path'
 import type { UpdateCheckResult, UpdateInfo } from '../shared/api'
 import { checkForUpdates, downloadUpdate, installUpdate, updateSource } from './updater'
+import { playSongInNetease } from './music-app'
 import { Services } from './services'
 import { appVersion } from './version'
 
@@ -190,6 +191,8 @@ function registerIpc(): void {
   })
 
   ipcMain.handle('update:install', async () => installUpdate())
+
+  ipcMain.handle('app:play-music', async (_event, songId: string) => playSongInNetease(String(songId)))
 
   ipcMain.handle('app:open-external', async (_event, url: string) => {
     if (/^https?:\/\//i.test(url)) await shell.openExternal(url)

@@ -9,7 +9,7 @@
 > 四个 importer、自动更新与 curl 安装链路均已落地。
 > v0.2.2 改版包含：可收起左侧栏 + 多页导航、主题只在设置页、导入历史与备份恢复、
 > 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI；
-> 设置页开关已做浅色对比度修复。
+> 设置页开关已做浅色对比度修复；关于页歌曲优先唤起网易云音乐 App，失败回退网页播放器。
 > **发布需要你本机验收后确认；在此之前不创建 tag/release。**
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
@@ -84,7 +84,8 @@ Little Snitch 会把“未签名进程要联网”标成风险，这是签名状
 5. 在底部状态条复制 **转发口** 与 **API Key**，填到 Codex / Claude Code / DSH / WorkBuddy。
 6. **历史记录**页查看每次写入、diff 与备份，可一键恢复；恢复前会再备份当前文件。
 7. **设置**页切换主题、手动检查更新、复制网关地址/Key；**关于**页有 ZEO、音乐与赞助方式。
-8. 右下角应用 LOGO 头像可拖动，点击进入关于；播放音乐后出现全局可拖动播放器。
+8. 点击关于页歌曲会优先唤起本机网易云音乐 App；未安装或唤起失败时，自动使用全局可拖动网页播放器。
+9. 右下角应用 LOGO 头像可拖动，点击进入关于。
 
 ## 接入客户端
 
@@ -246,6 +247,11 @@ xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
 确认已重启对应客户端；在导入预览里检查目标路径与 diff。
 Codex/Claude 的配置块只改 AI Bobby 标记的部分，不会覆盖其他 provider。
 
+**关于页点击歌曲没有在 App 中播放**
+
+确认已安装网易云音乐 macOS 客户端，并允许系统通过 `orpheus://` 唤起它。
+未安装或唤起失败时，AI Bobby 会自动切到网页播放器；App 内能否播放仍取决于登录、会员、版权与地区限制。
+
 ## 当前实现
 
 - `packages/core`：模型注册表、Canonical 请求/事件、错误与日志脱敏
@@ -254,7 +260,8 @@ Codex/Claude 的配置块只改 AI Bobby 标记的部分，不会覆盖其他 pr
 - `packages/workbuddy`：官方登录 state/poll、AccountStore、目录/兜底、chat SSE、刷新、billing、多账号调度
 - `packages/opencode`：npm 运行时下载/SHA-512 校验、隔离 serve、免费模型过滤、CLI `run` 转发与工具信封
 - `packages/importers`：WorkBuddy / Codex / Claude Code / DSH 的 dry-run / 备份 / 原子写 / 回滚
-- `apps/desktop`：主进程启动 46890 网关，renderer 读真实模型/账号，内嵌登录窗口与导入 IPC
+- `apps/desktop`：主进程启动 46890 网关，renderer 读真实模型/账号，内嵌登录窗口与导入 IPC；
+  关于页优先唤起网易云 App，失败回退 iframe 播放器
 - `apps/cli`：无界面起网关
 
 ## 技术栈

@@ -230,6 +230,25 @@ function AppInner() {
     else window.open(url, '_blank', 'noopener,noreferrer')
   }, [])
 
+  const playTrack = useCallback(async (track: MusicTrack) => {
+    const api = window.aiBobby
+    if (!api) {
+      setMusicTrack(track)
+      return
+    }
+    const result = await api.playInMusicApp(track.id).catch(() => ({ ok: false, reason: 'open-failed' as const }))
+    if (result.ok) {
+      setMusicTrack(null)
+      toast.success(`已在网易云音乐中播放《${track.title}》`)
+      return
+    }
+    setMusicTrack(track)
+    if (result.reason === 'no-app') toast.info('未找到网易云音乐 App，已切换到网页播放器')
+    else if (result.reason === 'unsupported-platform') toast.info('当前平台不支持唤起 App，已切换到网页播放器')
+    else if (result.reason === 'invalid-id') toast.error('歌曲 ID 无效，已切换到网页播放器')
+    else toast.warning('唤起网易云音乐失败，已切换到网页播放器')
+  }, [])
+
   const restoreBackup = useCallback(async (id: string) => {
     const api = window.aiBobby
     if (!api) {
@@ -744,7 +763,7 @@ function AppInner() {
               onRestore={restoreBackup}
             />
           ) : page === 'about' ? (
-            <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={setMusicTrack} onOpenExternal={openExternal} />
+            <AboutPage version={appInfo?.version ?? APP_FALLBACK.version} onPlay={track => void playTrack(track)} onOpenExternal={openExternal} />
           ) : (
             <SettingsPage
               appInfo={appInfo}

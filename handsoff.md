@@ -7,7 +7,7 @@
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版已实现并完成本地验证（含设置页开关对比度修复），工作区 clean @ `98babc4`；等待用户本机验收，未经确认不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
+- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版已实现并完成本地验证（含设置页开关对比度修复、关于页网易云音乐 App 播放），工作区 clean；等待用户本机验收，未经确认不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
   落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
@@ -32,8 +32,10 @@ WorkBuddy 国内版、WorkBuddy AI 国际版收敛成 `127.0.0.1:46890` 一个�
 - **v0.2.2 界面改版已在 main 实现并本地验证**：可收起左侧栏 + 多页导航、主题移到设置页、
   导入历史/备份/恢复、关于 ZEO + 音乐 + 全局可拖动播放器、可拖动应用 LOGO 头像、
   更新条与设置更新 UI；设置页开关已补边框/内边距与标签间距。尚未发版，等待用户本机验收。
+- **关于页音乐默认唤起网易云音乐 App**：用 `orpheus://base64({"type":"song","id":…,"cmd":"play"})`，
+  App 不可用/唤起失败时回退 iframe；macOS 3.1.12.3443 实测可切歌。
 - 真实客户端验证：Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free`。
-- 测试：gateway 9、workbuddy 15、importers 4、opencode 4、updater 12、website 1，共 45 项通过；
+- 测试：gateway 9、workbuddy 15、importers 4、opencode 4、desktop 20（含 updater 12、music 8）、website 1，共 53 项通过；
   typecheck/build 通过。
 - 未完成：WorkBuddy 真实账号登录联调（人工）；OpenCode 原生工具强制沙箱；
   OpenCode 检测缓存；safeStorage（启动阻塞 Keychain，暂缓）；Windows。
@@ -155,7 +157,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P3 OpenCode provider | 主体完成 | 运行时/免费筛选/目录/CLI 转发/工具信封；检测缓存与原生工具沙箱待补 |
 | P4 三协议网关 | 完成 | Chat/Responses/Messages + count_tokens；真实 Codex/Claude 各跑通 |
 | P5 四个 importer | 基本完成 | 四个目标写入/备份/回滚测试；Codex/Claude 已真机回环；WorkBuddy/DSH 待账号/客户端验证 |
-| P6 控制面板 | 完成（v0.2.2 改版） | 左侧栏多页、历史/备份恢复、关于/音乐、浮动头像/播放器、更新条；真实状态、登录窗口、导入 IPC |
+| P6 控制面板 | 完成（v0.2.2 改版） | 左侧栏多页、历史/备份恢复、关于/音乐、浮动头像/播放器、更新条；关于页优先唤起网易云 App，失败回退 iframe；真实状态、登录窗口、导入 IPC |
 | P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布；v0.2.2 待用户验收后发布；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
 | Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署根路径 |
@@ -344,7 +346,7 @@ WorkBuddy 上游
   恢复前再备份当前文件；diff 写盘前脱敏。
 - 开发模式版本改用应用 `package.json`（`appVersion()`），修复 Electron 自身版本混入更新检查。
 - 修复：下载完成清空进度、同一版本“稍后”不再被自动检查弹回、无变更导入不记历史。
-- 验证：typecheck、45 项测试、desktop build 通过；本机 Electron 验证历史恢复、主题、
+- 验证：typecheck、当时 45 项测试、desktop build 通过；本机 Electron 验证历史恢复、主题、
   播放器 iframe、头像拖动、模拟 0.2.2 更新包下载到“更新已就绪”。
 - 提交：`218ce77 feat(desktop): implement v0.2.2 multi-page redesign`。
 - **未创建 tag/release；等用户本机验收后再 bump 版本与发布。**
@@ -359,3 +361,22 @@ WorkBuddy 上游
 - 收尾：`docs/ui-guideline.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
   设计依据引用 Spec.fm 8-Point Grid、IBM Carbon 2x Grid、Material Design 3 spacing。
 - 工作区 clean；未 push、未 tag、未创建 release。
+
+### 2026-10-18 Round 4.2：关于页唤起网易云音乐 App
+
+- 调研结论：
+  - macOS 客户端 Info.plist 注册 `orpheus` scheme（`com.netease.163music`）。
+  - 移动端 `orpheus://song/<id>` 在 macOS 只把客户端带到前台，不切歌；不要使用。
+  - 桌面端使用 `orpheus://<base64(JSON)>`，payload `{"type":"song","id":<id>,"cmd":"play"}`。
+    参考 `ncm-cli`：<https://github.com/Davied-H/ncm-cli/blob/main/docs/ncm-api-exploration.md>。
+  - 本机 macOS 网易云音乐 3.1.12.3443 实测：打开 payload 后播放器切到目标歌曲并开始播放。
+- 实现：
+  - `music-app-core.ts`：ID 校验 + payload/base64 URL；3 项单测。
+  - `music-app.ts`：`app.getApplicationInfoForProtocol` 检查 handler 是否属于网易云，
+    `shell.openExternal` 打开；返回 `no-app` / `open-failed` / `unsupported-platform` / `invalid-id`；
+    5 项 mock 单测。
+  - IPC `app:play-music`；preload `playInMusicApp(songId)`；renderer 成功关闭 iframe，失败回退 iframe。
+- 测试：新增 music-app-core 3 项、music-app 5 项；desktop 共 20 项，workspace 共 53 项通过。
+- 文档：PRD FR-UI-10/AC-8、tech §8.5.1、README 使用说明与故障排查、issues 第 6 条。
+- 未公开协议，客户端升级可能失效；版权/会员/登录限制仍由网易云 App 处理。
+- 提交：见最新提交；未 push、未 tag、未创建 release。
