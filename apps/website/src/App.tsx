@@ -79,7 +79,7 @@ function CopyButton({
   className?: string
 }) {
   return (
-    <button type="button" className={`install-button ${className}`} onClick={onCopy} aria-label={label}>
+    <button type="button" className={`install-button ${copied ? 'copied' : ''} ${className}`} onClick={onCopy} aria-label={label}>
       <span className="install-prompt">$</span>
       <code>curl -fsSL https://xsin.github.io/ai-bobby/...</code>
       <span className="copy-icon" aria-hidden="true">
