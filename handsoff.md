@@ -7,12 +7,13 @@
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；main 正在做 v0.2.2 界面改版并完成本地验证；未经用户本机确认，不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
+- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版已实现并完成本地验证（含设置页开关对比度修复），工作区 clean @ `98babc4`；等待用户本机验收，未经确认不创建新 tag/release。主链路完成，剩余 WorkBuddy 真实账号验证与少量硬化。
   落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。**
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
 - 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.1>
+- 当前 HEAD：`98babc4`（本地 commit；未 push、未 tag）
 - 工具链：Node v26.3.0、pnpm 10.15.1
 
 ---
@@ -30,7 +31,7 @@ WorkBuddy 国内版、WorkBuddy AI 国际版收敛成 `127.0.0.1:46890` 一个�
   自动更新与 curl 安装均已实现并发布 `v0.2.1`。
 - **v0.2.2 界面改版已在 main 实现并本地验证**：可收起左侧栏 + 多页导航、主题移到设置页、
   导入历史/备份/恢复、关于 ZEO + 音乐 + 全局可拖动播放器、可拖动应用 LOGO 头像、
-  更新条与设置更新 UI。尚未发版，等待用户本机验收。
+  更新条与设置更新 UI；设置页开关已补边框/内边距与标签间距。尚未发版，等待用户本机验收。
 - 真实客户端验证：Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free`。
 - 测试：gateway 9、workbuddy 15、importers 4、opencode 4、updater 12、website 1，共 45 项通过；
   typecheck/build 通过。
@@ -155,7 +156,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P4 三协议网关 | 完成 | Chat/Responses/Messages + count_tokens；真实 Codex/Claude 各跑通 |
 | P5 四个 importer | 基本完成 | 四个目标写入/备份/回滚测试；Codex/Claude 已真机回环；WorkBuddy/DSH 待账号/客户端验证 |
 | P6 控制面板 | 完成（v0.2.2 改版） | 左侧栏多页、历史/备份恢复、关于/音乐、浮动头像/播放器、更新条；真实状态、登录窗口、导入 IPC |
-| P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布但验收中；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
+| P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布；v0.2.2 待用户验收后发布；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
 | Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署根路径 |
 | Lucia | 独立项目 | 同级 `ai-lucia/`；等 AI Bobby 完结后再启动，不在本仓库实现 |
@@ -345,4 +346,14 @@ WorkBuddy 上游
 - 修复：下载完成清空进度、同一版本“稍后”不再被自动检查弹回、无变更导入不记历史。
 - 验证：typecheck、45 项测试、desktop build 通过；本机 Electron 验证历史恢复、主题、
   播放器 iframe、头像拖动、模拟 0.2.2 更新包下载到“更新已就绪”。
+- 提交：`218ce77 feat(desktop): implement v0.2.2 multi-page redesign`。
 - **未创建 tag/release；等用户本机验收后再 bump 版本与发布。**
+
+### 2026-10-18 Round 4.1：设置页开关对比度修复
+
+- 浅色下 checked 状态的白色滑块与页面背景融合；共享 `Switch` 轨道改用 `border-line`，
+  默认尺寸调整为 `36×22` + `p-0.5` 内边距，滑块四周保留轨道边；label 间距 6px → 10px。
+- 审计所有 `Switch` 使用点：当前仅设置页“自动检查”一个；导入抽屉的 Checkbox 不受影响。
+- 浅色/深色 checked、unchecked 四种状态截图检查；desktop typecheck、12 项测试、build 通过。
+- 提交：`98babc4 fix(desktop): give switches a visible border and label spacing`。
+- 工作区 clean；未 push、未 tag、未创建 release。

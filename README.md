@@ -4,11 +4,12 @@
 收敛成一个 `127.0.0.1:46890` 端点、一把 API Key、一个桌面控制面板，
 并支持一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness。
 
-> **状态（2026-10-18）**：`v0.2.1` 已发布；`main` 正在进行 **v0.2.2 界面改版**，本地验收中，尚未发版。
+> **状态（2026-10-18）**：`v0.2.1` 已发布；`main` 的 **v0.2.2 界面改版已实现并完成本地验证**，等待你本机验收，尚未发版。
 > 46890 网关（Chat / Responses / Messages）、OpenCode 免费模型、WorkBuddy 双版本 provider、
 > 四个 importer、自动更新与 curl 安装链路均已落地。
 > v0.2.2 改版包含：可收起左侧栏 + 多页导航、主题只在设置页、导入历史与备份恢复、
-> 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI。
+> 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI；
+> 设置页开关已做浅色对比度修复。
 > **发布需要你本机验收后确认；在此之前不创建 tag/release。**
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
