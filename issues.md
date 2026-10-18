@@ -4,3 +4,8 @@ NOTE: 此文档由人类反馈应用产品的 BUG 或 FR (Feature Requests),由 
 ## v0.2.1 体验报告：  
 1、安装时Little Snitch 弹出安全提醒（大概是因为AI Bobby未签名但要访问Local Network），在readme中说明Why 和 How，避免用户错杀导致应用无法正常工作。
 2、扫码登录无法正常工作。
+3、额度显示未知
+
+## v0.2.2 FR
+1. 去除主界面的主题切换。设置界面有了。
+2. 为ai-bobby设置一个动态avatar，放在设置图标左边。点击后进去关于页。关于页用于营销我个人IP：ZEO 独立开发者 / 独立音乐人

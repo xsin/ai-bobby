@@ -153,7 +153,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P6 控制面板 | 完成 | 三 tab、真实状态、登录窗口、导入 IPC、设置真实端口/Key |
 | P7 打包/分发/更新 | 完成（macOS） | v0.2.1 发布；curl 安装与 0.1.0→0.2.0→0.2.1 更新闭环验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
-| Website | 视觉稿待确认 | `prototype/website/` + `docs/prd-landing.md` / `docs/tech-landing.md`；确认后再建 `apps/website` |
+| Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署 `/website/` |
 | Lucia | 独立项目 | 同级 `ai-lucia/`；等 AI Bobby 完结后再启动，不在本仓库实现 |
 
 ---
@@ -162,12 +162,13 @@ Headroom 式前缀缓存/压缩后置到 P8。
 
 ### Website
 
-- 目标：Web3D 产品落地页，React + Vite + Tailwind + shadcn + TS，PWA 自动更新提醒。
-- 视觉稿：`prototype/website/index.html`（Three.js/GLSL/SVG/CSS；需静态服务器）。
+- 已实现：`apps/website`，React 19 + Vite 8 + TS7 + Tailwind 4 + shadcn + Three.js。
+- 支持 **中文/英文切换**（localStorage + 浏览器语言，`document.lang`/title 同步）。
+- PWA：`vite-plugin-pwa` prompt 模式；新版本 toast + Refresh；安装提示 7 天节流。
+- 视觉母版：`prototype/website/`（含本地 vendor + file:// bundle）。
+- 部署：`.github/workflows/website.yml` → gh-pages `/website/`；release workflow 已改为保留 `website/`。
 - 文档：`docs/prd-landing.md`、`docs/tech-landing.md`。
-- 部署计划：`/website/` 子路径；**不要覆盖 gh-pages 根目录的安装通道**。
-- 约束：release workflow 目前 force-push gh-pages，上线 website 前必须先改成保留 `website/`。
-- **状态：等用户确认视觉稿后再编码。**
+- **状态：已实现并本地验证。**
 
 ### Lucia（独立项目）
 
@@ -269,8 +270,8 @@ WorkBuddy 上游
 
 ### 2026-10-18 新项目与依赖收归
 
-- 新增落地页视觉稿 `prototype/website/`（Three.js + GLSL + SVG + CSS），
-  PRD/tech 为 `docs/prd-landing.md` / `docs/tech-landing.md`；等用户确认后再建 `apps/website`。
+- 落地页视觉稿确认并实现 `apps/website`：WebGL、中英文 i18n、PWA 更新提示、
+  gh-pages `/website/` 工作流，并保留根目录安装通道。
 - marketing 拆分为同级独立项目 `ai-lucia/`，等 AI Bobby 完结后再启动。
 - `prototype/` 已按 `desktop/`、`website/` 分目录。
 - 第三方依赖版本收归 `pnpm-workspace.yaml` 的 `catalog:`，package.json 改为 `catalog:`；

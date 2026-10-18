@@ -75,11 +75,25 @@ jobs:
         run: node scripts/release/validate.mjs "$RUNNER_TEMP/dist/${{ steps.ver.outputs.version }}"
 
       - name: Stage Pages install channel
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           V="${{ steps.ver.outputs.version }}"
           SITE="$RUNNER_TEMP/site"
           DIST="$RUNNER_TEMP/dist/$V"
+          mkdir -p "$SITE"
+
+          # Preserve the landing page published by website.yml. The install
+          # channel and the website share one gh-pages branch.
+          if git ls-remote --exit-code --heads origin gh-pages >/dev/null 2>&1; then
+            rm -rf "$RUNNER_TEMP/gh-pages-current"
+            git clone -q --depth 1 --branch gh-pages               "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"               "$RUNNER_TEMP/gh-pages-current"
+            if [ -d "$RUNNER_TEMP/gh-pages-current/website" ]; then
+              cp -R "$RUNNER_TEMP/gh-pages-current/website" "$SITE/website"
+            fi
+          fi
+
           mkdir -p "$SITE/releases/latest"
           cp scripts/release/install.sh "$SITE/releases/latest/install.sh"
           cp "$DIST/checksums.txt" "$SITE/releases/latest/checksums.txt"

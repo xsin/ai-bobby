@@ -2,9 +2,10 @@
 
 - 版本：v0.1（视觉方向评审稿）
 - 日期：2026-10-18
-- 状态：**待视觉稿确认后编码**
+- 状态：**已确认并实现（`apps/website`）**
 - 关联：[prd-landing.md](./prd-landing.md)、[README.md](../README.md)、[handsoff.md](../handsoff.md)
 - 视觉稿：[prototype/website/index.html](../prototype/website/index.html)
+- 实现：[apps/website](../apps/website)
 
 ---
 
@@ -81,6 +82,14 @@ apps/website/
 ---
 
 ## 3. 渲染与 Web3D
+
+### 3.0 i18n
+
+- `src/i18n.tsx`：`zh` / `en` 两份同构字典 + React context；`useI18n()` 读取。
+- 初始化：`localStorage("ai-bobby-locale")` → `navigator.language` 兜底。
+- 切换：`<html lang>`、`document.title`、meta description 同步更新；`localStorage` 持久化。
+- 结构测试：`src/i18n.test.ts` 比较中英文 key/shape，防止漏翻。
+- 语言按钮在 nav；移动端仍可见。
 
 ### 3.1 首屏分层
 

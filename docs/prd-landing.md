@@ -2,9 +2,10 @@
 
 - 版本：v0.1（视觉方向评审稿）
 - 日期：2026-10-18
-- 状态：**待用户确认视觉稿后编码**
+- 状态：**视觉已确认；已实现于 `apps/website`**
 - 关联：[README.md](../README.md)、[handsoff.md](../handsoff.md)、[tech-landing.md](./tech-landing.md)
 - 视觉稿：[prototype/website/index.html](../prototype/website/index.html)
+- 实现：[apps/website](../apps/website)
 
 ---
 
@@ -166,7 +167,15 @@ PWA install prompt + update toast
 - 语义化 section、唯一 H1、图片 alt。
 - 提供 `robots.txt` + `sitemap.xml`（部署在 `/website/` 下）。
 
-### FR-8 分析
+### FR-8 国际化（v1 必须）
+
+- 支持 **中文 / English** 切换，默认跟随浏览器语言，选择持久化到 `localStorage`。
+- 切换后同步 `<html lang>`、`document.title`、meta description。
+- 所有用户可见文案（导航、Hero、来源、协议、导入、安全、CTA、PWA toast、footer）都要翻译。
+- 语言切换不改变布局、不重置表单/滚动位置。
+- 中文/英文文案结构保持一一对应，CI 用 key/shape 测试兜底。
+
+### FR-9 分析
 
 - v1 不接第三方分析 SDK；只用 GitHub Release 下载量/仓库 star 作为粗指标。
 - 如需 UTM，使用纯前端 `location.search` 透传到 GitHub 链接，不发送到第三方。

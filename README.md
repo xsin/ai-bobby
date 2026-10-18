@@ -9,6 +9,8 @@
 > 四个 importer、自动更新与 curl 安装链路均已落地。
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
+> 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒，
+> 部署在 <https://xsin.github.io/ai-bobby/website/>。
 
 ![OpenCode tab](docs/screenshots/01-opencode-dark.png)
 
@@ -217,6 +219,7 @@ Codex/Claude 的配置块只改 AI Bobby 标记的部分，不会覆盖其他 pr
 - **React 19.3.1** + **TypeScript 7.0.2** + **Vite 8.3.4** + **Electron 44.9.0**
 - **Tailwind CSS 4.3.3** + **shadcn/ui 4.22**（视觉层）
 - **Ant Design 6.6.6**（模型表格等功能层，按 [ui-guideline.md](./ui-guideline.md) 做 token 桥接）
+- **Three.js 0.186.1 + GLSL**（落地页 WebGL）、**vite-plugin-pwa 2.0**（PWA 更新）
 - pnpm 10 workspace；`electron-vite` 构建 main/preload/renderer
 - 第三方依赖版本统一在 `pnpm-workspace.yaml` 的 `catalog:` 声明，子项目只写 `catalog:`
 - 主题色：**电光克莱因蓝 `#1e4fff`**
@@ -238,6 +241,8 @@ pnpm --filter @ai-bobby/desktop dev      # Electron + Vite 开发
 pnpm --filter @ai-bobby/desktop build    # 构建 out/
 pnpm --filter @ai-bobby/desktop typecheck
 pnpm --filter @ai-bobby/desktop test
+pnpm --filter @ai-bobby/website dev       # 落地页开发
+pnpm --filter @ai-bobby/website build     # 落地页构建
 ```
 
 只预览 renderer（无需 Electron）：
@@ -263,6 +268,7 @@ CI：推送 `v*` tag 触发 [.github/workflows/release.yml](./.github/workflows/
 
 ```
 apps/desktop          Electron 主进程 + shadcn/Tailwind/antd 控制面板
+apps/website          React/Vite/Three/PWA 落地页（中英文）
 apps/cli              无界面网关
 packages/core         领域模型、注册表、设置、日志
 packages/workbuddy    WorkBuddy 双版本登录/账号/目录/聊天/调度
@@ -288,9 +294,10 @@ refs/                 只读参考实现（.gitignore，不发布）
 
 ## 新项目状态
 
-- **Website（落地页）**：视觉稿已产出，见
-  [`prototype/website/`](./prototype/website/)；PRD/tech 在 `docs/`；**等你确认后再创建
-  `apps/website` 并编码**。
+- **Website（落地页）**：已实现于 [`apps/website`](./apps/website)，
+  支持中英文与 PWA 自动更新提醒；视觉母版仍在
+  [`prototype/website/`](./prototype/website/)。线上：
+  <https://xsin.github.io/ai-bobby/website/>。
 - **Marketing / Lucia**：已拆分为同级独立项目（`ai-lucia`），不在本仓库；
   等 AI Bobby 完结后再启动实现。
 - **依赖版本**：所有第三方版本收敛到 `pnpm-workspace.yaml` 的 `catalog:`，

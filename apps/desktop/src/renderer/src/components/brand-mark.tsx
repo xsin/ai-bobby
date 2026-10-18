@@ -1,19 +1,15 @@
 export function BrandMark({ className = 'size-7' }: { className?: string }) {
   return (
     <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <rect width="32" height="32" rx="9" fill="currentColor" />
-      <rect x="7" y="11" width="18" height="13" rx="4.5" fill="#fff" />
-      <circle cx="12.5" cy="17" r="1.7" fill="currentColor" />
-      <circle cx="19.5" cy="17" r="1.7" fill="currentColor" />
+      <rect x="2" y="2" width="28" height="28" rx="8" fill="#1e4fff" />
       <path
-        d="M12.8 21.1c1.8 1.2 4.6 1.2 6.4 0"
-        fill="none"
-        stroke="currentColor"
+        d="M10 20.5V11.5h5.2c3.2 0 5.3 1.8 5.3 4.5s-2.1 4.5-5.3 4.5H10Z"
+        stroke="#fff"
         strokeWidth="1.8"
-        strokeLinecap="round"
+        strokeLinejoin="round"
       />
-      <path d="M16 6.6v3.1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="16" cy="5.7" r="1.5" fill="#fff" />
+      <path d="M10 16h5.1" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="23.5" cy="9" r="1.5" fill="#8ff7ff" />
     </svg>
   )
 }
