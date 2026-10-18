@@ -1,6 +1,6 @@
 # AI Bobby 技术方案（tech）
 
-- 当前版本：v0.2.1
+- 当前版本：v0.2.1（main，验收中）
 - 日期：2026-10-18
 - 状态：**与当前实现同步；v0.2.1 验收中，发版需用户本机确认**
 - 关联：[prd.md](./prd.md)、[handsoff.md](../handsoff.md)、[README.md](../README.md)

@@ -1,6 +1,6 @@
 # AI Bobby 产品需求文档（PRD）
 
-- 当前版本：v0.2.1
+- 当前版本：v0.2.1（main，验收中）
 - 日期：2026-10-18
 - 状态：**v0.2.1 验收中；未经用户本机确认不发版**
 - 关联：[tech.md](./tech.md)、[handsoff.md](../handsoff.md)、[README.md](../README.md)

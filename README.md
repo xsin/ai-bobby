@@ -7,6 +7,7 @@
 > **状态（2026-10-18）**：`v0.2.1` 已发布。
 > 46890 网关（Chat / Responses / Messages）、OpenCode 免费模型、WorkBuddy 双版本 provider、
 > 四个 importer、自动更新与 curl 安装链路均已落地。
+> 当前 `main` 含验收中的 WorkBuddy 额度切换等修复，尚未发版；下一版需你本机确认后发布。
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
 > 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒，
