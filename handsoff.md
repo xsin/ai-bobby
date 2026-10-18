@@ -238,7 +238,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 - 不修改 `refs/`；需要复用的代码复制到 `packages/` 并注明来源。
 - 提交前：`pnpm -r typecheck && pnpm -r test`；UI 改动附浅色/深色截图。
 - **文档与代码同步**：改代码必须同步 `docs/prd.md` / `docs/tech.md` / `README.md` / 对应 landing 文档；
-  人类阅读文档只保留当前状态，不写修订记录/变更日志。
+  PRD/tech 保持整体设计，只做局部修订；人类阅读文档只保留当前状态，不写修订记录/变更日志。
 
 ---
 
