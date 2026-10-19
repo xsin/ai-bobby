@@ -91,13 +91,16 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 ## v0.2.3 设计补充
 
-- **NVIDIA NIM**（新来源）：来源页含「访问凭据」卡片（API Key 掩码 / 更新 / 获取 Key）、
-  免费试用与限速提示；「检测全部」做真实最小对话探测，显示耗时，超 8 秒标「慢」、超时标不可用；
-  侧栏与概览的模型源数量同步为 4。
+- **NVIDIA NIM**（新来源）：来源页含「访问凭据」卡片——Key 掩码 + 眼睛显示 + 复制 + 更新；
+  「检测全部」做真实最小对话探测，耗时按 ≤1s 绿 / ≤2s 黄 / >2s 红着色（所有来源统一），
+  不再显示「慢」字；侧栏与概览的模型源数量同步为 4。
 - **导入目标**：新增 VS Code（Custom Endpoint，可自动写入，Key 由 VS Code 迁入钥匙串）与
   Cursor（仅引导，不出复选框，点「接入步骤」弹窗复制 URL/Key，不写 SQLite / Keychain）；
   分组新增 `NV`。
-- **设置**：新增「界面语言」（跟随系统 / 简体中文 / English）与「网络代理」（关闭 / 跟随系统 / 自定义，
-  并按模型源勾选 NVIDIA / WorkBuddy / WorkBuddy AI；OpenCode 子进程不受影响）。
-- 版本标识更新为 0.2.3；新增截图：`screenshot-nvidia.png`、`screenshot-settings.png`、`screenshot-import.png`。
-- 调研记录见 [docs/research-v0.2.3.md](../docs/research-v0.2.3.md)。
+- **设置**：新增「界面语言」（跟随系统 / 简体中文 / English）与「网络代理」
+  （默认自定义 `http://127.0.0.1:10080`；关闭 / 跟随系统 / 自定义 + 按模型源勾选；OpenCode 子进程不受影响）。
+- 细节规范：弹窗内容统一 18px 留白、步骤不贴边；复选框统一品牌色实心 + 白勾；
+  复制的 Key / Base URL 都放弹窗 footer。
+- 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-settings.png`、
+  `screenshot-import.png`、`screenshot-cursor-guide.png`。
+- 调研记录见 [docs/research-v0.2.3.md](../../docs/research-v0.2.3.md)。

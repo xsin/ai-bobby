@@ -596,3 +596,14 @@ WorkBuddy 上游
 - NVIDIA：检测改为真实最小对话探测，显示耗时；>8s 标「慢」，超时标不可用；提示探测消耗少量额度。
 - 网络代理：关闭 / 跟随系统 / 自定义 + 按模型源勾选（NVIDIA / WorkBuddy / WBI），OpenCode 不受影响。
 - 设计稿与 `docs/research-v0.2.3.md` 已更新；生产代码未动，等确认。
+
+
+### 2026-10-19 Round 20：v0.2.3 设计细节 + Gitalk
+
+- NVIDIA Key：加眼睛显示 / 复制 / 更新，字段最小 260px；延迟按 ≤1s 绿、≤2s 黄、>2s 红，
+  所有来源统一，去掉「慢」字。
+- Cursor 引导：无复选框；弹窗步骤 18px 留白，复制 Key/Base URL 移到 footer。
+- 代理：默认 `http://127.0.0.1:10080`（自定义），按来源勾选。
+- Checkbox 统一品牌色实心 + 白勾；弹窗/列表细节写入 ui-guideline §5.7。
+- 落地页：接入 Gitalk 2（@aifire/gitalk 2.0.0-beta.2），左下角默认收起，展开桌面固定左下、
+  移动端全屏；配置 `number: 1`、proxy 已配；本地 origin 被 CORS 拒绝属预期。

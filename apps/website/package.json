@@ -12,6 +12,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
+    "@aifire/gitalk": "catalog:",
+    "@aifire/gitalk-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:"
   },

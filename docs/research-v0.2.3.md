@@ -121,8 +121,8 @@ Cursor 的设置不在 JSON 里，而在 SQLite：
   探测会消耗一次少量免费额度，界面上要明确提示。**不展示额度/积分**，只标“免费试用 / 限速”。
 - 导入：作为第 4 个分组 `NV`，可被 WorkBuddy / Codex / Claude / DSH / VS Code 目标导入。
 - 代理：Node 的 fetch 默认不走系统代理；设置里加“网络代理”，模式为关闭 / 跟随系统 / 自定义，
-  并**按模型源勾选**（NVIDIA NIM / WorkBuddy / WorkBuddy AI）——国内来源通常不需要代理，
-  只想让 NVIDIA 或 WBI 走代理。OpenCode 是子进程，设置里明确标注不受影响。
+  默认自定义地址 `http://127.0.0.1:10080`，并**按模型源勾选**（NVIDIA NIM / WorkBuddy / WorkBuddy AI）。
+  OpenCode 是子进程，设置里明确标注不受影响。
 
 来源：
 - <https://build.nvidia.com/llms.txt>
@@ -167,7 +167,7 @@ Cursor 的设置不在 JSON 里，而在 SQLite：
 
 1. 安装脚本默认目录 `/Applications/AIMatrix`、回退与 `--system` chown 方案：按最佳实践执行。
 2. VS Code：已确认不会在打开时弹框；导入器写一次 Key，VS Code 迁移到钥匙串。
-3. Cursor：本期只做引导；设计稿已去掉复选框，改为「查看接入步骤」弹窗。
-4. NVIDIA：已加真实对话探测与延迟/慢模型标记；慢模型标黄。
-5. 网络代理：已改为按模型源勾选（NVIDIA / WorkBuddy / WorkBuddy AI），OpenCode 标注不受影响。
+3. Cursor：本期只做引导；设计稿已去掉复选框，改为「查看接入步骤」弹窗，复制按钮统一在 footer。
+4. NVIDIA：已加真实对话探测与耗时着色（≤1s 绿 / ≤2s 黄 / >2s 红），不再显示「慢」字。
+5. 网络代理：默认 `http://127.0.0.1:10080`，按模型源勾选；OpenCode 标注不受影响。
 6. i18n：范围与默认规则待确认；英文文案是否需要在设计稿里逐页预览。

@@ -225,8 +225,16 @@
                   <span class="account-note">免费试用 · 上游限速</span>
                 </div>
                 <div class="credential-row">
-                  <code id="credential-key">nvapi-…9f3c</code>
-                  <button type="button" id="credential-edit">更新 Key</button>
+                  <div class="key-field">
+                    <code id="credential-key">nvapi-••••••••••••9f3c</code>
+                    <button type="button" class="key-icon" id="credential-reveal" aria-label="显示 API Key" aria-pressed="false" title="显示 / 隐藏">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M2.5 10S5.5 5 10 5s7.5 5 7.5 5-3 5-7.5 5-7.5-5-7.5-5Z"/><circle cx="10" cy="10" r="2.2"/></svg>
+                    </button>
+                    <button type="button" class="key-icon" id="credential-copy" aria-label="复制 API Key" title="复制">
+                      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7"/></svg>
+                    </button>
+                  </div>
+                  <button type="button" id="credential-edit">更新</button>
                   <a class="credential-link" href="https://build.nvidia.com/settings" target="_blank" rel="noreferrer">获取 Key ↗</a>
                 </div>
               </section>
@@ -245,7 +253,7 @@
                     <h3 id="models-heading">模型清单</h3>
                     <p id="table-hint">勾选决定导入，点击行查看详情。</p>
                   </div>
-                  <div class="list-meta"><span id="list-meta-text">最近刷新 2 分钟前</span></div>
+                  <div class="list-meta"><span class="latency-legend" aria-label="耗时颜色说明"><i class="fast"></i>≤1s<i class="medium"></i>≤2s<i class="slow"></i>&gt;2s</span><span id="list-meta-text">最近刷新 2 分钟前</span></div>
                 </div>
 
                 <div class="table-wrap" tabindex="0" role="region" aria-label="可滚动的模型清单">
@@ -511,9 +519,9 @@
                       <select id="proxy-mode" aria-label="代理模式">
                         <option value="off">关闭</option>
                         <option value="system">跟随系统</option>
-                        <option value="custom">自定义</option>
+                        <option value="custom" selected>自定义</option>
                       </select>
-                      <input id="proxy-url" type="url" placeholder="http://127.0.0.1:7890" disabled aria-label="代理地址">
+                      <input id="proxy-url" type="url" value="http://127.0.0.1:10080" aria-label="代理地址">
                     </div>
                     <div class="proxy-targets" role="group" aria-label="应用到模型源">
                       <label><input type="checkbox" data-proxy-source="nvidia" checked> NVIDIA NIM</label>
@@ -678,13 +686,14 @@
         <ol class="guide-steps">
           <li><span>1</span><div><strong>打开 Cursor 设置</strong><p><code>Settings → Models → API Keys</code></p></div></li>
           <li><span>2</span><div><strong>开启 Base URL override</strong><p>打开 <code>Override OpenAI Base URL</code>，粘贴下面的地址。</p><code class="guide-url">http://127.0.0.1:46890/v1</code></div></li>
-          <li><span>3</span><div><strong>粘贴 API Key</strong><p>填入 AI Bobby 的 Key；Cursor 会自己加密保存，AI Bobby 不代写。</p><button type="button" class="guide-copy" data-copy="key">复制 Key</button></div></li>
+          <li><span>3</span><div><strong>粘贴 API Key</strong><p>填入 AI Bobby 的 Key；Cursor 会自己加密保存，AI Bobby 不代写。</p></div></li>
           <li><span>4</span><div><strong>选择模型</strong><p>回到 Chat / Agent 选择 AI Bobby 模型；Tab 自动补全仍走 Cursor 自己的模型。</p></div></li>
         </ol>
         <div class="modal-note">只影响 Chat / Agent；开启 override 后 Cursor 托管模型也会走该地址，切回时记得关闭。</div>
         <div class="modal-foot">
           <button type="button" id="close-guide-foot">关闭</button>
-          <button type="button" class="primary" data-copy="url">复制 Base URL</button>
+          <button type="button" data-copy="key">复制 Key</button>
+          <button type="button" data-copy="url">复制 Base URL</button>
         </div>
       </div>
     </div>

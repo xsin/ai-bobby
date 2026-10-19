@@ -140,14 +140,14 @@
     serviceSub: 'NVIDIA NIM · integrate.api.nvidia.com',
     listMeta: '最近刷新 1 分钟前',
     lastHeader: '耗时',
-    credential: { masked: 'nvapi-…9f3c', note: '免费试用 · 上游限速' },
+    credential: { masked: 'nvapi-••••••••••••9f3c', note: '免费试用 · 上游限速' },
     models: [
-      { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'available', latency: '1.8 秒', context: '128,000', maxOutput: '4,096', checked: '1 分钟前' },
-      { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'available', latency: '2.4 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'available', latency: '0.8 秒', context: '128,000', maxOutput: '4,096', checked: '1 分钟前' },
+      { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'available', latency: '1.6 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/nemotron-3-super-120b', display: 'NV. Nemotron 3 Super 120B', upstream: 'nvidia/nemotron-3-super-120b-a12b', caps: ['推理'], status: 'available', latency: '3.1 秒', context: '1,000,000', maxOutput: '16,384', checked: '1 分钟前' },
-      { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '9.8 秒', slow: true, context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '9.8 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/qwen3.5-397b', display: 'NV. Qwen 3.5 397B', upstream: 'qwen/qwen3.5-397b-a17b', caps: ['推理', '图片'], status: 'available', latency: '4.6 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
-      { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '14.6 秒', slow: true, context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '14.6 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/glm-5.1', display: 'NV. GLM-5.1', upstream: 'zai/glm-5.1', caps: ['推理'], status: 'unavailable', latency: '超时 30 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/minimax-m2.7', display: 'NV. MiniMax M2.7', upstream: 'minimaxai/minimax-m2.7', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
     ],
@@ -247,6 +247,7 @@
     page: 'opencode',
     themeChoice: 'dark',
     langChoice: 'system',
+    credentialVisible: false,
     historyFilter: 'all',
     historyQuery: '',
     pendingRestore: null,
@@ -300,6 +301,15 @@
 
   function isAvailable(model) {
     return model.status === 'available' || model.status === 'chat_only';
+  }
+
+  function latencyTone(value) {
+    const match = String(value).match(/([0-9]+(?:\.[0-9]+)?)\s*秒/);
+    if (!match) return '';
+    const seconds = Number(match[1]);
+    if (seconds <= 1) return ' fast';
+    if (seconds <= 2) return ' medium';
+    return ' slow';
   }
 
   function selectedCount(tab = state.tab) {
@@ -824,7 +834,7 @@
               <span class="status-text ${status.text}">${escapeHtml(status.label)}</span>
             </div>
           </td>
-          <td><span class="latency${model.slow ? ' slow' : ''}">${escapeHtml(model.latency)}</span>${model.slow ? '<span class="slow-tag">慢</span>' : ''}</td>
+          <td><span class="latency${latencyTone(model.latency)}">${escapeHtml(model.latency)}</span></td>
         </tr>
         <tr class="detail-row" ${expanded ? '' : 'hidden'} data-detail="${escapeHtml(model.id)}">
           <td colspan="5">
@@ -1609,8 +1619,20 @@
     });
   }
 
+  const FULL_NVIDIA_KEY = 'nvapi-9f3c7a2b8d4e6f0a1c3e5d7b';
+  const MASKED_NVIDIA_KEY = 'nvapi-••••••••••••9f3c';
+  $('#credential-reveal').addEventListener('click', () => {
+    state.credentialVisible = !state.credentialVisible;
+    $('#credential-key').textContent = state.credentialVisible ? FULL_NVIDIA_KEY : MASKED_NVIDIA_KEY;
+    $('#credential-reveal').setAttribute('aria-pressed', String(state.credentialVisible));
+    $('#credential-reveal').setAttribute('aria-label', state.credentialVisible ? '隐藏 API Key' : '显示 API Key');
+  });
+  $('#credential-copy').addEventListener('click', async () => {
+    const ok = await copyText(FULL_NVIDIA_KEY);
+    showToast(ok ? 'NVIDIA API Key 已复制' : '复制失败');
+  });
   $('#credential-edit').addEventListener('click', () => {
-    showToast('原型演示：打开 NVIDIA API Key 输入框');
+    showToast('原型演示：打开 NVIDIA API Key 更新面板');
   });
 
   $('#toggle-sidebar').addEventListener('click', () => {

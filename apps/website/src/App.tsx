@@ -5,6 +5,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 const HeroCanvas = lazy(() => import('@/components/HeroCanvas').then(module => ({ default: module.HeroCanvas })))
 import { Logo } from '@/components/Logo'
 import { PwaPrompts } from '@/components/PwaPrompts'
+import { CommentsDock } from '@/components/CommentsDock'
 import { useI18n } from '@/i18n'
 
 const INSTALL_COMMAND =
@@ -538,6 +539,7 @@ export default function App() {
       </main>
       <Footer />
       <PwaPrompts />
+      <CommentsDock />
       {commandToast ? <div className="command-toast show">{commandToast}</div> : null}
       <span className="sr-only" aria-live="polite">{locale === 'zh' ? '语言已切换为中文' : 'Language switched to English'}</span>
     </div>

@@ -25,6 +25,16 @@ pnpm --filter @ai-bobby/website build
 视觉母版：[prototype/website](../../prototype/website)。
 生产实现必须保持同一套 CSS token / 排版 / 动效节奏。
 
+## 评论（Gitalk 2）
+
+- 底部左下角「讨论 / Comments」按钮默认收起；展开后固定左下角（桌面 400px 宽、最高 72dvh），
+  移动端展开时全屏。
+- 使用 `@aifire/gitalk` + `@aifire/gitalk-react`（2.0 beta，GitHub Discussions 后端），
+  配置在 `src/components/CommentsDock.tsx`：`owner: xsin`、`repo: ai-bobby`、
+  `proxy: https://gitalk-proxy.aispin-abf.workers.dev`、`number: 1`。
+- 组件懒挂载：首次点开才加载 Gitalk，关闭后保留状态；Esc 关闭。
+- 代理的 CORS 已允许 `https://xsin.github.io`，本地 `127.0.0.1` 调试会被拒绝，属预期。
+
 ## 移动端兼容
 
 移动端浏览器（尤其旧 Android WebView / 微信内嵌页）可能整包解析失败或加载不到懒加载 chunk。
