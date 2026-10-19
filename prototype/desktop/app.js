@@ -214,6 +214,8 @@
     historyFilter: 'all',
     historyQuery: '',
     pendingRestore: null,
+    restoreVersions: [],
+    selectedVersion: null,
     musicSong: null,
     update: { status: 'idle', progress: 0, timer: null },
     selection: {
@@ -325,7 +327,7 @@
       const value = metrics[def.key];
       const tone = def.tone ? ` ${def.tone}` : '';
       return `<div class="metric${tone}"><dt>${escapeHtml(def.label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
-    }).join('') + `<div class="metric accent"><dt>已选</dt><dd><span id="selected-count">${selected}</span><span class="metric-unit">/ <span id="selected-total">${src.models.length}</span></span></dd></div>`;
+    }).join('') + `<div class="metric accent"><dt>已选</dt><dd><span id="selected-count">${selected}</span></dd></div>`;
 
     $('#source-actions').innerHTML = src.actions.map(action =>
       `<button type="button" data-action="${action.id}">${ICONS[action.icon] || ''}<span>${escapeHtml(action.label)}</span></button>`
@@ -363,6 +365,7 @@
     if (!isSource && !['overview', 'history', 'about', 'settings'].includes(page)) return;
     state.page = page;
     if (isSource) state.tab = page;
+    renderTabCounts();
 
     $('#page-overview').hidden = page !== 'overview';
     $('#page-models').hidden = !isSource;
@@ -452,6 +455,8 @@
   function renderHistory() {
     if (!$('#history-list')) return;
     const query = state.historyQuery.trim().toLowerCase();
+    const earliestByClient = new Map();
+    for (const record of HISTORY) earliestByClient.set(record.client, record.id);
     const rows = [
       ...HISTORY.map(record => ({ record, backup: BACKUPS.find(backup => backup.history === record.id) || null })),
       ...BACKUPS.filter(backup => !backup.history).map(backup => ({ record: backupOnlyRow(backup), backup })),
@@ -477,13 +482,13 @@
             </div>
             <div class="history-line3"><span class="line-label">配置</span><code title="${escapeHtml(record.target)}">${escapeHtml(record.target)}</code></div>
             <div class="history-line4"><span class="line-label">备份</span>${backup
-              ? `<code title="${escapeHtml(backup.name)}">${escapeHtml(backup.name)}</code><span class="line-meta">${escapeHtml(record.backupMeta || backup.meta.split(' · ')[2] || '')}</span>`
+              ? `<code title="${escapeHtml(backup.name)}">${escapeHtml(backup.name)}</code><span class="line-meta">${escapeHtml(record.backupMeta || backup.meta.split(' · ')[2] || '')}</span>${record.id === earliestByClient.get(record.client) ? '<span class="chip baseline">基线</span>' : ''}`
               : '<span class="line-empty">没有可用的备份文件</span>'}</div>
           </td>
           <td class="history-cell-actions">
-            ${record.status !== 'backup' ? `<button type="button" data-history-view="${record.id}" title="只读查看这次写入改了什么">查看差异</button>` : ''}
-            <button type="button" data-open-dir="${record.id}" title="在 Finder 中打开配置所在目录">打开目录</button>
-            ${backup ? `<button class="restore" type="button" data-restore="${record.id}">恢复</button>` : ''}
+            ${record.status !== 'backup' ? `<button class="ghost" type="button" data-history-view="${record.id}" title="只读查看这次写入改了什么">查看差异</button>` : ''}
+            <button class="ghost" type="button" data-open-dir="${record.id}" title="在 Finder 中打开配置所在目录">打开目录</button>
+            ${backup ? `<button class="ghost" type="button" data-restore="${record.id}">恢复</button>` : ''}
           </td>
         </tr>`).join('');
   }
@@ -532,23 +537,84 @@
     return null;
   }
 
+  // Mock backup sets: baseline (before the first AI Bobby write) + the
+  // newest five rolling backups. The real app keeps the same upper bound.
+  const BACKUP_SETS = {
+    workbuddy: [
+      { at: '2026-10-12 09:14', size: '204 KB', file: 'models.json.ai-bobby-20261012-0914.bak', models: 0, baseline: true },
+      { at: '2026-10-17 22:10', size: '218 KB', file: 'models.json.ai-bobby-20261017-2210.bak', models: 5 },
+      { at: '2026-10-18 13:39', size: '214 KB', file: 'models.json.ai-bobby-20261018-1339.bak', models: 7 },
+      { at: '2026-10-18 13:42', size: '218 KB', file: 'models.json.ai-bobby-20261018-1342.bak', models: 7 },
+      { at: '2026-10-18 18:20', size: '221 KB', file: 'models.json.ai-bobby-20261018-1820.bak', models: 9 },
+      { at: '2026-10-19 00:54', size: '223 KB', file: 'models.json.ai-bobby-20261019-0054.bak', models: 9 },
+    ],
+    claude: [
+      { at: '2026-10-13 10:02', size: '38 KB', file: 'settings.json.ai-bobby-20261013-1002.bak', models: 0, baseline: true },
+      { at: '2026-10-17 22:10', size: '41 KB', file: 'settings.json.ai-bobby-20261017-2210.bak', models: 5 },
+      { at: '2026-10-18 13:39', size: '42 KB', file: 'settings.json.ai-bobby-20261018-1339.bak', models: 7 },
+      { at: '2026-10-18 18:20', size: '43 KB', file: 'settings.json.ai-bobby-20261018-1820.bak', models: 7 },
+    ],
+    codex: [
+      { at: '2026-10-14 21:30', size: '16 KB', file: 'config.toml.ai-bobby-20261014-2130.bak', models: 0, baseline: true },
+      { at: '2026-10-17 22:10', size: '18 KB', file: 'config.toml.ai-bobby-20261017-2210.bak', models: 7 },
+      { at: '2026-10-18 18:20', size: '19 KB', file: 'config.toml.ai-bobby-20261018-1820.bak', models: 7 },
+    ],
+    dsh: [
+      { at: '2026-10-14 20:05', size: '28 KB', file: 'cordis.patch.yml.ai-bobby-20261014-2005.bak', models: 0, baseline: true },
+      { at: '2026-10-17 22:08', size: '31 KB', file: 'cordis.patch.yml.ai-bobby-20261017-2208.bak', models: 5 },
+      { at: '2026-10-18 18:20', size: '32 KB', file: 'cordis.patch.yml.ai-bobby-20261018-1820.bak', models: 7 },
+    ],
+    wbi: [
+      { at: '2026-10-15 09:12', size: '186 KB', file: 'models.json.ai-bobby-20261015-0912.bak', models: 0, baseline: true },
+      { at: '2026-10-18 18:20', size: '190 KB', file: 'models.json.ai-bobby-20261018-1820.bak', models: 5 },
+    ],
+  };
+
+  function versionsFor(record) {
+    const set = BACKUP_SETS[record.client] || BACKUP_SETS.workbuddy;
+    return set.map((version, index) => ({
+      id: `${record.client}-v${index}`,
+      label: index === 0 ? '基线 · 使用 AI Bobby 前' : `第 ${index + 1} 次写入前`,
+      target: record.target,
+      ...version,
+    }));
+  }
+
   function openRestore(record) {
     if (!record) return;
     state.pendingRestore = record;
-    $('#restore-title').textContent = `恢复 ${record.clientName} 的备份`;
-    $('#restore-subtitle').textContent = '恢复前会先备份当前文件；这不会改动其他客户端。';
-    $('#restore-details').innerHTML = `
-      <div class="restore-detail"><span>备份文件</span><code>${escapeHtml(record.backup)}</code></div>
-      <div class="restore-detail"><span>原始写入</span><strong>${escapeHtml(record.fullDate)}</strong></div>
-      <div class="restore-detail"><span>目标文件</span><code>${escapeHtml(record.target)}</code></div>
-      <div class="restore-detail"><span>影响范围</span><strong>${record.models} 个 AI Bobby 模型</strong></div>`;
+    state.restoreVersions = versionsFor(record);
+    state.selectedVersion = state.restoreVersions[0]?.id || null;
+    $('#restore-title').textContent = `恢复 ${record.clientName} 的配置`;
+    $('#restore-subtitle').textContent = '选择一个备份版本；默认选中基线（使用 AI Bobby 前）。';
+    renderRestoreVersions();
     $('#restore-modal').hidden = false;
     $('#confirm-restore').focus();
+  }
+
+  function renderRestoreVersions() {
+    const versions = state.restoreVersions;
+    $('#restore-versions').innerHTML = versions.map(version => `
+      <button type="button" class="restore-version${version.id === state.selectedVersion ? ' selected' : ''}" data-version="${version.id}" role="radio" aria-checked="${version.id === state.selectedVersion}">
+        <span class="restore-radio" aria-hidden="true"></span>
+        <span><strong>${escapeHtml(version.label)}</strong><small>${escapeHtml(version.at)} · ${escapeHtml(version.size)}</small></span>
+        ${version.baseline ? '<span class="chip baseline">基线</span>' : '<span></span>'}
+      </button>`).join('');
+    const selected = versions.find(version => version.id === state.selectedVersion) || versions[0];
+    if (!selected) return;
+    $('#restore-details').innerHTML = `
+      <div class="restore-detail"><span>备份文件</span><code>${escapeHtml(selected.file)}</code></div>
+      <div class="restore-detail"><span>版本时间</span><strong>${escapeHtml(selected.at)}</strong></div>
+      <div class="restore-detail"><span>文件大小</span><strong>${escapeHtml(selected.size)}</strong></div>
+      <div class="restore-detail"><span>目标文件</span><code>${escapeHtml(selected.target)}</code></div>
+      <div class="restore-detail"><span>影响范围</span><strong>${selected.baseline ? '无 AI Bobby 条目' : `${selected.models} 个 AI Bobby 模型`}</strong></div>`;
   }
 
   function closeRestore() {
     $('#restore-modal').hidden = true;
     state.pendingRestore = null;
+    state.restoreVersions = [];
+    state.selectedVersion = null;
   }
 
   function openMusic(track) {
@@ -708,7 +774,6 @@
     const selected = selectedCount();
     const total = totalSelected();
     $('#selected-count').textContent = String(selected);
-    $('#selected-total').textContent = String(source().models.length);
     renderTabCounts();
     const badge = $('#import-badge');
     badge.textContent = String(total);
@@ -1274,13 +1339,21 @@
   $('#restore-modal').addEventListener('click', event => {
     if (event.target === $('#restore-modal')) closeRestore();
   });
+  $('#restore-versions').addEventListener('click', event => {
+    const button = event.target.closest('[data-version]');
+    if (!button) return;
+    state.selectedVersion = button.dataset.version;
+    renderRestoreVersions();
+  });
   $('#confirm-restore').addEventListener('click', () => {
     const record = state.pendingRestore;
     if (!record) return;
+    const version = state.restoreVersions.find(item => item.id === state.selectedVersion);
     closeRestore();
-    showToast(`原型：已恢复 ${record.clientName} 的备份；当前文件已再次备份`);
+    const label = version ? `${version.label}（${version.at}）` : '所选备份';
+    showToast(`原型：已把 ${record.clientName} 恢复到 ${label}；当前文件已再次备份`);
     $('#feedback').hidden = false;
-    $('#feedback-text').textContent = `已从 ${record.backup} 恢复；其他客户端未改动。`;
+    $('#feedback-text').textContent = `已恢复到 ${label}；其他客户端未改动。`;
   });
 
   $('#settings-copy-endpoint').addEventListener('click', async () => {

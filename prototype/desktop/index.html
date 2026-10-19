@@ -50,21 +50,21 @@
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 5.5h12M4 10h8M4 14.5h10" stroke-linecap="round"/><circle cx="15.5" cy="10" r="1.2" fill="currentColor" stroke="none"/></svg>
               </span>
               <span class="side-label">OpenCode</span>
-              <span class="side-count" data-count="opencode">7</span>
+              <span class="side-count" data-count="opencode">3/10</span>
             </button>
             <button class="side-item" type="button" data-page="workbuddy" title="WorkBuddy">
               <span class="side-icon" aria-hidden="true">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m10 2.8 6.2 3.6v7.2L10 17.2l-6.2-3.6V6.4L10 2.8Z"/><path d="m6.8 10 2.1 2.1 4.4-4.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
               </span>
               <span class="side-label">WorkBuddy</span>
-              <span class="side-count" data-count="workbuddy">8</span>
+              <span class="side-count" data-count="workbuddy">2/10</span>
             </button>
             <button class="side-item" type="button" data-page="wbi" title="WorkBuddy AI">
               <span class="side-icon" aria-hidden="true">
                 <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="6.8"/><path d="M3.5 10h13M10 3.2c2.2 2 3.2 4.4 3.2 6.8s-1 4.8-3.2 6.8c-2.2-2-3.2-4.4-3.2-6.8S7.8 5.2 10 3.2Z"/></svg>
               </span>
               <span class="side-label">WorkBuddy AI</span>
-              <span class="side-count" data-count="wbi">6</span>
+              <span class="side-count" data-count="wbi">2/8</span>
             </button>
 
             <div class="nav-group-label">其他</div>
@@ -268,7 +268,7 @@
 
               <div class="history-stats">
                 <div class="stat-card"><span>最近写入</span><strong>今天 13:42</strong><small>WorkBuddy · 7 个模型</small></div>
-                <div class="stat-card"><span>可恢复备份</span><strong>5</strong><small>每个目标保留最近 5 份</small></div>
+                <div class="stat-card"><span>可恢复备份</span><strong>17</strong><small>基线 1 份 + 最近 5 份</small></div>
                 <div class="stat-card"><span>备份占用</span><strong>1.8 MB</strong><small>只存本机，不上传</small></div>
               </div>
 
@@ -290,7 +290,7 @@
                 <div class="panel-head">
                   <h2 id="history-heading">导入记录与备份</h2>
                   <div class="panel-head-actions">
-                    <span>每个目标保留最近 5 份</span>
+                    <span>基线 1 份 + 最近 5 份（最多 6 份）</span>
                   </div>
                 </div>
                 <table class="history-table">
@@ -308,7 +308,7 @@
                   </thead>
                   <tbody id="history-list"></tbody>
                 </table>
-                <p class="panel-note">写入前自动备份；恢复前会再次生成当前文件的备份。没有对应导入记录的旧备份单独列在末尾。</p>
+                <p class="panel-note">每个目标保留 1 份基线（首次写入前）和最近 5 份备份；恢复前会再次备份当前文件。</p>
               </section>
             </main>
 
@@ -597,14 +597,20 @@
     <div class="modal restore-modal" id="restore-modal" hidden role="dialog" aria-modal="true" aria-labelledby="restore-title">
       <div class="modal-card">
         <div class="modal-head">
-          <div><h2 id="restore-title">恢复备份</h2><p id="restore-subtitle">恢复前会先备份当前文件。</p></div>
+          <div>
+            <h2 id="restore-title">恢复 WorkBuddy 的配置</h2>
+            <p id="restore-subtitle">选择一个备份版本；默认选中基线（使用 AI Bobby 前）。</p>
+          </div>
           <button class="icon-button" id="close-restore" type="button" aria-label="关闭恢复窗口">×</button>
         </div>
-        <div class="restore-details" id="restore-details"></div>
-        <div class="modal-note">原型演示：真实版本会写入目标配置，并生成一条新的导入历史。</div>
+        <div class="restore-body">
+          <div class="restore-versions" id="restore-versions" role="radiogroup" aria-label="备份版本"></div>
+          <div class="restore-details" id="restore-details"></div>
+        </div>
+        <div class="modal-note">恢复前会先备份当前文件；恢复只写入这个客户端，不影响其他客户端。</div>
         <div class="modal-foot">
           <button type="button" id="cancel-restore">取消</button>
-          <button type="button" class="primary" id="confirm-restore">恢复此备份</button>
+          <button type="button" class="primary" id="confirm-restore">恢复此版本</button>
         </div>
       </div>
     </div>

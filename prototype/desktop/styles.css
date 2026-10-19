@@ -89,27 +89,30 @@ button, input, select { font: inherit; }
 button, summary, label { -webkit-user-select: none; user-select: none; }
 h1, h2, h3, h4, p, dl, dd { margin: 0; }
 
+/* 按钮系统：全部按钮只在这里定义尺寸/字号/边框/hover。
+   默认 = secondary（白底描边）；primary = 主操作；ghost = 行内/低频操作；
+   页面内不再覆写按钮样式。 */
 button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 32px;
-  padding: 5px 11px;
+  min-height: 30px;
+  padding: 4px 10px;
   border: 1px solid var(--line);
   border-radius: 7px;
   background: var(--surface);
   color: var(--text);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 500;
   line-height: 1.4;
   white-space: nowrap;
   cursor: pointer;
   transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
-button:hover:not(:disabled) { border-color: var(--muted); background: var(--hover); }
+button:hover:not(:disabled) { border-color: var(--line); background: var(--hover); }
 button:active:not(:disabled) { background: var(--selected); }
-button:disabled { color: var(--faint); cursor: default; opacity: 0.72; }
+button:disabled { color: var(--faint); cursor: default; opacity: 0.6; }
 
 button.primary {
   border-color: var(--accent);
@@ -118,6 +121,14 @@ button.primary {
 }
 button.primary:hover:not(:disabled) { border-color: var(--accent-hover); background: var(--accent-hover); }
 button.primary:disabled { opacity: 0.5; }
+
+button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+button.ghost:hover:not(:disabled) { border-color: transparent; background: var(--hover); color: var(--text); }
+
 
 button:focus-visible,
 input:focus-visible,
@@ -817,7 +828,6 @@ body[data-theme="light"] .diff .del { color: #b42318; }
   font-size: 10px;
 }
 .drawer-actions { display: flex; gap: 7px; }
-.drawer-actions button { min-height: 30px; font-size: 11px; }
 
 .modal {
   position: fixed;
@@ -1123,7 +1133,6 @@ body[data-theme="light"] .diff .del { color: #b42318; }
 .page-head h1 { margin-top: 2px; font-size: 25px; font-weight: 650; letter-spacing: -0.035em; line-height: 1.15; }
 .page-head p { max-width: 620px; margin-top: 6px; color: var(--muted); font-size: 12px; }
 .page-actions { display: flex; align-items: center; gap: 8px; padding-top: 16px; }
-.page-actions .primary { min-height: 34px; }
 .page .eyebrow { margin-bottom: 4px; }
 
 /* History */
@@ -1283,7 +1292,6 @@ body[data-theme="light"] .diff .del { color: #b42318; }
 .settings-value { display: flex; align-items: center; gap: 7px; min-width: 0; }
 .settings-value code { max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); font: 10px/1.4 var(--mono); }
 .settings-value button { min-height: 26px; padding: 2px 8px; font-size: 10px; }
-.settings-value .primary { border-color: var(--line); background: var(--surface-2); color: var(--text); }
 
 /* Draggable ZEO avatar */
 .zeo-fab {
@@ -1748,16 +1756,7 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .line-meta { flex: 0 0 auto; color: var(--faint); font-size: 9px; }
 .line-empty { color: var(--faint); font-size: 9px; }
 .history-cell-actions { text-align: right; white-space: nowrap; }
-.history-cell-actions button {
-  min-height: 25px;
-  padding: 2px 7px;
-  border-color: transparent;
-  background: transparent;
-  color: var(--muted);
-  font-size: 10px;
-}
-.history-cell-actions button:hover:not(:disabled) { border-color: var(--line); background: var(--hover); color: var(--text); }
-.history-cell-actions button.restore { color: var(--accent); }
+.history-cell-actions button { margin-left: 2px; }
 
 .login-guide {
   margin: 16px 18px;
@@ -1801,3 +1800,64 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 
 .history-table .history-row { display: table-row; }
 .history-table .history-row > td { display: table-cell; }
+
+/* Restore dialog: version list + live details */
+.restore-modal .modal-card { width: min(660px, calc(100vw - 32px)); }
+.restore-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 12px;
+  padding: 14px 18px;
+}
+.restore-versions {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  max-height: 268px;
+  overflow: auto;
+}
+.restore-version {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  white-space: normal;
+}
+.restore-version:hover:not(:disabled) { border-color: var(--line); background: var(--surface-2); }
+.restore-version.selected { border-color: var(--accent-border); background: var(--accent-soft); }
+.restore-radio {
+  width: 12px;
+  height: 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+}
+.restore-version.selected .restore-radio {
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 3px var(--surface), inset 0 0 0 8px var(--accent);
+}
+.restore-version strong { display: block; font-size: 11px; font-weight: 600; }
+.restore-version small { display: block; margin-top: 1px; color: var(--muted); font-size: 9px; }
+.restore-details { padding: 0; }
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: var(--surface-3);
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.chip.baseline { background: var(--amber-soft); color: var(--amber-text); }
+.history-line4 .chip { margin-left: 4px; }
+@media (max-width: 760px) {
+  .restore-body { grid-template-columns: 1fr; }
+}
