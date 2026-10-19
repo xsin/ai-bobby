@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import { parse as parseToml } from 'smol-toml'
 import { atomicWrite, backup, exists, latestBackup, normalizeEndpoint, planFor, readText, withLock } from './common'
 import type { ImportContext, ImportPlan, ImportSelection, ImportTarget, Importer } from './types'
+import { codexCatalogEntry, isCodexCovered } from './codex-metadata'
 
 const START = '# >>> ai-bobby:start'
 const END = '# <<< ai-bobby:end'
@@ -171,57 +172,21 @@ async function buildCatalog(
   selection: ImportSelection,
   context: ImportContext,
 ): Promise<{ path: string; content: string; fallback: string[] } | undefined> {
-  const sourcePath = join(dirname(configPath), 'models.json')
-  const raw = await readText(sourcePath)
-  if (raw === undefined) return undefined
-  let parsed: { models?: Array<Record<string, unknown>> }
-  try {
-    parsed = JSON.parse(raw) as typeof parsed
-  } catch {
-    return undefined
-  }
-  const entries = parsed.models
-  if (!Array.isArray(entries) || entries.length === 0) return undefined
-  const template = entries[0]
-  if (template === undefined) return undefined
   const selected = new Set(selection.modelIds)
   const available = context.models.filter(model => selected.has(model.id))
   const models: Array<Record<string, unknown>> = []
   const fallback: string[] = []
   for (const model of available) {
-    const existing = entries.find(entry => entry['slug'] === model.upstreamId || entry['slug'] === model.id)
-    const base = existing ?? template
-    if (existing === undefined) fallback.push(model.displayName)
-    const reasoningLevels = base['supported_reasoning_levels']
-    const entry: Record<string, unknown> = {
-      ...base,
-      slug: model.id,
-      display_name: model.displayName,
-      description: `AI Bobby · ${model.groupName}`,
-      context_window: model.contextWindow ?? base['context_window'],
-      max_context_window: model.contextWindow ?? base['max_context_window'],
-      supported_in_api: true,
-      visibility: 'list',
-      priority: models.length + 1,
-      input_modalities: model.capabilities.images ? base['input_modalities'] : ['text'],
-      supports_parallel_tool_calls: model.capabilities.tools,
+    if (!isCodexCovered(model)) {
+      fallback.push(model.displayName)
+      continue
     }
-    if (!model.capabilities.reasoning) {
-      entry['supported_reasoning_levels'] = []
-      entry['default_reasoning_level'] = null
-    } else if (!Array.isArray(reasoningLevels) || reasoningLevels.length === 0) {
-      entry['supported_reasoning_levels'] = [
-        { effort: 'low', description: 'Fast responses with lighter reasoning' },
-        { effort: 'medium', description: 'Balanced reasoning' },
-        { effort: 'high', description: 'More reasoning depth' },
-      ]
-    }
-    models.push(entry)
+    models.push(codexCatalogEntry(model))
   }
   if (models.length === 0) return undefined
   return {
     path: join(dirname(configPath), 'models.ai-bobby.json'),
-    content: `${JSON.stringify({ ...parsed, models }, null, 2)}\n`,
+    content: `${JSON.stringify({ models }, null, 2)}\n`,
     fallback,
   }
 }

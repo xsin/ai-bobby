@@ -181,6 +181,7 @@ export interface AiBobbyApi {
   getImportHistory(): Promise<ImportHistorySnapshot>
   getImportedModelIds(): Promise<string[]>
   getSettings(): Promise<DesktopSettings>
+  getCodexMetadata(): Promise<string[]>
   setNvidiaKey(apiKey: string): Promise<GatewayStatus>
   probeNvidia(): Promise<GatewayStatus>
   setProxy(proxy: DesktopSettings['proxy']): Promise<DesktopSettings>

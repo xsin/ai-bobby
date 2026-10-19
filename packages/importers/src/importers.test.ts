@@ -229,15 +229,19 @@ describe('backup retention', () => {
     await writeFile(join(dir, '.codex', 'config.toml'), 'model = "deepseek-v4.1-flash"\nmodel_provider = "local"\n')
     const importer = new CodexImporter(dir)
     const context: ImportContext = {
-      models: [model('workbuddy', 'deepseek-v4.1-flash', 'DeepSeek')],
+      models: [
+        model('workbuddy', 'deepseek-v4.1-flash', 'DeepSeek'),
+        model('opencode', 'space-bunny-free', 'Space Bunny'),
+      ],
       apiKey: 'sk-test',
       endpoint: 'http://127.0.0.1:46890/v1',
     }
     await importer.apply(
-      { groups: ['workbuddy'], modelIds: ['wb/deepseek-v4.1-flash'], defaultModelId: 'wb/deepseek-v4.1-flash', setAsDefault: true },
+      { groups: ['workbuddy', 'opencode'], modelIds: ['wb/deepseek-v4.1-flash', 'oc/space-bunny-free'], defaultModelId: 'wb/deepseek-v4.1-flash', setAsDefault: true },
       context,
     )
     const catalog = JSON.parse(await readFile(join(dir, '.codex', 'models.ai-bobby.json'), 'utf8')) as { models: Array<{ slug: string }> }
+    expect(catalog.models).toHaveLength(1)
     expect(catalog.models[0]?.slug).toBe('wb/deepseek-v4.1-flash')
     const config = await readFile(join(dir, '.codex', 'config.toml'), 'utf8')
     expect(config).toContain('models.ai-bobby.json')

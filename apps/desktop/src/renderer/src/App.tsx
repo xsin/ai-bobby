@@ -178,6 +178,7 @@ function AppInner() {
   const [nvidiaKey, setNvidiaKey] = useState('')
   const [nvidiaKeyVisible, setNvidiaKeyVisible] = useState(false)
   const [settings, setSettings] = useState<DesktopSettings | null>(null)
+  const [codexModels, setCodexModels] = useState<string[]>([])
   const [, setLocaleVersion] = useState(0)
   const [loginOpen, setLoginOpen] = useState(false)
   const [loginBusy, setLoginBusy] = useState(false)
@@ -469,6 +470,7 @@ function AppInner() {
           scannedImports.current = true
         }
         void api.getSettings().then(next => { if (alive) setSettings(next) }).catch(() => undefined)
+        void api.getCodexMetadata().then(ids => { if (alive) setCodexModels(ids) }).catch(() => undefined)
         setRealStatus(status)
         applyStatus(status)
       } catch {
@@ -1049,6 +1051,7 @@ function AppInner() {
           toast.success('已写入客户端；重启对应客户端后生效')
           void loadHistory()
         }}
+        codexModels={codexModels}
         onApply={async payload => {
           const api = window.aiBobby
           if (!api) {

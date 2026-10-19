@@ -47,6 +47,7 @@ interface ImportSheetProps {
   selectedTotal: number
   onApplied: () => void
   onApply?: (payload: { clients: ClientId[]; groups: ProviderId[]; modelIds: string[]; defaultModelId: string; setAsDefault: boolean }) => Promise<void> | void
+  codexModels: string[]
 }
 
 type ClientId = ImportClient['id']
@@ -86,7 +87,7 @@ const TARGET_LABEL: Record<string, string> = {
   vscode: 'VS Code',
 }
 
-export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply }: ImportSheetProps) {
+export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply, codexModels }: ImportSheetProps) {
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
     Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, true])) as Record<ClientId, boolean>,
   )
@@ -122,6 +123,14 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
     () => activeGroups.flatMap(group => selectedIdsByGroup[group]),
     [activeGroups, selectedIdsByGroup],
   )
+
+  const codexCoverage = useMemo(() => {
+    const ids = activeGroups.flatMap(group => selectedIdsByGroup[group])
+    const catalog = Object.values(SOURCES).flatMap(source => source.models)
+    const selected = ids.map(id => catalog.find(model => model.id === id)).filter((model): model is NonNullable<typeof model> => model !== undefined)
+    const missing = selected.filter(model => !codexModels.includes(model.upstream))
+    return { total: selected.length, covered: selected.length - missing.length, missing }
+  }, [activeGroups, selectedIdsByGroup, codexModels])
 
   const [previews, setPreviews] = useState<ImportPlanSnapshot[]>([])
   const [previewing, setPreviewing] = useState(false)
@@ -289,6 +298,26 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                   )
                 })}
               </div>
+              {clients.codex ? (
+                <div className="mt-2 rounded-md border border-warning/30 bg-warning-soft/40 px-2.5 py-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-[11px] font-semibold text-text">{t('Codex 元数据')}</strong>
+                    <span className="font-mono text-[10px] text-warning">{codexCoverage.covered}/{codexCoverage.total}</span>
+                  </div>
+                  <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
+                    {codexCoverage.missing.length === 0
+                      ? t('已选模型都有 Codex 元数据，会全部写入 Codex 模型选择器。')
+                      : t('{n} 个已选模型缺少 Codex 元数据，不会写入 Codex 模型选择器；其他客户端仍会导入。', { n: codexCoverage.missing.length })}
+                  </p>
+                  {codexCoverage.missing.length > 0 ? (
+                    <div className="mt-1.5 flex flex-wrap gap-1.5">
+                      {codexCoverage.missing.map(model => (
+                        <span key={model.id} className="rounded bg-warning-soft px-1.5 py-0.5 font-mono text-[9px] text-warning">{model.display}</span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
               <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-dashed border-line px-2.5 py-2">
                 <div className="min-w-0">
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-text">

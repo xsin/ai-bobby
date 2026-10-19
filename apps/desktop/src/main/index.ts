@@ -145,6 +145,11 @@ function registerIpc(): void {
     return services.importedModelIds()
   })
 
+  ipcMain.handle('codex:metadata', async () => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.getCodexMetadata()
+  })
+
   ipcMain.handle('settings:get', async () => {
     if (!services) throw new Error('服务尚未启动')
     return services.getSettings()

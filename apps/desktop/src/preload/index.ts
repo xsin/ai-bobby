@@ -12,6 +12,7 @@ const api: AiBobbyApi = {
   importRollback: target => ipcRenderer.invoke('import:rollback', target),
   getImportHistory: () => ipcRenderer.invoke('import:history'),
   getImportedModelIds: () => ipcRenderer.invoke('import:installed-models'),
+  getCodexMetadata: () => ipcRenderer.invoke('codex:metadata'),
   getSettings: () => ipcRenderer.invoke('settings:get'),
   setNvidiaKey: apiKey => ipcRenderer.invoke('settings:nvidia-key', apiKey),
   probeNvidia: () => ipcRenderer.invoke('settings:probe-nvidia'),

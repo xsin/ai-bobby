@@ -40,6 +40,7 @@ import {
   normalizeRestoredCodexModel,
   backup,
   baselineBackupPath,
+  codexCoveredUpstreamIds,
   ensureBaseline,
   exists,
   readText,
@@ -212,6 +213,10 @@ export class Services {
       apiKeyMasked: maskKey(this.key),
       refreshedAtMs: this.refreshedAtMs,
     }
+  }
+
+  async getCodexMetadata(): Promise<string[]> {
+    return codexCoveredUpstreamIds()
   }
 
   async getSettings(): Promise<AppSettings> {
