@@ -93,7 +93,7 @@ export function SettingsPage({
           <div className="flex gap-1.5">
             {([
               ['system', t('跟随系统')],
-              ['zh', '简体中文'],
+              ['zh', t('简体中文')],
               ['en', 'English'],
             ] as const).map(([id, label]) => (
               <Button
@@ -150,7 +150,7 @@ export function SettingsPage({
                 </label>
               ))}
             </div>
-            <p className="text-[9px] leading-relaxed text-faint">OpenCode 运行时由子进程联网，不受此设置影响；国内来源通常不需要代理。</p>
+            <p className="text-[9px] leading-relaxed text-faint">{t('OpenCode 运行时由子进程联网，不受此设置影响；国内来源通常不需要代理。')}</p>
           </div>
         </div>
 
@@ -192,7 +192,7 @@ export function SettingsPage({
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
           <div>
             <h2 className="text-[12px] font-semibold text-text">{t('版本与更新')}</h2>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">当前 v{appInfo?.version ?? '0.2.1'}；{t('新版本先提示，不静默替换。')}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">{t('当前 v{version}；新版本先提示，不静默替换。', { version: appInfo?.version ?? '0.2.3' })}</p>
             <p className="mt-1 max-w-[520px] truncate font-mono text-[9px] text-faint">{t('更新源')} {appInfo?.updateSource ?? 'https://xsin.github.io/ai-bobby/releases/latest/latest.json'}</p>
             {lastMessage ? <p className="mt-1 text-[10px] text-muted-foreground">{lastMessage}</p> : null}
           </div>

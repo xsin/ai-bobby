@@ -172,7 +172,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
           <span className="text-[10px] text-faint">{t("最近写入")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{latest ? formatTime(latest.createdAtMs) : '—'}</strong>
-          <small className="mt-0.5 block text-[10px] text-muted-foreground">{latest ? `${TARGET_LABEL[latest.target]} · ${latest.modelCount} 个模型` : '还没有导入记录'}</small>
+          <small className="mt-0.5 block text-[10px] text-muted-foreground">{latest ? `${TARGET_LABEL[latest.target]} · ${latest.modelCount} ${t('个模型')}` : '还没有导入记录'}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
           <span className="text-[10px] text-faint">{t("可恢复备份")}</span>
@@ -281,15 +281,15 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                     <td className="whitespace-nowrap px-3.5 py-2.5 text-right align-top">
                       {entry.diff ? (
                         <Button type="button" variant="ghost" size="sm" title={t("只读查看这次写入改了什么")} onClick={() => setViewing(entry)}>
-                          查看差异
+                          {t('查看差异')}
                         </Button>
                       ) : null}
                       <Button type="button" variant="ghost" size="sm" title={t("在 Finder 中打开配置所在目录")} onClick={() => onOpenDirectory(entry.path)}>
-                        打开目录
+                        {t('打开目录')}
                       </Button>
                       {entry.backupPath ? (
                         <Button type="button" variant="ghost" size="sm" onClick={() => setPending(entry)}>
-                          恢复
+                          {t('恢复')}
                         </Button>
                       ) : null}
                     </td>
@@ -300,13 +300,13 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           </table>
         )}
         <p className="border-t border-line-soft px-3.5 py-2.5 text-[9px] leading-relaxed text-faint">
-          写入前自动备份；恢复前会再次备份当前文件，失败不会覆盖。
+          {t('写入前自动备份；恢复前会再次备份当前文件，失败不会覆盖。')}
         </p>
       </section>
 
       <div className="mt-3 flex items-center gap-1.5 text-[9px] text-faint">
         <ShieldCheck className="size-3.5" />
-        备份只在本机；恢复时会写入目标客户端配置，不影响其他客户端。
+        {t('备份只在本机；恢复时会写入目标客户端配置，不影响其他客户端。')}
       </div>
 
       <Dialog open={pending !== null} onOpenChange={open => { if (!open) setPending(null) }}>

@@ -104,7 +104,7 @@ export function AboutPage({ version, onPlay, onOpenAlbum, onOpenExternal }: Abou
                     tab === id && 'border-primary/30 bg-accent-soft text-primary',
                   )}
                 >
-                  {label}
+                  {t(label)}
                 </button>
               ))}
             </div>
@@ -149,7 +149,7 @@ export function AboutPage({ version, onPlay, onOpenAlbum, onOpenExternal }: Abou
             <figure key={label} className="m-0 min-w-0 rounded-lg border border-line-soft bg-surface p-2">
               <img src={src} alt={`${label}赞助收款码`} className="block aspect-square w-full rounded object-contain bg-white" />
               <figcaption className="flex flex-col gap-px px-0.5 pt-2">
-                <strong className="text-[10px] font-semibold text-text">{label}</strong>
+                <strong className="text-[10px] font-semibold text-text">{t(label)}</strong>
                 <span className="text-[9px] text-faint">{t("扫码支持")}</span>
               </figcaption>
             </figure>

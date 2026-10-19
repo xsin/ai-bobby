@@ -43,7 +43,7 @@ function creditsLabel(status: GatewayStatus | null): { value: string; note: stri
   const accounts = status?.accounts ?? []
   const cn = accounts.filter(account => account.realm === 'cn')
   const intl = accounts.filter(account => account.realm === 'intl')
-  const note = `CN ${cn.length} 个账号 · INTL ${intl.length} 个账号`
+  const note = `CN ${cn.length} ${t('个账号')} · INTL ${intl.length} ${t('个账号')}`
   if (accounts.some(account => account.unlimited)) return { value: '不限量', note }
   const known = accounts.filter(account => typeof account.credits === 'number')
   if (known.length === 0) return { value: '—', note }
@@ -162,7 +162,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
               className="border-0 bg-transparent p-0 text-[10px] text-primary hover:underline"
               onClick={() => onNavigate('history')}
             >
-              查看全部 →
+              {t('查看全部')} →
             </button>
           </div>
         </div>
@@ -178,14 +178,14 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
                 <span className="flex min-w-0 flex-col gap-0.5">
                   <strong className="text-[11px] font-semibold text-text">{TARGET_LABEL[entry.target] ?? entry.target}</strong>
                   <small className="truncate text-[10px] text-muted-foreground">
-                    {formatTime(entry.createdAtMs)} · {entry.modelCount} 个模型 · <code className="font-mono text-[9px] text-faint">{entry.path}</code>
+                    {formatTime(entry.createdAtMs)} · {entry.modelCount} {t('个模型')} · <code className="font-mono text-[9px] text-faint">{entry.path}</code>
                   </small>
                 </span>
                 <span className={cn(
                   'rounded px-1.5 py-px text-[9px]',
                   entry.action === 'restore' ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success',
                 )}>
-                  {entry.action === 'restore' ? '已恢复' : '成功'}
+                  {entry.action === 'restore' ? t('已恢复') : t('成功')}
                 </span>
               </div>
             ))}

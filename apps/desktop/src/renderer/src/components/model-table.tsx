@@ -92,7 +92,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
                   : 'border-line text-muted-foreground',
               )}
             >
-              {cap}
+              {t(cap)}
             </span>
           ))}
         </div>
@@ -121,7 +121,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
       },
     },
     {
-      title: source.lastHeader,
+      title: t(source.lastHeader),
       dataIndex: 'latency',
       key: 'latency',
       width: 148,
@@ -140,7 +140,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
         <Detail label={t("上下文")} value={`${model.context} tokens`} />
         <Detail label={t("最大输出")} value={`${model.maxOutput} tokens`} />
         <Detail label={t("最近检测")} value={model.checked} />
-        <Detail label={t("能力")} value={model.caps.join(' / ')} />
+        <Detail label={t("能力")} value={model.caps.map(cap => t(cap)).join(' / ')} />
         <Detail
           label={t("计费")}
           value={
