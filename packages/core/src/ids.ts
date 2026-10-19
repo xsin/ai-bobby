@@ -4,6 +4,7 @@ export const PROVIDER_GROUPS: Record<ProviderId, { name: string; prefix: string;
   opencode: { name: 'OpenCode', prefix: 'oc', displayPrefix: 'OC.' },
   workbuddy: { name: 'WorkBuddy', prefix: 'wb', displayPrefix: 'WB.' },
   'workbuddy-ai': { name: 'WorkBuddy AI', prefix: 'wbi', displayPrefix: 'WBI.' },
+  nvidia: { name: 'NVIDIA NIM', prefix: 'nv', displayPrefix: 'NV.' },
 }
 
 export function groupName(provider: ProviderId): string {
@@ -31,6 +32,7 @@ export function providerOfModelId(id: string): ProviderId | undefined {
   if (id.startsWith('oc/')) return 'opencode'
   if (id.startsWith('wb/')) return 'workbuddy'
   if (id.startsWith('wbi/')) return 'workbuddy-ai'
+  if (id.startsWith('nv/')) return 'nvidia'
   return undefined
 }
 

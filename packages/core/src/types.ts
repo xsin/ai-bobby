@@ -1,4 +1,4 @@
-export type ProviderId = 'opencode' | 'workbuddy' | 'workbuddy-ai'
+export type ProviderId = 'opencode' | 'workbuddy' | 'workbuddy-ai' | 'nvidia'
 export type Realm = 'cn' | 'intl'
 
 export type ModelStatus =
