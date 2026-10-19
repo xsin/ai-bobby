@@ -1381,6 +1381,8 @@ AI Bobby 的策略：
 - 验证：`pnpm validate:codex` 用 `codex debug models` 让 Codex 解析生成的 catalog，断言 slug 齐全且没有
   fallback 元数据（L1）；`pnpm validate:codex:contract` 再断言 Codex 规范化后的 visibility/context/
   reasoning/模态（L2）；两者已接入 `.github/workflows/validate.yml`。
+- `pnpm validate:codex:request` 用 mock `/v1/responses` 跑真实 Codex CLI，断言实际请求的
+  `model`、`stream`、`tools`、`reasoning.effort`（L2 请求形状）。
 - `pnpm smoke:codex` 是 L3 上游 smoke：读取运行中网关的 Key，对每个覆盖模型发一条最小
   `/v1/responses`，需真实 provider 权限，手动运行，不进 CI。
 

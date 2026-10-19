@@ -19,7 +19,8 @@
     "dist:mac": "bash scripts/release/build-mac.sh",
     "validate:codex": "tsx scripts/validate-codex-catalog.mts",
     "validate:codex:contract": "tsx scripts/validate-codex-contract.mts",
-    "smoke:codex": "tsx scripts/smoke-codex-models.mts"
+    "smoke:codex": "tsx scripts/smoke-codex-models.mts",
+    "validate:codex:request": "tsx scripts/validate-codex-request.mts"
   },
   "devDependencies": {
     "@types/node": "catalog:",

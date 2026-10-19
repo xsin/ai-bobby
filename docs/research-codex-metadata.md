@@ -179,10 +179,11 @@ catalog schema 随 Codex 版本变化。CI 固定测试一个 Codex CLI 版本�
 | 项 | 状态 |
 |---|---|
 | L1：`pnpm validate:codex` 让 Codex 解析 catalog | ✅ |
-| L2：`pnpm validate:codex:contract` 断言 Codex 规范化后的字段 | ✅（字段契约，不是网络请求形状） |
+| L2：`pnpm validate:codex:contract` 断言 Codex 规范化后的字段 | ✅ |
+| L2：`pnpm validate:codex:request` 用 mock `/v1/responses` 断言 Codex 实际发出的 model/reasoning/tools | ✅ |
 | L3：`pnpm smoke:codex` 直连网关做上游 smoke | ✅ 脚本；需运行中的网关与真实 Key，手动执行 |
 | CI：typecheck/test + L1/L2 | ✅ `.github/workflows/validate.yml` |
-| 请求形状 mock（reasoning/tools 实际发出） | ❌ 仍待实现 |
+| 请求形状 mock（reasoning/tools 实际发出） | ✅ |
 | `verifiedAt/source/verification` 登记字段 | ✅ `codex-metadata.ts` |
 | 覆盖模型扩展 | ❌ 仍为 2 个上游模型 |
 
@@ -193,7 +194,7 @@ B 不是一个“自动得出正确元数据”的方案，而是一个**分层�
 | 验证层 | 能证明什么 | 不能证明什么 | 有效性 |
 |---|---|---|---|
 | L1 Schema | Codex 能解析 catalog；必填字段齐全；slug 不触发 fallback | 字段值是否符合模型真实语义 | 高（≈100% 结构错误可拦截） |
-| L2 规范化契约 | Codex 加载后 slug/visibility/context/模态/reasoning 仍符合预期 | 上游是否真的支持/采纳这些参数 | 中高（能抓字段被丢弃/降级） |
+| L2 规范化契约 + 请求形状 | Codex 加载后字段符合预期；实际请求含 model/reasoning/tools/stream | 上游是否真的支持/采纳这些参数 | 中高（能抓字段被丢弃/降级） |
 | L3 上游 smoke | 该 Key 下模型能完成一次最小对话/工具调用 | 多轮、并行工具、长上下文、指令遵循质量 | 中（只能证明“能跑”） |
 | L4 行为评测 | 模型在固定任务集上的表现 | 与官方 Codex 行为完全一致 | 低（成本高，且无官方基线） |
 

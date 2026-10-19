@@ -43,3 +43,4 @@ jobs:
       - run: npm install --global @openai/codex@0.154.0
       - run: pnpm validate:codex
       - run: pnpm validate:codex:contract
+      - run: pnpm validate:codex:request
