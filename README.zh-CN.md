@@ -1,0 +1,357 @@
+# AI Bobby
+
+**所有模型，一个本机端点。**
+
+AI Bobby 是一个本地优先的桌面 AI 网关：把 **OpenCode 免费模型池**、**WorkBuddy（国内版）**
+和 **WorkBuddy AI（国际版）** 收敛到 `127.0.0.1:46890` 一个 OpenAI 兼容端点 ——
+一个 API Key、三种协议，配一个原生 macOS 控制面板。
+
+[English](./README.md) · [简体中文](./README.zh-CN.md) · [繁體中文](./README.zh-TW.md)
+
+*桌面界面目前只有简体中文。*
+
+> **状态（2026-10-19）：** `v0.2.2` 已发布。修复 WorkBuddy / WorkBuddy AI 的 `deepseek`
+> 上游 abort；导入备份改为 1 份基线 + 最近 5 份，并支持按版本恢复；统一按钮与 hover；
+> 移动端落地页增加兜底。网关（Chat / Responses / Messages）、OpenCode 免费模型、
+> WorkBuddy 双版本 provider、四个 importer、自动更新与 curl 安装链路均已上线。
+> **WorkBuddy 仍需要你本人扫码登录。**
+> 落地页：<https://xsin.github.io/ai-bobby/>
+
+![OpenCode 页](docs/screenshots/01-opencode-dark.png)
+
+## 你会得到什么
+
+- **一个端点** —— `http://127.0.0.1:46890/v1` 同时支持 OpenAI Chat Completions、
+  OpenAI Responses 和 Anthropic Messages。
+- **三个模型来源** —— OpenCode 免费池、WorkBuddy（国内版）、WorkBuddy AI（国际版），
+  合并成一份模型清单，并标注免费或计费倍率。
+- **多账号** —— 每个来源可添加多个 WorkBuddy 账号，默认 round-robin + 失败切换。
+- **一键导入** —— 把 AI Bobby 端点写入 WorkBuddy、Codex、Claude Code 和 DeepSeek Harness，
+  写入前有实时 diff 预览。
+- **历史与恢复** —— 每次写入前自动备份；可在历史页恢复基线或最近 5 份快照。
+- **只在本机** —— 只监听 `127.0.0.1:46890`，拒绝浏览器 `Origin` 请求，不做遥测。
+
+## 安装（macOS，ad-hoc 签名公测）
+
+推荐一行安装：
+
+```bash
+curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash
+```
+
+可审计安装：
+
+```bash
+curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh -o install.sh
+less install.sh && bash install.sh
+```
+
+- 默认安装到 `~/Applications/AI Bobby.app`；`--system` 可装到 `/Applications`。
+- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
+- 二进制托管在 **GitHub Releases**；gh-pages 只放安装脚本、版本号、校验和与更新清单。
+- 当前版本未做 Apple 公证。首次打开若被 Gatekeeper 阻止：
+
+```bash
+xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+```
+
+## 为什么 macOS 会提示联网
+
+AI Bobby 目前是 **ad-hoc 签名、未公证** 的公测版，Electron Helper 没有 Developer ID。
+Little Snitch 会把“未签名进程要联网”标成风险，这是签名状态导致的提示，不是应用在扫描局域网。
+
+它需要联网的原因只有三类：
+
+- 访问 WorkBuddy / WorkBuddy AI 上游接口（登录、模型目录、聊天、额度）；
+- 首次下载 OpenCode 运行时；
+- 检查 GitHub Release 更新。
+
+本机网关只监听 `127.0.0.1:46890`，不会把端口暴露到局域网或公网，也不做遥测。
+
+建议：
+
+- 在 Little Snitch 提示中给 **AI Bobby / Electron Helper** 建**单独规则**，不要建 “any via-process” 的宽泛规则。
+- 只测本机网关时可先选 **Only local network**；要登录 WorkBuddy 或首次下载 OpenCode 时，需要允许对应出站连接。
+- 不要直接 Deny 整个进程，否则 WorkBuddy / OpenCode / 更新会失败。
+- 如果不想放行，退出 AI Bobby 即可；它不会修改系统代理，也不会后台常驻网络行为。
+
+> 开发环境下看到的 `DeepSeek Harness via Electron Helper` 提示来自 DSH 开发工具本身，不是 AI Bobby 的网关。
+
+## 第一次使用
+
+1. 启动 AI Bobby。应用只监听本机 `127.0.0.1:46890`。
+2. 在左侧栏 **OpenCode** 页点“读取模型”。首次运行会下载 OpenCode 运行时，需要网络，可能要等一会儿。
+3. 切到 **WorkBuddy** 或 **WorkBuddy AI** 页，点“添加账号”。会打开 WorkBuddy 官方登录窗口；
+   完成扫码/授权后窗口自动关闭，账号进入本机账号库。同一来源可添加多个账号，
+   默认 round-robin + 失败切换。
+4. 勾选要暴露给客户端的模型。模型清单的 **计费** 列标出免费（`免费`）或消耗倍率（如 `x0.79`）。
+   打开应用时默认不勾选；应用会读取各客户端配置，把已经导入的模型自动勾上。点右上角 **导入**，
+   选择客户端、分组和默认模型，变更预览会随选择实时更新，确认后写入。写前会备份，
+   只改 AI Bobby 自己标记的条目。
+5. 在底部状态条复制 **转发口** 与 **API Key**，填到 Codex / Claude Code / DSH / WorkBuddy。
+6. **历史记录**页查看每次写入、diff 与备份，可一键恢复；恢复前会再备份当前文件。
+7. **设置**页切换主题、手动检查更新、复制网关地址/Key；**关于**页有 ZEO、音乐与赞助方式。
+8. 点击关于页歌曲会优先唤起本机网易云音乐 App；未安装或唤起失败时，自动使用全局可拖动网页播放器。
+   客户端没开着时会先把它启动起来再补发一次播放指令，不用点第二次。
+   专辑卡片打开网易云专辑网页；当前客户端不支持专辑深链，会提示并打开网页版。
+9. 右下角应用 LOGO 头像可拖动，点击进入关于。
+
+## 模型来源
+
+| 来源 | 分组 | 登录 |
+|---|---|---|
+| OpenCode 免费模型池 | `OpenCode` | 无需登录，按价格字段筛免费模型 |
+| WorkBuddy 国内版 | `WorkBuddy` | 官方登录页 + state/poll，多账号 |
+| WorkBuddy AI 国际版 | `WorkBuddy AI` | 官方登录页 + state/poll，多账号 |
+
+## 接入客户端
+
+统一端点：
+
+```text
+http://127.0.0.1:46890/v1
+```
+
+鉴权：
+
+- OpenAI 兼容路径：`Authorization: Bearer <API Key>`
+- Anthropic Messages：`Authorization: Bearer <API Key>` 或 `x-api-key: <API Key>`
+- 浏览器带 `Origin` 的请求会被 403 拒绝；这是给本机客户端用的端口。
+
+模型 ID：
+
+- `oc/<upstream-id>`，显示名 `OC. <name>`
+- `wb/<upstream-id>`，显示名 `WB. <name>`
+- `wbi/<upstream-id>`，显示名 `WBI. <name>`
+
+### OpenAI Chat Completions
+
+```bash
+curl http://127.0.0.1:46890/v1/chat/completions \
+  -H "Authorization: Bearer $AI_BOBBY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "oc/space-bunny-free",
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```
+
+### OpenAI Responses（Codex）
+
+```bash
+curl http://127.0.0.1:46890/v1/responses \
+  -H "Authorization: Bearer $AI_BOBBY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"oc/space-bunny-free","input":"你好"}'
+```
+
+### Anthropic Messages（Claude Code）
+
+```bash
+curl http://127.0.0.1:46890/v1/messages \
+  -H "Authorization: Bearer $AI_BOBBY_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "oc/space-bunny-free",
+    "max_tokens": 256,
+    "messages": [{"role": "user", "content": "你好"}]
+  }'
+```
+
+其他端点：
+
+| 方法 | 路径 | 用途 |
+|---|---|---|
+| GET | `/health` | 健康检查（无需 Key） |
+| GET | `/v1/models` | 当前暴露的模型清单 |
+| POST | `/v1/chat/completions` | OpenAI Chat，流式/非流式 |
+| POST | `/v1/responses` | OpenAI Responses，流式/非流式 |
+| POST | `/v1/messages` | Anthropic Messages，流式/非流式 |
+| POST | `/v1/messages/count_tokens` | 近似 token 计数 |
+
+模型清单默认只返回 `available` / `chat_only`；`GET /v1/models?all=1` 可以看到待检测/不可用模型。
+
+## 导入目标
+
+| 客户端 | 写入位置 | 协议 | 说明 |
+|---|---|---|---|
+| WorkBuddy 国内版 | `~/.workbuddy/models.json` | Chat | 默认排除 `wb/` 自身分组，避免自环 |
+| WorkBuddy AI | `~/.workbuddy-ai/models.json` | Chat | 默认排除 `wbi/` 自身分组 |
+| Codex | `~/.codex/config.toml` | Responses | 写入 `[model_providers.ai-bobby]` 标记块，可选默认模型 |
+| Claude Code | `~/.claude/settings.json` | Messages | 合并 `env.ANTHROPIC_BASE_URL / AUTH_TOKEN / MODEL` |
+| DeepSeek Harness | `~/.dsh/profiles/<profile>/cordis.patch.yml` | Chat | 合并 `llm-pi-ai` 的 `ai-bobby` provider；同时把网关 Key 写入 DSH 凭据存储（`refs.AI_BOBBY_API_KEY`），不需要设环境变量 |
+
+共同行为：
+
+- 先 dry-run 展示 diff；确认后才写。
+- 写前备份、文件锁、原子替换；只改 AI Bobby 标记的条目。
+- 重复导入幂等；用户手写条目不会被覆盖。
+- 导入器 API 支持回滚（`rollback`）；**当前桌面 UI 还没暴露回滚按钮**。
+- Codex / Claude 的默认模型会在勾选“设为默认”时写入。
+
+## 历史与备份
+
+- 每次实际写入客户端前，importer 会先备份目标文件；每个目标保留 **1 份基线**（首次写入前）+ **最近 5 份**滚动备份。
+- **历史记录**页把导入记录与备份合并成一张表：客户端、时间 · 模型数 · 状态、配置路径、备份文件。
+  可按客户端筛选、按路径搜索；支持「查看差异」（只读 diff）、「打开目录」（Finder 定位）和「恢复」。
+- 点“恢复”可在弹窗里选择版本：基线（使用 AI Bobby 前）或最近 5 份滚动备份，默认选中基线；
+  恢复前会先备份当前文件，失败不会覆盖。
+- 记录与备份只在本机：`import-history.json` 为 `0600`，diff 中的 Key/token 会先脱敏。
+- 重复导入且内容未变时返回 `changed:false`，不会新增历史或备份。
+
+## CLI（无界面起网关）
+
+```bash
+AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli start
+# 指定端口
+AI_BOBBY_DATA_DIR=~/.ai-bobby AI_BOBBY_PORT=46890 pnpm --filter @ai-bobby/cli start
+# 只查看账号/模型状态
+AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
+```
+
+首次运行会在数据目录生成 `api-key`（`0600`）。API Key 也可以从桌面状态条复制。
+
+## 界面
+
+| | |
+|---|---|
+| ![概览](docs/screenshots/12-overview-dark.png) | ![OpenCode](docs/screenshots/01-opencode-dark.png) |
+| 概览：网关、模型源、积分与最近导入 | 左侧栏多页导航 + 模型清单 |
+| ![History](docs/screenshots/07-history-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
+| 导入记录与备份合并表格 | 全局导入：实时预览 + 默认模型 |
+| ![Restore](docs/screenshots/13-restore-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
+| 恢复：基线 + 最近 5 份版本切换 | 非模态更新条 |
+| ![About](docs/screenshots/08-about-dark.png) | ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) |
+| 关于 ZEO、音乐与赞助 | WorkBuddy 多账号、额度与计费 |
+
+更多截图：[浅色主题](docs/screenshots/06-opencode-light.png)、[全局播放器](docs/screenshots/09-music-player-dark.png)、
+[设置页（主题唯一入口）](docs/screenshots/10-settings-dark.png)、
+[收起的侧边栏](docs/screenshots/11-collapsed-dark.png)、
+[登录弹窗](docs/screenshots/04-login-light.png)。
+
+## 数据目录与安全
+
+- 数据目录：macOS `~/Library/Application Support/AI Bobby`；可用 `AI_BOBBY_DATA_DIR` 覆盖。
+- `api-key`、账号库、`import-history.json` 等敏感文件以 `0600` 保存在本机。
+- 账号库当前是 `0600` 明文；Electron `safeStorage` 因启动时可能阻塞 Keychain 暂未默认启用。
+- 日志与状态不记录 access token / refresh token / API Key 明文；导入历史 diff 同样脱敏。
+- WorkBuddy 登录在官方页面完成，AI Bobby 不接触密码；但后续接口不是公开 API，请遵守上游条款。
+
+## 故障排查
+
+**首次打开提示“已损坏”/无法打开**
+
+```bash
+xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+```
+
+**46890 端口被占用**
+
+关闭占用进程，或仅在开发/CLI 场景用 `AI_BOBBY_PORT` 改端口。
+桌面安装版默认固定 46890，因为客户端配置依赖这个地址。
+
+**OpenCode 模型为空**
+
+首次读取需要下载运行时，确认网络可访问 npm registry / GitHub。
+点“读取模型”重试；仍失败时查看数据目录下日志，或先在终端运行
+`pnpm --filter @ai-bobby/cli start` 观察错误。
+
+**WorkBuddy 登录窗口空白**
+
+先把同一个 `authUrl` 用系统浏览器打开完成登录；桌面端会继续轮询 token。
+登录成功但模型为空时，检查账号是否启用、是否被上游限流/额度不足。
+
+**导入后客户端没变化**
+
+确认已重启对应客户端；在导入预览里检查目标路径与 diff。
+Codex/Claude 的配置块只改 AI Bobby 标记的部分，不会覆盖其他 provider。
+
+**关于页点击歌曲没有在 App 中播放**
+
+确认已安装网易云音乐 macOS 客户端，并允许系统通过 `orpheus://` 唤起它。
+未安装或唤起失败时，AI Bobby 会自动切到网页播放器；App 内能否播放仍取决于登录、会员、版权与地区限制。
+
+## 已知限制
+
+- WorkBuddy 真实账号登录/上游联调仍需人工验证；目前只验证到官方登录页可打开。
+- OpenCode 原生工具目前是 prompt 级约束，未做强制沙箱；请不要让不可信 prompt 驱动本机工具。
+- OpenCode 免费模型的检测/延迟缓存尚未实现，目录先标 `available`。
+- 当前只验证 macOS；Windows 打包与更新未实现。
+- ad-hoc 签名、未公证；首次打开可能需要手动清 quarantine。
+
+## 开发
+
+```sh
+pnpm install
+pnpm --filter @ai-bobby/desktop dev      # Electron + Vite 开发
+pnpm --filter @ai-bobby/desktop build    # 构建 out/
+pnpm --filter @ai-bobby/desktop typecheck
+pnpm --filter @ai-bobby/desktop test
+pnpm --filter @ai-bobby/website dev       # 落地页开发
+pnpm --filter @ai-bobby/website build     # 落地页构建
+```
+
+只预览 renderer（无需 Electron）：
+
+```sh
+cd apps/desktop && pnpm build
+python3 -m http.server 8766 --bind 127.0.0.1 -d out/renderer
+# http://127.0.0.1:8766/
+```
+
+发布（本地）：
+
+```sh
+bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.2
+bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.2
+node scripts/release/validate.mjs release-site/releases/0.2.2
+```
+
+CI：推送 `v*` tag 触发 [.github/workflows/release.yml](./.github/workflows/release.yml)，
+构建 arm64/x64 → ad-hoc 签名 → zip/checksums/latest.json → gh-pages + GitHub Release。
+
+## 目录
+
+```
+apps/desktop          Electron 主进程 + shadcn/Tailwind/antd 控制面板
+apps/website          React/Vite/Three/PWA 落地页（中英文）
+apps/cli              无界面网关
+packages/core         领域模型、注册表、设置、日志
+packages/workbuddy    WorkBuddy 双版本登录/账号/目录/聊天/调度
+packages/opencode     OpenCode 运行时/免费筛选/转发
+packages/gateway      46890 网关与三种协议 codec
+packages/importers    四个客户端的一键导入
+scripts/release       版本、构建、签名、manifest、安装脚本
+docs/prd.md           产品范围、FR、界面、验收
+docs/tech.md          架构、协议、登录/多账号、更新/分发、测试
+refs/                 只读参考实现（.gitignore，不发布）
+```
+
+## 文档
+
+- [handsoff.md](./handsoff.md) — 实施计划、决策、进度、跨会话记忆
+- [docs/README.md](./docs/README.md) — 文档索引与“只写当前状态”规范
+- [docs/prd.md](./docs/prd.md) — 产品范围、FR、界面、验收
+- [docs/tech.md](./docs/tech.md) — 架构、协议、登录/多账号、更新/分发、测试
+- [docs/prd-landing.md](./docs/prd-landing.md) — 落地页 PRD（已实现）
+- [docs/tech-landing.md](./docs/tech-landing.md) — 落地页技术方案（React/Vite/Three/PWA）
+- [human-sos.md](./human-sos.md) — **需要人工完成/确认的交付事项**
+- [prototype/](./prototype/) — 视觉稿：`desktop/` 控制面板、`website/` 落地页
+- [docs/ui-guideline.md](./docs/ui-guideline.md) — shadcn/Tailwind/antd 分层与 4px 间距规范
+
+## 项目状态
+
+- **Website（落地页）**：已实现于 [`apps/website`](./apps/website)，支持中英文与 PWA 更新提醒；
+  视觉母版在 [`prototype/website/`](./prototype/website/)。线上：
+  <https://xsin.github.io/ai-bobby/>。
+- **Marketing / Lucia**：已拆分为同级独立项目（`ai-lucia`），不在本仓库。
+- **依赖版本**：所有第三方版本收敛到 `pnpm-workspace.yaml` 的 `catalog:`，子项目只写 `catalog:`。
+
+## 免责声明
+
+WorkBuddy 的登录与模型接口不是公开 API；本项目仅用于个人学习与研究，
+请遵守上游服务条款，风险自担。本项目与腾讯、WorkBuddy、DeepSeek 无关联。
+
+## License
+
+MIT（见 [LICENSE](./LICENSE)）。参考实现的许可见 [THIRD_PARTY_NOTICES.md](./THIRD_PARTY_NOTICES.md)。
