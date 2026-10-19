@@ -1260,7 +1260,8 @@ export interface Importer {
 - 启动时并行读取 `getStatus()` 与 `getImportedModelIds()`，首次拿到模型后用“已安装 ids ∩ 当前可用模型”初始化勾选；
   默认不勾选任何模型，不记忆上一次的临时选择。
 - `withFileLock(path, fn)`：锁文件 + 过期（5 分钟）。
-- `backup(path)`：`<name>.ai-bobby-<timestamp>.bak`，保留 5 份。
+- `backup(path)`：首次写入前额外保存一份不可轮转的基线 `<name>.ai-bobby-baseline.bak`；
+  滚动备份为 `<name>.ai-bobby-<timestamp>.bak`，只保留最近 5 份（基线 + 5 = 每目标最多 6 份）。
 - `atomicWrite(path, text, mode)`：同目录临时文件 + `rename`。
 - 写前读 mtime/hash；写时再读一次，不一致则放弃。
 - 所有 importer 只动自己标记的条目/块。
@@ -1779,7 +1780,7 @@ release/<version>/
 ```
 
 - 目录 0700；敏感文件 0600。
-- 原子写；写前备份（账号库保留 3 份，导入备份每目标保留 5 份）。
+- 原子写；写前备份（账号库保留 3 份，导入备份每目标 1 份基线 + 最近 5 份）。
 - 数据目录可由 `AI_BOBBY_DATA_DIR` 覆盖（调试）。
 - 主题、自动检查、侧边栏/头像/播放器位置在 Chromium `localStorage`，不进数据目录。
 

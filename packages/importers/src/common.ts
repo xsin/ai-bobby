@@ -49,15 +49,32 @@ export async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T
   }
 }
 
+const BASELINE_SUFFIX = '.ai-bobby-baseline.bak'
+
+/**
+ * Snapshot a target before a write. Per target we keep one immutable baseline
+ * (the file as it was before AI Bobby first touched it) plus the newest five
+ * rolling backups, so the upper bound is six files.
+ */
 export async function backup(path: string): Promise<string | undefined> {
   if (!(await exists(path))) return undefined
+  const dir = dirname(path)
+  const base = `${basename(path)}.ai-bobby-`
+  const baseline = `${path}${BASELINE_SUFFIX}`
+  if (!(await exists(baseline))) {
+    // Seed the baseline from the oldest rolling backup when upgrading an
+    // existing install, so it still describes the pre-AI-Bobby file.
+    const existing = (await readdir(dir))
+      .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== basename(baseline))
+      .sort()
+    const seed = existing[0]
+    await copyFile(seed === undefined ? path : join(dir, seed), baseline)
+  }
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const target = `${path}.ai-bobby-${stamp}.bak`
   await copyFile(path, target)
-  const dir = dirname(path)
-  const base = `${basename(path)}.ai-bobby-`
   const entries = (await readdir(dir))
-    .filter(name => name.startsWith(base) && name.endsWith('.bak'))
+    .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== basename(baseline))
     .sort()
   for (const stale of entries.slice(0, Math.max(0, entries.length - 5))) {
     await rm(join(dir, stale), { force: true })
@@ -68,9 +85,10 @@ export async function backup(path: string): Promise<string | undefined> {
 export async function latestBackup(path: string): Promise<string | undefined> {
   const dir = dirname(path)
   const base = `${basename(path)}.ai-bobby-`
+  const baselineName = `${basename(path)}${BASELINE_SUFFIX}`
   try {
     const entries = (await readdir(dir))
-      .filter(name => name.startsWith(base) && name.endsWith('.bak'))
+      .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== baselineName)
       .sort()
     const last = entries.at(-1)
     return last === undefined ? undefined : join(dir, last)

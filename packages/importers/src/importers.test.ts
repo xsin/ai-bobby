@@ -1,4 +1,4 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -9,6 +9,7 @@ import { ClaudeImporter } from './claude'
 import { CodexImporter } from './codex'
 import { DshImporter } from './dsh'
 import { WorkBuddyImporter } from './workbuddy'
+import { backup } from './common'
 import type { ImportContext } from './types'
 
 let dir: string | undefined
@@ -163,5 +164,37 @@ describe('DSH importer', () => {
     expect(credentials.version).toBe(1)
     expect(credentials.records['client-connection/browser-session'].payload.secret).toBe('keep-me')
     expect(credentials.refs).toMatchObject({ OTHER_KEY: 'other-secret', AI_BOBBY_API_KEY: 'sk-ai-bobby-test' })
+  })
+})
+
+describe('backup retention', () => {
+  it('keeps one baseline plus the newest five rolling backups', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-backup-'))
+    const path = join(dir, 'config.json')
+    await writeFile(path, 'v0')
+    for (let i = 1; i <= 7; i += 1) {
+      await backup(path)
+      await writeFile(path, `v${i}`)
+      await new Promise(resolve => setTimeout(resolve, 5))
+    }
+    const files = (await readdir(dir)).filter(name => name.includes('.ai-bobby-') && name.endsWith('.bak'))
+    expect(files).toHaveLength(6)
+    const baseline = await readFile(join(dir, 'config.json.ai-bobby-baseline.bak'), 'utf8')
+    expect(baseline).toBe('v0')
+    const rolling = files.filter(name => !name.endsWith('.ai-bobby-baseline.bak')).sort()
+    expect(rolling).toHaveLength(5)
+    const oldest = await readFile(join(dir, rolling[0]!), 'utf8')
+    expect(oldest).toBe('v2')
+  })
+
+  it('seeds the baseline from the oldest existing backup on upgrade', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-baseline-'))
+    const path = join(dir, 'config.json')
+    await writeFile(join(dir, 'config.json.ai-bobby-20261001-0000.bak'), 'v1')
+    await writeFile(join(dir, 'config.json.ai-bobby-20261002-0000.bak'), 'v2')
+    await writeFile(path, 'v3')
+    await backup(path)
+    const baseline = await readFile(join(dir, 'config.json.ai-bobby-baseline.bak'), 'utf8')
+    expect(baseline).toBe('v1')
   })
 })
