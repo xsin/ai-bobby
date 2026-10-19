@@ -536,3 +536,12 @@ WorkBuddy 上游
   行 hover 背景与 ghost hover 背景相同，视觉上“没有 hover”。
 - 修复：ghost 按钮与恢复弹窗 tab 的 hover 背景改为 `color-mix(--surface-2 90%, --text 10%)`，
   保留文字变亮；行 hover 与按钮 hover 现在有可见色差。截图核对像素：按钮 hover #3b3b3e，行 #2a2a2d。
+
+### 2026-10-19 Round 13：ghost hover 品牌色 + 恢复 tab 贯通落地
+
+- ghost 按钮/tab hover 改为品牌色浅底：`color-mix(primary 12%, transparent)`，文字同时变亮；
+  避免 Ant Design 的 `--hover == --surface-2` 导致行 hover 上看不见。
+- 恢复弹窗按已确认设计落地：tabmenu 与 tabpanel 无分隔线、tabmenu 无内留白，
+  选中 tab 与面板同底色 + 左侧 2px 主色条；更新 `docs/screenshots/13-restore-dark.png`。
+- 文档：ui-guideline §5.6 补充“不要用中性灰做 ghost hover”。
+- 验证：全量 69 项测试通过；像素核对 hover 为 (42,45,66) 的淡蓝，行底色 (42,42,45)。
