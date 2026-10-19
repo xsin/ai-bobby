@@ -498,3 +498,10 @@ WorkBuddy 上游
 - 右侧由“卡片式明细”改为“将恢复到”摘要面板：大标题 + 时间 + 键值明细（细分割线）+ 恢复后影响说明，
   与左侧列表形成明确层级，避免看起来像更多备份条目。
 - 更新 `prototype/desktop/screenshot-restore.png` 与 prototype README；生产 UI 仍未动，等确认。
+
+### 2026-10-19 Round 10.2：恢复弹窗改垂直 tab
+
+- 左侧 tabmenu（基线置顶，其余倒序）与右侧 tabpanel 贯通；tab 内容只保留“相对时间 + 日期”，
+  日期用次级文案；移除“第 N 次写入前”和文件大小；支持上下方向键切换。
+- 右侧摘要只保留 备份文件 / 目标文件 / 恢复后影响。
+- 更新 prototype README 与 `screenshot-restore.png`；生产 UI 仍未动，等确认。
