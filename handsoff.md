@@ -528,3 +528,11 @@ WorkBuddy 上游
 - 设计稿（待确认）：tabmenu 与 tabpanel 去掉分隔线，tabmenu 去掉内留白，选中 tab 与面板同底色 + 左侧主色条；
   更新 `prototype/desktop/screenshot-restore.png`。
 - 生产代码未应用 borderless tab，等确认。
+
+
+### 2026-10-19 Round 12.1：ghost/tab hover 可见性
+
+- 根因：Ant Design 把 `--surface-2` 与 `--hover` 映射到同一个 fill token（#2a2a2d），
+  行 hover 背景与 ghost hover 背景相同，视觉上“没有 hover”。
+- 修复：ghost 按钮与恢复弹窗 tab 的 hover 背景改为 `color-mix(--surface-2 90%, --text 10%)`，
+  保留文字变亮；行 hover 与按钮 hover 现在有可见色差。截图核对像素：按钮 hover #3b3b3e，行 #2a2a2d。
