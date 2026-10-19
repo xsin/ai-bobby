@@ -545,3 +545,11 @@ WorkBuddy 上游
   选中 tab 与面板同底色 + 左侧 2px 主色条；更新 `docs/screenshots/13-restore-dark.png`。
 - 文档：ui-guideline §5.6 补充“不要用中性灰做 ghost hover”。
 - 验证：全量 69 项测试通过；像素核对 hover 为 (42,45,66) 的淡蓝，行底色 (42,42,45)。
+
+
+### 2026-10-19 Round 14：网站移动端白屏修复
+
+- 复现：block `*HeroCanvas*` 后整页 root 变空（React 因未捕获的 chunk 加载错误卸载）。
+- 修复：`ErrorBoundary` 包 App + HeroCanvas；`build.target` es2022→es2019；`#root` 内置 inline-style 静态首屏；
+  `polyfills.ts` 补 `at`。验证：屏蔽 chunk、禁用 JS、移动模拟三种情况都有内容。
+- 记录：apps/website/README.md「移动端兼容」。

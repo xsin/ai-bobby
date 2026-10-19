@@ -18,3 +18,7 @@ NOTE: 此文档由人类反馈应用产品的 BUG 或 FR (Feature Requests),由 
 
 1. 恢复弹窗看不到置顶的基线菜单；菜单 hover 未按设计稿。 **已完成（e4d3769 + 68fe99a + a4a9227）：启动/打开弹窗时为每个客户端补齐基线；hover 同时变背景与文字颜色，并为 ghost/tab 用独立的提亮背景（Ant Design 让 --hover 与 --surface-2 同色，旧 hover 在行 hover 上不可见）。**
 2. tabmenu 与 tabpanel 不用 border 分隔，选中菜单与右侧面板贯通融合，tabmenu 去掉内留白。 **已完成（a4a9227）：无分隔线、无内留白，选中 tab 与面板同底色 + 左侧主色条。**
+
+## 2026-10-19 网站移动端反馈
+
+1. 用户反馈网站在移动端浏览器打开看不到内容。 **已完成（0f92e2d）：构建目标降为 es2019；App 与 HeroCanvas 加 ErrorBoundary；`#root` 内置静态首屏；补 `Array/String.prototype.at`。原因：懒加载 HeroCanvas chunk 在旧浏览器解析/加载失败会卸载整个 React 树。**
