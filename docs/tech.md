@@ -87,7 +87,7 @@
 | 构建 | **electron-vite 6.0.0 + Vite 8.3.4**（main/preload/renderer）；包用 tsdown（按需） | 单工具链、HMR、Vite 8 |
 | 测试 | Vitest **5.0.5** | 最新稳定 |
 | 桌面 | Electron **44.9.0** + electron-builder **26.15.3** | 最新稳定；托盘/打包 |
-| UI | React **19.3.1** + Tailwind **4.3.3** + shadcn/ui **4.22.0** + Ant Design **6.6.6** | 用户指定；按 [ui-guideline.md](./ui-guideline.md) 分层 |
+| UI | React **19.3.1** + Tailwind **4.3.3** + shadcn/ui **4.22.0** + Ant Design **6.6.6** | 用户指定；按 [spec-ui.md](./spec-ui.md) 分层 |
 | 图标 | lucide-react **1.59.0**；antd 内置图标 | shadcn 默认；不混用同类原子组件 |
 | HTTP | `node:http` + 小路由（不引入框架） | 完全控制 SSE、body 限制、Origin 围栏 |
 | 校验 | `zod` **4.6.7** | 请求/配置 schema 可复用 |
@@ -177,7 +177,7 @@ workbuddy opencode
 
 ---
 
-## 2.4 UI 分层与 Token 桥接（按 [ui-guideline.md](./ui-guideline.md)）
+## 2.4 UI 分层与 Token 桥接（按 [spec-ui.md](./spec-ui.md)）
 
 ### 2.4.1 分层
 

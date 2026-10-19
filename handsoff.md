@@ -311,7 +311,7 @@ WorkBuddy 上游
 
 ### 2026-10-18 发布链路
 
-- 主题色 `#1e4fff`；UI 按 `docs/ui-guideline.md` 落地；arm64/x64 打包与 ad-hoc 签名通过。
+- 主题色 `#1e4fff`；UI 按 `docs/spec-ui.md` 落地；arm64/x64 打包与 ad-hoc 签名通过。
 - 自研更新器、install.sh、gh-pages + GitHub Release 工作流；`v0.1.0` 发布。
 - 踩坑：Electron zip 123–135MB，超过 GitHub Git 100MB 限制 → 二进制放 Release，
   gh-pages 只放 install.sh/VERSION/checksums/latest.json。
@@ -361,7 +361,7 @@ WorkBuddy 上游
 - 审计所有 `Switch` 使用点：当前仅设置页“自动检查”一个；导入抽屉的 Checkbox 不受影响。
 - 浅色/深色 checked、unchecked 四种状态截图检查；desktop typecheck、12 项测试、build 通过。
 - 提交：`98babc4 fix(desktop): give switches a visible border and label spacing`。
-- 收尾：`docs/ui-guideline.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
+- 收尾：`docs/spec-ui.md` 新增 §5.4「尺寸与间距：4px 网格」，并加入 Agent 约束 #13 与修正路径 #10；
   设计依据引用 Spec.fm 8-Point Grid、IBM Carbon 2x Grid、Material Design 3 spacing。
 - 工作区 clean；未 push、未 tag、未创建 release。
 
@@ -392,7 +392,7 @@ WorkBuddy 上游
   的 `cursor: pointer`；专辑卡额外加 `cursor-pointer`。
 - 专辑深链测试：`{"type":"album","id":…,"cmd":"open"}` 在网易云 3.1.12.3443 提示“操作不支持”，
   `cmd:"play"` 无效果；因此专辑卡继续打开 `music.163.com` 专辑页，不调用 App。
-- 文档：PRD FR-UI-10、tech §8.5.1、ui-guideline §5.5 与 Agent 约束 #14、README、issues 第 7 条。
+- 文档：PRD FR-UI-10、tech §8.5.1、spec-ui §5.5 与 Agent 约束 #14、README、issues 第 7 条。
 - 验证：浅色/深色下歌曲列表边框与手型检查；desktop typecheck/build；全量 53 项测试通过。
 - 提交：`fa61d0d fix(desktop): repair about-page track borders and pointer cursors`；工作区 clean；未 push、未 tag、未创建 release。
 
@@ -516,7 +516,7 @@ WorkBuddy 上游
   `getBackupVersions` / `restoreBackupVersion` IPC；记录行加“基线”标记，文案改为“基线 1 份 + 最近 5 份”。
 - 来源页“已选”只显示数字，侧边栏仍 `已选/总数`。
 - 基线快照保留源文件 mtime（升级时从最旧滚动备份播种也能显示真实时间）。
-- 文档：PRD FR-UI-9、tech §8.4/§?、ui-guideline §5.6 + 约束 #15、README 截图与历史说明。
+- 文档：PRD FR-UI-9、tech §8.4/§?、spec-ui §5.6 + 约束 #15、README 截图与历史说明。
 - 验证：全量 69 项测试通过；截图 01/07/13 刷新；应用已重启（dev、46890）。
 
 ### 2026-10-19 Round 12：恢复弹窗基线补齐 + tab 贯通设计
@@ -542,7 +542,7 @@ WorkBuddy 上游
   避免 Ant Design 的 `--hover == --surface-2` 导致行 hover 上看不见。
 - 恢复弹窗按已确认设计落地：tabmenu 与 tabpanel 无分隔线、tabmenu 无内留白，
   选中 tab 与面板同底色 + 左侧 2px 主色条；更新 `docs/screenshots/13-restore-dark.png`。
-- 文档：ui-guideline §5.6 补充“不要用中性灰做 ghost hover”。
+- 文档：spec-ui §5.6 补充“不要用中性灰做 ghost hover”。
 - 验证：全量 69 项测试通过；像素核对 hover 为 (42,45,66) 的淡蓝，行底色 (42,42,45)。
 
 
@@ -604,7 +604,7 @@ WorkBuddy 上游
   所有来源统一，去掉「慢」字。
 - Cursor 引导：无复选框；弹窗步骤 18px 留白，复制 Key/Base URL 移到 footer。
 - 代理：默认 `http://127.0.0.1:10080`（自定义），按来源勾选。
-- Checkbox 统一品牌色实心 + 白勾；弹窗/列表细节写入 ui-guideline §5.7。
+- Checkbox 统一品牌色实心 + 白勾；弹窗/列表细节写入 spec-ui §5.7。
 - 落地页：接入 Gitalk 2（@aifire/gitalk 2.0.0-beta.2），左下角默认收起，展开桌面固定左下、
   移动端全屏；配置 `number: 1`、proxy 已配；本地 origin 被 CORS 拒绝属预期。
 
@@ -614,7 +614,7 @@ WorkBuddy 上游
 - Cursor 引导弹窗 18px → 20px（列表 4/20/12）；modal head/foot/note 18px → 20px。
 - 新组件间距归到 4 的倍数：Key 字段 26px 图标 → 28px、padding 12px；guide 行 8/12；
   代理输入 32px 高、gap 8/12；概览 4 卡 gap 12。
-- ui-guideline §5.7 明确：弹窗 20px（小弹窗 16px），禁止 18/14 等非 4 倍数。
+- spec-ui §5.7 明确：弹窗 20px（小弹窗 16px），禁止 18/14 等非 4 倍数。
 - 其他验收项保持通过；Gitalk 仍未部署，等发布确认。
 
 
@@ -624,5 +624,5 @@ WorkBuddy 上游
   裁切了内容，最后一行文字压在虚线上。
 - 修复：容器改名 `.guide-text`，删除已不用的按钮样式；行高由 padding + 内容撑开，
   实测内容底部距边框 8px（+1px 边框）。
-- 新增 ui-guideline §5.8：class 一物一用、文字容器禁止固定高度、卡片内容 ≥8px、
+- 新增 spec-ui §5.8：class 一物一用、文字容器禁止固定高度、卡片内容 ≥8px、
   用子元素 bottom 与容器 bottom 做自查。

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
-import { Check, FileCode2, FolderGit2, Terminal } from 'lucide-react'
+import { Check, Copy, FileCode2, FolderGit2, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -11,6 +11,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import {
   Sheet,
   SheetContent,
@@ -49,6 +57,7 @@ const CLIENT_ICONS: Record<ClientId, typeof Terminal> = {
   codex: Terminal,
   claude: FileCode2,
   dsh: FileCode2,
+  vscode: FileCode2,
 }
 
 const GROUP_LABELS: Record<GroupId, string> = {
@@ -63,6 +72,7 @@ const TARGET_MAP: Record<ClientId, ImportTargetName> = {
   codex: 'codex',
   claude: 'claude',
   dsh: 'dsh',
+  vscode: 'vscode',
 }
 
 const TARGET_LABEL: Record<string, string> = {
@@ -71,6 +81,7 @@ const TARGET_LABEL: Record<string, string> = {
   codex: 'Codex',
   claude: 'Claude Code',
   dsh: 'DeepSeek Harness',
+  vscode: 'VS Code',
 }
 
 export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply }: ImportSheetProps) {
@@ -79,6 +90,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   )
   const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: true })
   const [defaultModel, setDefaultModel] = useState('oc/big-pickle')
+  const [cursorGuideOpen, setCursorGuideOpen] = useState(false)
   const [setAsDefault, setSetAsDefault] = useState(false)
 
   const modelOptions = useMemo(
@@ -225,6 +237,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   }
 
   return (
+    <>
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col gap-0 border-line bg-surface p-0 sm:max-w-[480px]">
         <SheetHeader className="border-b border-line bg-toolbar px-5 py-4 text-left">
@@ -273,6 +286,18 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                     </label>
                   )
                 })}
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 rounded-md border border-dashed border-line px-2.5 py-2">
+                <div className="min-w-0">
+                  <span className="flex items-center gap-1.5 text-[11px] font-semibold text-text">
+                    Cursor
+                    <span className="rounded bg-warning-soft px-1 py-px text-[9px] font-normal text-warning">仅引导</span>
+                  </span>
+                  <p className="mt-0.5 text-[9px] text-faint">不写数据库 · 手动粘贴</p>
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setCursorGuideOpen(true)}>
+                  查看接入步骤
+                </Button>
               </div>
             </section>
 
@@ -369,6 +394,64 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
         </SheetFooter>
       </SheetContent>
     </Sheet>
+
+    <Dialog open={cursorGuideOpen} onOpenChange={setCursorGuideOpen}>
+      <DialogContent className="max-w-[560px] gap-0 border-line bg-surface p-0">
+        <DialogHeader className="border-b border-line px-5 py-4 text-left">
+          <DialogTitle className="text-[15px] font-semibold text-text">在 Cursor 中接入 AI Bobby</DialogTitle>
+          <DialogDescription className="text-[11px] text-muted-foreground">
+            Cursor 的设置存在 SQLite 与钥匙串里，AI Bobby 不写它的数据库，按下面步骤手动粘贴即可。
+          </DialogDescription>
+        </DialogHeader>
+        <ol className="space-y-2 px-5 py-4">
+          {[
+            ['打开 Cursor 设置', 'Settings → Models → API Keys'],
+            ['开启 Base URL override', '打开 Override OpenAI Base URL，粘贴 http://127.0.0.1:46890/v1'],
+            ['粘贴 API Key', '填写 AI Bobby 的 Key；Cursor 会自己加密保存。'],
+            ['选择模型', '回到 Chat / Agent 选择 AI Bobby 模型；Tab 补全仍走 Cursor 自己的模型。'],
+          ].map(([title, text], index) => (
+            <li key={title} className="flex gap-2.5">
+              <span className="grid size-5 shrink-0 place-items-center rounded-full bg-accent-soft font-mono text-[10px] text-primary">{index + 1}</span>
+              <div>
+                <strong className="block text-[11px] font-semibold text-text">{title}</strong>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">{text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <div className="px-5 pb-3 text-[10px] leading-relaxed text-faint">
+          只影响 Chat / Agent；开启 override 后 Cursor 托管模型也会走该地址，切回时记得关闭。
+        </div>
+        <DialogFooter className="border-t border-line px-5 py-3">
+          <Button type="button" variant="outline" size="sm" onClick={() => setCursorGuideOpen(false)}>关闭</Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              const api = window.aiBobby
+              if (api) await api.copyApiKey()
+              else await navigator.clipboard.writeText('')
+              toast.success('API Key 已复制')
+            }}
+          >
+            <Copy className="size-3.5" />复制 Key
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              await navigator.clipboard.writeText('http://127.0.0.1:46890/v1')
+              toast.success('Base URL 已复制')
+            }}
+          >
+            <Copy className="size-3.5" />复制 Base URL
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   )
 }
 
@@ -430,6 +513,11 @@ function buildDiff(
       lines.push({ type: 'add', text: '+ "ANTHROPIC_BASE_URL": "http://127.0.0.1:46890"' })
       lines.push({ type: 'add', text: '+ "ANTHROPIC_AUTH_TOKEN": "sk-…f3a2"' })
       lines.push({ type: 'add', text: `+ "ANTHROPIC_MODEL": "${defaultModel || 'oc/big-pickle'}"` })
+    } else if (client.id === 'vscode') {
+      lines.push({ type: 'add', text: 'VS Code  ~/Library/Application Support/Code/User/chatLanguageModels.json' })
+      lines.push({ type: 'add', text: '+ vendor = "customendpoint" · name = "AI Bobby"' })
+      lines.push({ type: 'add', text: '+ url = http://127.0.0.1:46890/v1' })
+      lines.push({ type: 'dim', text: '  Key 会被 VS Code 迁移到系统钥匙串；重启后生效' })
     } else if (client.id === 'dsh') {
       lines.push({ type: 'add', text: 'DeepSeek Harness  ~/.dsh/profiles/desktop/cordis.patch.yml' })
       lines.push({ type: 'add', text: '+ ai-bobby:' })

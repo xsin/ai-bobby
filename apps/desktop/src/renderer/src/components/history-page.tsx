@@ -29,6 +29,7 @@ const TARGET_LABEL: Record<string, string> = {
   codex: 'Codex',
   claude: 'Claude Code',
   dsh: 'DeepSeek Harness',
+  vscode: 'VS Code',
 }
 
 const FILTERS = [
@@ -38,6 +39,7 @@ const FILTERS = [
   ['codex', 'Codex'],
   ['claude', 'Claude'],
   ['dsh', 'DSH'],
+  ['vscode', 'VS Code'],
 ] as const
 
 const HISTORY_WINDOW_MS = 30 * 24 * 60 * 60 * 1000

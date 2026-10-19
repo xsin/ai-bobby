@@ -183,7 +183,7 @@ export const STATUS_META: Record<ModelStatus, { label: string; tone: 'success' |
 }
 
 export interface ImportClient {
-  id: 'workbuddy' | 'wbi' | 'codex' | 'claude' | 'dsh'
+  id: 'workbuddy' | 'wbi' | 'codex' | 'claude' | 'dsh' | 'vscode'
   name: string
   path: string
   note: string
@@ -197,6 +197,7 @@ export const IMPORT_CLIENTS: ImportClient[] = [
   { id: 'codex', name: 'Codex', path: '~/.codex/config.toml', note: 'responses', status: '已探测', defaultGroup: 'opencode' },
   { id: 'claude', name: 'Claude Code', path: '~/.claude/settings.json', note: 'messages', status: '已探测', defaultGroup: 'opencode' },
   { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', note: 'llm-pi-ai', status: '已探测', defaultGroup: 'opencode' },
+  { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', note: 'Custom Endpoint', status: '可自动写入', defaultGroup: 'opencode' },
 ]
 
 export function metricsFor(source: DemoSource) {

@@ -80,7 +80,7 @@ export interface GatewayStatus {
 }
 
 
-export type ImportTargetName = 'workbuddy' | 'workbuddy-ai' | 'codex' | 'claude' | 'dsh'
+export type ImportTargetName = 'workbuddy' | 'workbuddy-ai' | 'codex' | 'claude' | 'dsh' | 'vscode'
 
 export interface ImportSelectionPayload {
   groups: string[]

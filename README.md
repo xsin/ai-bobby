@@ -368,7 +368,7 @@ refs/                 Read-only reference implementations (.gitignore, not shipp
 - [docs/tech-landing.md](./docs/tech-landing.md) — landing page stack (React/Vite/Three/PWA)
 - [human-sos.md](./human-sos.md) — **manual verification and delivery items**
 - [prototype/](./prototype/) — design sources: `desktop/` control panel, `website/` landing page
-- [docs/ui-guideline.md](./docs/ui-guideline.md) — shadcn/Tailwind/antd layering and 4px spacing
+- [docs/spec-ui.md](./docs/spec-ui.md) — shadcn/Tailwind/antd layering and 4px spacing
 
 ## Project status
 

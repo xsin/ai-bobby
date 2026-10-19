@@ -1,6 +1,6 @@
 import type { ModelDescriptor, ProviderId } from '@ai-bobby/core'
 
-export type ImportTarget = 'workbuddy' | 'workbuddy-ai' | 'codex' | 'claude' | 'dsh'
+export type ImportTarget = 'workbuddy' | 'workbuddy-ai' | 'codex' | 'claude' | 'dsh' | 'vscode'
 
 export interface ImportSelection {
   groups: readonly ProviderId[]

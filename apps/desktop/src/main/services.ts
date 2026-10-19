@@ -31,6 +31,7 @@ import {
   CodexImporter,
   DshImporter,
   WorkBuddyImporter,
+  VSCodeImporter,
   atomicWrite,
   backup,
   baselineBackupPath,
@@ -73,6 +74,7 @@ export class Services {
       codex: new CodexImporter(),
       claude: new ClaudeImporter(),
       dsh: new DshImporter(),
+      vscode: new VSCodeImporter(),
     }
     for (const variant of WORKBUDDY_VARIANTS) {
       if (variant.id === 'opencode') continue

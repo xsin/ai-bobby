@@ -9,21 +9,24 @@
 #
 # Options:
 #   --version <v>        install a specific version (default: latest)
-#   --install-dir <dir>  install location (default: ~/Applications)
+#   --install-dir <dir>  install into exactly this directory (no fallback)
 #   --no-launch          do not launch after install
-#   --system             install into /Applications (sudo required)
+#   --system             force /Applications/AIMatrix (admin authorization if needed)
 #   --help               show this help
 #
 # macOS system bash is 3.2: no mapfile / associative arrays / ${var^^}.
 set -euo pipefail
 
 APP_NAME="AI Bobby"
+APP_GROUP="AIMatrix"
 BASE_URL="${AI_BOBBY_BASE_URL:-https://github.com/xsin/ai-bobby/releases/latest}"
 VERSION="latest"
 RESOLVED_VERSION=""
-INSTALL_ROOT="${HOME}/Applications"
+INSTALL_MODE="default"        # default | system | custom
+CUSTOM_ROOT=""
+INSTALL_ROOT=""
 DO_LAUNCH=1
-USE_SUDO=0
+NEED_SUDO=0
 
 log()  { printf '%s[install]%s %s\n' "$(printf '\033[1;34m')" "$(printf '\033[0m')" "$*" >&2; }
 ok()   { printf '%s[  ok  ]%s %s\n' "$(printf '\033[1;32m')" "$(printf '\033[0m')" "$*" >&2; }
@@ -38,9 +41,9 @@ usage() {
 while [ $# -gt 0 ]; do
   case "$1" in
     --version) VERSION="${2:?--version needs a value}"; shift 2 ;;
-    --install-dir) INSTALL_ROOT="${2:?--install-dir needs a value}"; shift 2 ;;
+    --install-dir) INSTALL_MODE="custom"; CUSTOM_ROOT="${2:?--install-dir needs a value}"; shift 2 ;;
     --no-launch) DO_LAUNCH=0; shift ;;
-    --system) USE_SUDO=1; INSTALL_ROOT="/Applications"; shift ;;
+    --system) INSTALL_MODE="system"; shift ;;
     -h|--help) usage ;;
     *) die "unknown argument: $1 (use --help)" ;;
   esac
@@ -191,22 +194,100 @@ if pgrep -x "$APP_NAME" >/dev/null 2>&1; then
   done
 fi
 
-mkdir -p "$INSTALL_ROOT"
+# ---------------------------------------------------------------------------
+# Install location
+#
+# Default: /Applications/AIMatrix (system-wide for admin users). A standard
+# user or a managed Mac falls back to ~/Applications/AIMatrix and gets told
+# why. --system forces /Applications/AIMatrix and asks for admin rights when
+# needed; --install-dir is used verbatim with no fallback.
+# ---------------------------------------------------------------------------
+system_root="/Applications/${APP_GROUP}"
+user_root="${HOME}/Applications/${APP_GROUP}"
+
+can_write_dir() {
+  mkdir -p "$1" 2>/dev/null && [ -w "$1" ]
+}
+
+run_root() {
+  if [ "$(id -u)" -eq 0 ]; then
+    "$@"
+    return
+  fi
+  if [ -r /dev/tty ]; then
+    sudo "$@" </dev/tty
+  else
+    sudo -n "$@"
+  fi
+}
+
+case "$INSTALL_MODE" in
+  custom)
+    INSTALL_ROOT="$CUSTOM_ROOT"
+    log "install mode: custom (no fallback)"
+    ;;
+  system)
+    INSTALL_ROOT="$system_root"
+    log "install mode: --system (forced)"
+    ;;
+  default)
+    if can_write_dir "$system_root"; then
+      INSTALL_ROOT="$system_root"
+    else
+      INSTALL_ROOT="$user_root"
+      warn "/Applications is not writable (standard user or managed Mac)"
+      warn "falling back to ${INSTALL_ROOT}"
+    fi
+    ;;
+esac
+
+if ! can_write_dir "$INSTALL_ROOT"; then
+  if [ "$INSTALL_MODE" != "system" ]; then
+    die "cannot create ${INSTALL_ROOT}; choose another location with --install-dir"
+  fi
+  log "requesting administrator authorization for ${INSTALL_ROOT}"
+  run_root mkdir -p "$INSTALL_ROOT"
+  if [ ! -w "$INSTALL_ROOT" ]; then
+    NEED_SUDO=1
+  fi
+fi
+
 APP_DEST="$INSTALL_ROOT/${APP_NAME}.app"
 log "installing to: ${APP_DEST}"
 if [ -e "$APP_DEST" ]; then
   BACKUP="$TMP_DIR/${APP_NAME}.app.bak"
-  mv "$APP_DEST" "$BACKUP" 2>/dev/null || rm -rf "$APP_DEST"
+  if [ "$NEED_SUDO" -eq 1 ] && [ ! -w "$(dirname "$APP_DEST")" ]; then
+    run_root mv "$APP_DEST" "$BACKUP" 2>/dev/null || run_root rm -rf "$APP_DEST"
+  else
+    mv "$APP_DEST" "$BACKUP" 2>/dev/null || rm -rf "$APP_DEST"
+  fi
 fi
 
-if [ "$USE_SUDO" -eq 1 ] && [ ! -w "$INSTALL_ROOT" ]; then
-  sudo mkdir -p "$INSTALL_ROOT"
-  sudo ditto "$APP_SRC" "$APP_DEST"
-  sudo chown -R "$(id -u):$(id -g)" "$APP_DEST" 2>/dev/null || true
+if [ "$NEED_SUDO" -eq 1 ]; then
+  run_root ditto "$APP_SRC" "$APP_DEST"
+  # Hand the install directory back to the installing user so the updater
+  # (`mv` + `ditto` on the bundle) can replace it without admin rights.
+  run_root chown -R "$(id -u):$(id -g)" "$INSTALL_ROOT" 2>/dev/null || true
 else
   ditto "$APP_SRC" "$APP_DEST"
 fi
 ok "installed"
+
+# Remove the two legacy managed defaults only. A custom --install-dir is never
+# touched; the current target is skipped explicitly.
+cleanup_legacy() {
+  for legacy in "${HOME}/Applications/AI Bobby.app" "/Applications/AI Bobby.app"; do
+    [ "$legacy" = "$APP_DEST" ] && continue
+    [ -d "$legacy" ] || continue
+    if [ -w "$(dirname "$legacy")" ]; then
+      rm -rf "$legacy"
+    else
+      run_root rm -rf "$legacy" || warn "could not remove legacy install: ${legacy}"
+    fi
+    log "removed legacy install: ${legacy}"
+  done
+}
+cleanup_legacy
 
 xattr -dr com.apple.quarantine "$APP_DEST" 2>/dev/null || true
 MAIN_BIN="$APP_DEST/Contents/MacOS/${APP_NAME}"

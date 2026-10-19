@@ -895,7 +895,7 @@ function AppInner() {
             setFeedback('浏览器预览：未写入任何文件。')
             return
           }
-          const targetMap = { workbuddy: 'workbuddy', wbi: 'workbuddy-ai', codex: 'codex', claude: 'claude', dsh: 'dsh' } as const
+          const targetMap = { workbuddy: 'workbuddy', wbi: 'workbuddy-ai', codex: 'codex', claude: 'claude', dsh: 'dsh', vscode: 'vscode' } as const
           const plans = []
           for (const client of payload.clients) {
             plans.push(await api.importApply(targetMap[client], {

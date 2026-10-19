@@ -6,7 +6,7 @@
 |---|---|
 | [prd.md](./prd.md) | 当前产品需求、范围、验收、已知限制 |
 | [tech.md](./tech.md) | 当前架构、模块、协议、数据与发布实现 |
-| [ui-guideline.md](./ui-guideline.md) | shadcn/Tailwind/antd 分层与 4px 间距规范 |
+| [spec-ui.md](./spec-ui.md) | shadcn/Tailwind/antd 分层与 4px 间距规范 |
 | [prd-landing.md](./prd-landing.md) | 落地页当前需求 |
 | [tech-landing.md](./tech-landing.md) | 落地页当前技术实现 |
 

@@ -337,7 +337,7 @@ refs/                 只讀參考實現（.gitignore，不發布）
 - [docs/tech-landing.md](./docs/tech-landing.md) — 落地頁技術方案（React/Vite/Three/PWA）
 - [human-sos.md](./human-sos.md) — **需要人工完成/確認的交付事項**
 - [prototype/](./prototype/) — 視覺稿：`desktop/` 控制面板、`website/` 落地頁
-- [docs/ui-guideline.md](./docs/ui-guideline.md) — shadcn/Tailwind/antd 分層與 4px 間距規範
+- [docs/spec-ui.md](./docs/spec-ui.md) — shadcn/Tailwind/antd 分層與 4px 間距規範
 
 ## 專案狀態
 

@@ -9,6 +9,7 @@ import { ClaudeImporter } from './claude'
 import { CodexImporter } from './codex'
 import { DshImporter } from './dsh'
 import { WorkBuddyImporter } from './workbuddy'
+import { VSCodeImporter } from './vscode'
 import { backup } from './common'
 import type { ImportContext } from './types'
 
@@ -196,5 +197,27 @@ describe('backup retention', () => {
     await backup(path)
     const baseline = await readFile(join(dir, 'config.json.ai-bobby-baseline.bak'), 'utf8')
     expect(baseline).toBe('v1')
+  })
+
+  it('writes a VS Code Custom Endpoint provider without touching other providers', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-vscode-'))
+    const config = join(dir, 'Library/Application Support/Code/User/chatLanguageModels.json')
+    await mkdir(join(dir, 'Library/Application Support/Code/User'), { recursive: true })
+    await writeFile(config, JSON.stringify([{ name: 'Other', vendor: 'customendpoint', models: [] }], null, 2))
+    const importer = new VSCodeImporter(dir)
+    const context: ImportContext = {
+      models: [model('opencode', 'space-bunny-free', 'Space Bunny')],
+      apiKey: 'sk-test',
+      endpoint: 'http://127.0.0.1:46890/v1',
+    }
+    const plan = await importer.plan({ groups: ['opencode'], modelIds: ['oc/space-bunny-free'] }, context)
+    expect(plan.changed).toBe(true)
+    await importer.apply({ groups: ['opencode'], modelIds: ['oc/space-bunny-free'] }, context)
+    const saved = JSON.parse(await readFile(config, 'utf8')) as Array<{ name: string; vendor: string; url?: string; apiKey?: string }>
+    expect(saved).toHaveLength(2)
+    expect(saved[0]?.name).toBe('Other')
+    const aiBobby = saved.find(entry => entry.name === 'AI Bobby')
+    expect(aiBobby?.url).toBe('http://127.0.0.1:46890/v1')
+    expect(aiBobby?.apiKey).toBe('sk-test')
   })
 })
