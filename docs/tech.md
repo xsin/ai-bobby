@@ -1362,6 +1362,23 @@ experimental_bearer_token = "<key>"
 - 解析用 `smol-toml` 校验结果；写入后重新解析确认。
 - 不删除其他 provider、注释、项目配置。
 
+### 7.3.1 Codex 模型目录与元数据覆盖（调研见 [research-codex-metadata.md](./research-codex-metadata.md)）
+
+Codex 的 `model_catalog_json` 是**完整替换**内置 catalog 的模型语义目录，不是简单的模型列表；
+未知 slug 会走 `model_info_from_slug` 的 fallback（通用 prompt、272k context、`visibility: None`、
+`used_fallback_model_metadata: true`），并输出 “Model metadata for … not found” 警告。
+
+AI Bobby 的策略：
+
+- `packages/importers/src/codex-metadata.ts` 维护 `CODEX_METADATA`（按上游模型 ID）。
+- 只有登记过的模型才生成 catalog 条目；`models.ai-bobby.json` 的 slug 用 `wb/`、`wbi/`、`nv/` 等前缀。
+- 生成失败/无覆盖模型时，不伪造模板字段；`ImportPlan.warnings` 列出被跳过的模型。
+- 渲染层通过 `codex:metadata` IPC 获取覆盖的上游 ID，在导入抽屉计算 `covered/total` 并列出缺失模型；
+  Codex 目标只写覆盖模型，其他客户端仍写全部选择。
+- 恢复历史备份时，`Services.restoreFile` 对 Codex 调用 `normalizeRestoredCodexModel`：顶层
+  `model_provider === "ai-bobby"` 且 `model` 无前缀时，按当前模型表唯一匹配补前缀；否则保留并 warning。
+- 字段语义无法从上游 `/v1/models` 推导；扩展覆盖必须逐模型核实并补 `CODEX_METADATA`，不能克隆模板冒充。
+
 ### 7.4 Claude Code
 
 目标：`~/.claude/settings.json`。

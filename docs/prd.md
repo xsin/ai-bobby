@@ -478,12 +478,19 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 - 国内版目标排除 `wb/`；国际版目标排除 `wbi/`；`oc/` 与另一版本可导入。
 - 不自动删除 oc-ferry / 其他工具条目；可选“清理 oc-ferry 条目”单独操作。
 
-**FR-IM-3 Codex 导入**
+**FR-IM-3 Codex 导入（元数据策略见 [research-codex-metadata.md](./research-codex-metadata.md)）**
 
 - 目标：`~/.codex/config.toml`。
 - 写入 `[model_providers.ai-bobby]`：`name`、`base_url`、`wire_api = "responses"`、`experimental_bearer_token`。
 - 可选：把 `model` 设为用户选定的默认模型；不改用户的 `model_provider` 之外的设置，除非用户勾选“设为默认”。
 - 保留其他 provider 与注释；冲突时给 diff。
+- **模型目录元数据**：Codex 的 picker 由 `model_catalog_json` 驱动，而这份 catalog 含 reasoning 档位、
+  指令模板、tool mode、truncation 等无法从上游模型列表推导的字段。AI Bobby 只把已核实元数据的模型
+  写入生成的 `models.ai-bobby.json`；未覆盖的模型不写入，避免出现“能勾选、Codex 里不可用”。
+- **覆盖提示**：Codex 勾选后，导入抽屉显示「Codex 元数据 覆盖数/已选数」和缺失模型列表；缺失模型
+  只跳过 Codex，其他客户端照常导入。
+- **恢复兼容**：恢复旧 Codex 备份时，若 `model_provider = "ai-bobby"` 且 `model` 仍是裸上游 ID，
+  按唯一匹配补前缀；无法唯一确定时保留并 warning。
 
 **FR-IM-4 Claude Code 导入**
 
