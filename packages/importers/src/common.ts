@@ -60,25 +60,34 @@ export function baselineBackupPath(path: string): string {
  * (the file as it was before AI Bobby first touched it) plus the newest five
  * rolling backups, so the upper bound is six files.
  */
+/**
+ * Make sure the immutable pre-first-write baseline exists for a target.
+ * Existing installs seed it from their oldest rolling backup; otherwise the
+ * current file is used. Timestamps are preserved from the source file.
+ */
+export async function ensureBaseline(path: string): Promise<string | undefined> {
+  if (!(await exists(path))) return undefined
+  const baseline = baselineBackupPath(path)
+  if (await exists(baseline)) return baseline
+  const dir = dirname(path)
+  const base = `${basename(path)}.ai-bobby-`
+  const existing = (await readdir(dir))
+    .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== basename(baseline))
+    .sort()
+  const seed = existing[0]
+  const source = seed === undefined ? path : join(dir, seed)
+  await copyFile(source, baseline)
+  const sourceInfo = await stat(source).catch(() => undefined)
+  if (sourceInfo !== undefined) await utimes(baseline, sourceInfo.atime, sourceInfo.mtime).catch(() => undefined)
+  return baseline
+}
+
 export async function backup(path: string): Promise<string | undefined> {
   if (!(await exists(path))) return undefined
   const dir = dirname(path)
   const base = `${basename(path)}.ai-bobby-`
-  const baseline = baselineBackupPath(path)
-  if (!(await exists(baseline))) {
-    // Seed the baseline from the oldest rolling backup when upgrading an
-    // existing install, so it still describes the pre-AI-Bobby file.
-    const existing = (await readdir(dir))
-      .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== basename(baseline))
-      .sort()
-    const seed = existing[0]
-    const source = seed === undefined ? path : join(dir, seed)
-    await copyFile(source, baseline)
-    // Keep the snapshot's original timestamp so "baseline" shows when that
-    // pre-AI-Bobby file was actually written, not when we copied it.
-    const sourceInfo = await stat(source).catch(() => undefined)
-    if (sourceInfo !== undefined) await utimes(baseline, sourceInfo.atime, sourceInfo.mtime).catch(() => undefined)
-  }
+  const baseline = await ensureBaseline(path)
+  if (baseline === undefined) return undefined
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const target = `${path}.ai-bobby-${stamp}.bak`
   await copyFile(path, target)

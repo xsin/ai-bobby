@@ -34,6 +34,7 @@ import {
   atomicWrite,
   backup,
   baselineBackupPath,
+  ensureBaseline,
   exists,
   readText,
   type Importer,
@@ -104,8 +105,23 @@ export class Services {
       }
       logger.error('gateway failed to start', { error: this.gatewayState.error })
     }
+    void this.ensureBaselines()
     void this.refresh()
     this.refreshTimer = setInterval(() => void this.refresh(), 15 * 60_000)
+  }
+
+  /** Seed a baseline for every configured client on first run after upgrade. */
+  private async ensureBaselines(): Promise<void> {
+    await Promise.all(
+      Object.values(this.importers).map(async importer => {
+        try {
+          const { path, detected } = await importer.detect()
+          if (detected) await ensureBaseline(path)
+        } catch (error) {
+          logger.warn('failed to seed baseline', { error: String(error) })
+        }
+      }),
+    )
   }
 
   async stop(): Promise<void> {
@@ -301,7 +317,8 @@ export class Services {
   /** Baseline plus rolling backups for one target, newest rolling first. */
   async backupVersions(target: ImportTargetName): Promise<BackupVersion[]> {
     const importer = this.importers[target]
-    const { path } = await importer.detect()
+    const { path, detected } = await importer.detect()
+    if (detected) await ensureBaseline(path).catch(() => undefined)
     const versions: BackupVersion[] = []
     const baseline = baselineBackupPath(path)
     const baselineInfo = await stat(baseline).catch(() => undefined)

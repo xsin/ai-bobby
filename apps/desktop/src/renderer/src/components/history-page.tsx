@@ -345,8 +345,8 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                       node?.focus()
                     }}
                     className={cn(
-                      'flex flex-col items-start gap-0.5 rounded-l-md border border-transparent bg-transparent px-3 py-2 text-left text-muted-foreground hover:bg-hover',
-                      active && 'border-line-soft border-r-surface bg-surface text-text',
+                      'flex flex-col items-start gap-0.5 rounded-l-md border border-transparent bg-transparent px-3 py-2 text-left text-muted-foreground hover:bg-hover hover:text-text',
+                      active && 'border-line-soft border-r-surface bg-surface text-text hover:bg-surface',
                     )}
                   >
                     <strong className="text-[11px] font-semibold">{version.baseline ? '使用 AI Bobby 前' : relativeTime(version.createdAtMs)}</strong>
