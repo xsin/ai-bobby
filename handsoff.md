@@ -651,3 +651,12 @@ WorkBuddy 上游
 - ModelSnapshot 暴露 latencyMs/checkedAtMs，UI 显示真实探测耗时。
 - 本地 0.2.3 包安装到 /Applications/AIMatrix，安装脚本默认路径/清理再次验证。
 - Codex 裸模型 ID 自动迁移 + 网关提示已上线。
+
+### 2026-10-19 Round 26：0.2.3 实现完成，等待本机签收
+
+- 已完成：AIMatrix 安装脚本、VS Code/Cursor、NVIDIA（含探测持久化）、分源代理、中英文、
+  Codex 裸 ID/catalog 修复、恢复时 Codex 归一化。
+- 本地 0.2.3 已安装在 `/Applications/AIMatrix/AI Bobby.app`，运行于 46890。
+- 未做：tag/release、网站/Gitalk 部署；等用户本机体验确认后执行。
+- 注意：Codex 的 `model_catalog_json` 会覆盖模型选择器；importer 现在生成
+  `models.ai-bobby.json`，旧 catalog 不再使用。
