@@ -1,76 +1,78 @@
 # Human SOS — 交付前需要你完成/确认的事项
 
-> 这里只保留 **Agent 无法代办、且会影响产品完成交付** 的事。
-> 安装、使用、接入客户端、导入路径和故障排查见 [README.md](./README.md)；
-> 实施进度与已知风险见 [handsoff.md](./handsoff.md)。
-> 最后更新：2026-10-18
+> 只保留 **Agent 无法代办、且会影响 v0.2.3 交付** 的事。
+> 安装/使用/客户端接入见 [README.md](./README.md)；实施进度与风险见 [handsoff.md](./handsoff.md)。
+> 最后更新：2026-10-20
 
 ---
 
-## 1. 登录一次 WorkBuddy，完成真实上游联调（必须）
+## 1. v0.2.3 本机验收与发版授权（必须，最高优先级）
 
-Agent 已实现并单测覆盖官方登录、账号库、目录、聊天、额度和多账号调度，
-也实测能打开官方 `codebuddy.cn/login` 页面；但扫码/授权只能由你完成。
+本地 0.2.3 已安装：`/Applications/AIMatrix/AI Bobby.app`，端口 `46890`。
 
-请按以下步骤验证：
+- [ ] 走一遍：设置中英文切换、NVIDIA Key（保存后自动探测）、VS Code/Cursor 导入、Codex 导入、历史恢复。
+- [ ] 确认 Codex 新会话能选到带前缀模型，且 `/v1/responses` 不再 404。
+- [ ] 确认导入抽屉的 Codex 元数据覆盖提示符合预期。
+- [ ] 明确回复 **“可以发版”**；在此之前不 tag、不 push release、不部署网站。
 
-- [ ] 安装 v0.2.2：`curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash`
-- [ ] 启动后切到 **WorkBuddy** tab → **添加账号** → 在官方窗口完成扫码/授权
-- [ ] 确认模型列表和账号额度出现
-- [ ] 发一条消息，确认流式回复正常
-- [ ] 切到 **WorkBuddy AI**，用国际版账号重复一次（如果要用国际版）
-- [ ] 再添加第二个同 realm 账号，确认多账号条与切换正常
+## 2. 发布与部署授权（必须）
 
-如果失败，请把以下信息贴回来：
+当前 `main` 比 `origin/main` 领先 **27 个提交**，包含 v0.2.3 代码、Gitalk 与网站改动；均未 push。
 
-- 出错的步骤（登录 / 拉目录 / 聊天 / 额度）
-- 界面提示或 `~/Library/Application Support/AI Bobby/logs` 中的错误
-- 是否国内版/国际版、账号数量
+- [ ] 授权 push `main`（或指定由你 push）。
+- [ ] 授权部署网站/Gitalk 到 gh-pages（会公开评论区）。
+- [ ] 确认 GitHub 仓库继续 public（安装通道与 Pages 依赖）。
+- [ ] 确认 GitHub OAuth App / Gitalk client ID 仍有效（`Iv23liM54pLB6TIqnqb6`）。
 
----
+## 3. WorkBuddy AI（国际版）渠道校验（产品决策）
 
-## 2. 做一次最终验收（必须）
+上游返回 `11-128 request illegal / 未通过渠道校验`，不是 AI Bobby 配置错误；
+Agent 不会做伪造官方客户端的绕过。
 
-Agent 已用 Codex 0.154、Claude Code 2.1、OpenCode 免费模型在本机跑通，
-但你的机器/账号环境是最终验收标准。
+- [ ] 决定：接受国际版在部分环境不可用 / 在 UI 标记该状态 / 暂时隐藏国际版入口。
+- [ ] 如有官方第三方接入方式，提供给 Agent 再适配。
+- [ ] 提供一次可用的国际版账号与网络环境，供 L3 smoke 复测。
 
-- [ ] 安装版状态条显示 `运行中`，转发口为 `http://127.0.0.1:46890/v1`
-- [ ] 复制 API Key，用 README 的 curl 示例完成一次 Chat 请求
-- [ ] 从 **导入** 抽屉导入到 Codex / Claude Code（先看 diff，再写入），重启客户端后能选到模型
-- [ ] 如果使用 DSH，导入后按 README 说明在 DSH 侧配置 `AI_BOBBY_API_KEY`
-- [ ] 设置页“检查更新”能返回 v0.2.2 或更高版本
-- [ ] 验收通过后明确回复“可以发版”；在此之前不要创建新的 release/tag
+## 4. Codex 元数据：目标模型与行为签收（必须）
 
----
+当前只有 `deepseek-v4.1-flash`、`glm-5.3-flash` 登记了 Codex 元数据（schema-valid）；
+其他模型会在导入时跳过 Codex。L4 行为评测需要人类判断。
 
-## 3. 发布闸门（必须）
+- [ ] 指定你希望优先进入 Codex picker 的模型（按来源/名称列出）。
+- [ ] 对每个候选模型，用 Codex 跑 2–3 个真实任务（普通对话、工具调用、图片/长上下文按需），确认行为可接受。
+- [ ] 确认后 Agent 才能把对应条目升到 `behavior-reviewed`；未签收的保持跳过。
+- [ ] 确认是否接受“未覆盖模型不进 Codex picker”的默认行为。
 
-当前处于 **v0.2.2 真实验收阶段**，问题记录在 [`issues.md`](./issues.md)。
+## 5. NVIDIA 上游 smoke（需要你的网络/Key/账号）
 
-- 未经你本机验收通过，不创建新 tag、不发布 GitHub Release、不更新安装通道。
-- 验收通过后，你明确回复“可以发版”，再走 release workflow。
-- 发版前必须确认：WorkBuddy 登录/额度、主题/关于页 FR、安装提醒等问题已处理或明确接受。
+`pnpm smoke:codex` 结果：
 
----
+- `wb/deepseek-v4.1-flash`、`wb/glm-5.3-flash` 通过；
+- `wbi/*` 被渠道校验拦截；
+- `nv/*` 超时（可能是代理、免费额度或模型下线）。
 
-## 4. 确认仓库保持 public（必须）
+- [ ] 确认 PandaFan 代理在跑，且 `127.0.0.1:10080` 可访问 `integrate.api.nvidia.com`。
+- [ ] 用你的 NVIDIA Key 在 UI 里保存并等待自动探测完成；把可用模型数/失败模型贴回来。
+- [ ] 如果某些 NV 模型长期超时，确认是否从来源页隐藏或保留为不可用。
 
-安装通道依赖 GitHub Pages 与 Release：
+## 6. 安装脚本的两种人工场景（必须）
 
-- 仓库：<https://github.com/xsin/ai-bobby>
-- 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
+Agent 已实测默认路径 `/Applications/AIMatrix` 与自定义 `--install-dir`。
 
-- [ ] 确认仓库继续 public；如果要转 private，请告知，需要改安装分发方式
+- [ ] `--system`：需要管理员密码；确认提权、目录所有权交还、后续自更新正常。
+- [ ] 标准用户 `/Applications` 不可写：确认回退 `~/Applications/AIMatrix` 且打印原因。
+- [ ] 确认旧 `~/Applications/AI Bobby.app` / `/Applications/AI Bobby.app` 被清理且未误删自定义安装。
 
----
+## 7. 发布物料（Agent 可代做，但需要你确认口径）
 
-## 5. 确认可接受的 v1 安全边界（必须）
+- [ ] 确认 v0.2.3 release notes（NVIDIA、VS Code/Cursor、代理、i18n、AIMatrix 路径、Codex 修复）。
+- [ ] 确认 x64 包是否需要（当前本地只构建了 arm64；发布脚本支持双架构）。
+- [ ] 确认 README 的安装路径/版本状态更新到 v0.2.3。
+- [ ] 确认 Gitalk 文案、评论区默认折叠/展开行为。
 
-以下两项是当前 v1 的已知限制，需要你确认是否接受作为公测版边界：
+## 8. 已知限制确认（发版边界）
 
-- [ ] **OpenCode 原生工具是 prompt 级约束，不是强制沙箱**：
-      官方免费模型要求默认 OpenCode 配置，自定义 permission/tools 会触发 free-tier gate。
-      不要让不可信 prompt 驱动本机工具；如需强隔离，下一轮做 sandbox/容器方案。
-- [ ] **账号库当前是 `0600` 明文**：
-      Electron `safeStorage` 在启动时会阻塞 Keychain，已回退；如要求加密落盘，
-      需要你确认接受一次 Keychain 授权弹窗，或指定其他密钥方案。
+- [ ] OpenCode 原生工具是 prompt 级约束，不是强沙箱；接受作为公测边界。
+- [ ] 账号库 `0600` 明文（未接 safeStorage）；接受或要求下一轮加密。
+- [ ] Codex 自定义 catalog 的语义字段无法自动推导；未覆盖模型不会出现在 picker。
+- [ ] WorkBuddy AI 渠道校验不属于可修复的本地 BUG。
