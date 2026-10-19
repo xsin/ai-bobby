@@ -570,14 +570,30 @@
     ],
   };
 
+  function relativeTime(at) {
+    const then = new Date(String(at).replace(' ', 'T')).getTime();
+    if (!Number.isFinite(then)) return '';
+    const minutes = Math.max(0, Math.round((Date.now() - then) / 60000));
+    if (minutes < 1) return '刚刚';
+    if (minutes < 60) return `${minutes} 分钟前`;
+    const hours = Math.round(minutes / 60);
+    if (hours < 24) return `${hours} 小时前`;
+    if (hours < 36) return '昨天';
+    return `${Math.round(hours / 24)} 天前`;
+  }
+
   function versionsFor(record) {
     const set = BACKUP_SETS[record.client] || BACKUP_SETS.workbuddy;
-    return set.map((version, index) => ({
+    const versions = set.map((version, index) => ({
       id: `${record.client}-v${index}`,
-      label: index === 0 ? '基线 · 使用 AI Bobby 前' : `第 ${index + 1} 次写入前`,
+      label: version.baseline ? '使用 AI Bobby 前' : `第 ${index + 1} 次写入前`,
+      relative: relativeTime(version.at),
       target: record.target,
       ...version,
     }));
+    const baseline = versions[0];
+    const rolling = versions.slice(1).sort((a, b) => String(b.at).localeCompare(String(a.at)));
+    return [baseline, ...rolling];
   }
 
   function openRestore(record) {
@@ -594,20 +610,37 @@
 
   function renderRestoreVersions() {
     const versions = state.restoreVersions;
-    $('#restore-versions').innerHTML = versions.map(version => `
+    const baseline = versions.find(version => version.baseline);
+    const rolling = versions.filter(version => !version.baseline);
+    const row = version => `
       <button type="button" class="restore-version${version.id === state.selectedVersion ? ' selected' : ''}" data-version="${version.id}" role="radio" aria-checked="${version.id === state.selectedVersion}">
         <span class="restore-radio" aria-hidden="true"></span>
-        <span><strong>${escapeHtml(version.label)}</strong><small>${escapeHtml(version.at)} · ${escapeHtml(version.size)}</small></span>
-        ${version.baseline ? '<span class="chip baseline">基线</span>' : '<span></span>'}
-      </button>`).join('');
+        <span class="restore-version-copy">
+          <strong>${escapeHtml(version.baseline ? version.label : version.relative)}</strong>
+          <small>${escapeHtml(version.at)}${version.baseline ? '' : ` · ${escapeHtml(version.label)}`} · ${escapeHtml(version.size)}</small>
+        </span>
+        ${version.baseline ? '<span class="chip baseline">基线</span>' : ''}
+      </button>`;
+    $('#restore-versions').innerHTML = [
+      baseline ? row(baseline) : '',
+      rolling.length > 0 ? '<div class="restore-divider">历史备份 · 最新在前</div>' : '',
+      ...rolling.map(row),
+    ].join('');
+
     const selected = versions.find(version => version.id === state.selectedVersion) || versions[0];
     if (!selected) return;
     $('#restore-details').innerHTML = `
-      <div class="restore-detail"><span>备份文件</span><code>${escapeHtml(selected.file)}</code></div>
-      <div class="restore-detail"><span>版本时间</span><strong>${escapeHtml(selected.at)}</strong></div>
-      <div class="restore-detail"><span>文件大小</span><strong>${escapeHtml(selected.size)}</strong></div>
-      <div class="restore-detail"><span>目标文件</span><code>${escapeHtml(selected.target)}</code></div>
-      <div class="restore-detail"><span>影响范围</span><strong>${selected.baseline ? '无 AI Bobby 条目' : `${selected.models} 个 AI Bobby 模型`}</strong></div>`;
+      <div class="restore-summary">
+        <span class="restore-summary-label">将恢复到</span>
+        <strong class="restore-summary-title">${escapeHtml(selected.baseline ? '使用 AI Bobby 前' : selected.label)}</strong>
+        <span class="restore-summary-when">${escapeHtml(selected.relative)} · ${escapeHtml(selected.at)}</span>
+        <dl class="restore-facts">
+          <div><dt>备份文件</dt><dd>${escapeHtml(selected.file)}</dd></div>
+          <div><dt>文件大小</dt><dd>${escapeHtml(selected.size)}</dd></div>
+          <div><dt>目标文件</dt><dd>${escapeHtml(selected.target)}</dd></div>
+        </dl>
+        <p class="restore-outcome">${selected.baseline ? '恢复后：移除这个客户端里所有 AI Bobby 条目' : `恢复后：写入 ${selected.models} 个 AI Bobby 模型（该次写入前的状态）`}</p>
+      </div>`;
   }
 
   function closeRestore() {

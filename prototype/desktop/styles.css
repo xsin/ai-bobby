@@ -1861,3 +1861,44 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 @media (max-width: 760px) {
   .restore-body { grid-template-columns: 1fr; }
 }
+
+/* Restore dialog v2: list hierarchy + summary panel */
+.restore-details { padding-left: 14px; border-left: 1px solid var(--line-soft); }
+.restore-divider {
+  margin: 8px 2px 2px;
+  color: var(--faint);
+  font-size: 9px;
+  letter-spacing: 0.04em;
+}
+.restore-version-copy { min-width: 0; }
+.restore-version strong { font-size: 12px; }
+.restore-summary { display: flex; flex-direction: column; gap: 4px; padding-top: 2px; }
+.restore-summary-label { color: var(--faint); font-size: 9px; letter-spacing: 0.06em; }
+.restore-summary-title { color: var(--text); font-size: 15px; font-weight: 650; letter-spacing: -0.01em; }
+.restore-summary-when { color: var(--muted); font-size: 10px; }
+.restore-facts { margin: 8px 0 0; }
+.restore-facts > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 7px 0;
+  border-top: 1px solid var(--line-soft);
+}
+.restore-facts dt { color: var(--faint); font-size: 9px; white-space: nowrap; }
+.restore-facts dd {
+  margin: 0;
+  min-width: 0;
+  color: var(--text);
+  font: 10px/1.45 var(--mono);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+.restore-outcome {
+  margin: 6px 0 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.5;
+}
