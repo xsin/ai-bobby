@@ -143,10 +143,10 @@
     credential: { masked: 'nvapi-••••••••••••9f3c', note: '免费试用 · 上游限速' },
     models: [
       { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'available', latency: '0.8 秒', context: '128,000', maxOutput: '4,096', checked: '1 分钟前' },
-      { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'available', latency: '1.6 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'pending', latency: '—', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/nemotron-3-super-120b', display: 'NV. Nemotron 3 Super 120B', upstream: 'nvidia/nemotron-3-super-120b-a12b', caps: ['推理'], status: 'available', latency: '3.1 秒', context: '1,000,000', maxOutput: '16,384', checked: '1 分钟前' },
       { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '9.8 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
-      { id: 'nv/qwen3.5-397b', display: 'NV. Qwen 3.5 397B', upstream: 'qwen/qwen3.5-397b-a17b', caps: ['推理', '图片'], status: 'available', latency: '4.6 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/qwen3.5-397b', display: 'NV. Qwen 3.5 397B', upstream: 'qwen/qwen3.5-397b-a17b', caps: ['推理', '图片'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '14.6 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/glm-5.1', display: 'NV. GLM-5.1', upstream: 'zai/glm-5.1', caps: ['推理'], status: 'unavailable', latency: '超时 30 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/minimax-m2.7', display: 'NV. MiniMax M2.7', upstream: 'minimaxai/minimax-m2.7', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
@@ -266,6 +266,7 @@
     groups: new Map([['oc', true], ['wb', true], ['wbi', true], ['nv', true]]),
     defaultModel: 'oc/big-pickle',
     probeTimer: null,
+    probingTab: null,
     toastTimer: null,
   };
 
@@ -371,7 +372,9 @@
     $('#source-title').textContent = src.title;
     $('#source-subtitle').textContent = src.subtitle;
     $('#list-meta-text').textContent = src.listMeta;
-    $('#feedback-text').textContent = src.feedback;
+    $('#feedback-text').textContent = state.probingTab === state.tab
+      ? `正在检测 ${src.models.filter(model => model.status === 'pending').length} 个模型；单个超时不会阻塞其他模型…`
+      : src.feedback;
     $('#feedback').hidden = false;
     $('#service-text').textContent = src.statusText;
     $('#service-sub').textContent = src.serviceSub;
@@ -384,9 +387,11 @@
       return `<div class="metric${tone}"><dt>${escapeHtml(def.label)}</dt><dd>${escapeHtml(value)}</dd></div>`;
     }).join('') + `<div class="metric accent"><dt>已选</dt><dd><span id="selected-count">${selected}</span></dd></div>`;
 
-    $('#source-actions').innerHTML = src.actions.map(action =>
-      `<button type="button" data-action="${action.id}">${ICONS[action.icon] || ''}<span>${escapeHtml(action.label)}</span></button>`
-    ).join('');
+    const probingHere = state.probingTab === state.tab;
+    $('#source-actions').innerHTML = src.actions.map(action => {
+      const busy = probingHere && action.id === 'probe';
+      return `<button type="button" data-action="${action.id}"${busy ? ' disabled' : ''}>${ICONS[action.icon] || ''}<span>${escapeHtml(busy ? '检测中…' : action.label)}</span></button>`;
+    }).join('');
 
     const lastHeader = $('.timing-heading');
     if (lastHeader) lastHeader.textContent = src.lastHeader;
@@ -814,6 +819,7 @@
       const selected = state.selection[state.tab].has(model.id);
       const expanded = state.expanded.has(model.id);
       const status = STATUS[model.status] || STATUS.pending;
+      const probing = state.probingTab === state.tab && model.status === 'pending';
       const caps = model.caps.map((cap, index) => `<span class="cap${index === 0 ? ' strong' : ''}">${escapeHtml(cap)}</span>`).join('');
       rows.push(`
         <tr class="model-row${selected ? ' selected' : ''}" data-id="${escapeHtml(model.id)}">
@@ -829,9 +835,9 @@
           </td>
           <td><div class="caps">${caps}</div></td>
           <td>
-            <div class="status-cell">
-              <span class="dot ${status.dot}" aria-hidden="true"></span>
-              <span class="status-text ${status.text}">${escapeHtml(status.label)}</span>
+            <div class="status-cell${probing ? ' status-probing' : ''}">
+              ${probing ? '<span class="status-spinner" aria-hidden="true"></span>' : `<span class="dot ${status.dot}" aria-hidden="true"></span>`}
+              <span class="status-text ${probing ? 'accent' : status.text}">${escapeHtml(probing ? '检测中…' : status.label)}</span>
             </div>
           </td>
           <td><span class="latency${latencyTone(model.latency)}">${escapeHtml(model.latency)}</span></td>
@@ -1141,27 +1147,30 @@
 
   function runProbe() {
     if (state.probeTimer) return;
-    const button = $('[data-action="probe"]');
-    if (!button) return;
-    const original = button.innerHTML;
-    button.disabled = true;
-    button.innerHTML = `${ICONS.activity}<span>检测中…</span>`;
+    const tab = state.tab;
+    const src = source();
+    const pending = src.models.filter(model => model.status === 'pending');
+    if (pending.length === 0) {
+      showToast('没有待检测的模型');
+      return;
+    }
+    state.probingTab = tab;
+    renderSourceHead();
+    renderTable();
     showToast('正在并发检测，单个模型超时不会阻塞其他模型');
     state.probeTimer = setTimeout(() => {
-      const src = SOURCES.opencode;
       for (const model of src.models) {
-        if (model.status === 'pending') {
-          model.status = 'available';
-          model.latency = '9.8 秒';
-          model.checked = '刚刚';
-        }
+        if (model.status !== 'pending') continue;
+        model.status = 'available';
+        model.latencyMs = 800 + Math.round(Math.random() * 3200);
+        model.latency = `${(model.latencyMs / 1000).toFixed(1)} 秒`;
+        model.checked = '刚刚';
       }
       state.probeTimer = null;
-      button.disabled = false;
-      button.innerHTML = original;
+      state.probingTab = null;
       renderAll();
-      showToast('检测完成：8 个可用，1 个仅对话，1 个不可用');
-    }, 1400);
+      showToast('检测完成：延迟已更新，慢模型标黄');
+    }, 1800);
   }
 
   function handleAction(action) {

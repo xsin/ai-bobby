@@ -2240,3 +2240,18 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 @media (max-width: 720px) {
   .credential-row { flex-wrap: wrap; }
 }
+
+/* Probing state: pending rows animate while a probe is running. */
+.status-probing .status-text { color: var(--accent); }
+.status-spinner {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border: 1.5px solid var(--line);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: probe-spin 0.8s linear infinite;
+}
+@keyframes probe-spin {
+  to { transform: rotate(360deg); }
+}

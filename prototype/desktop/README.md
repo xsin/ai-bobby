@@ -101,6 +101,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
   （默认自定义 `http://127.0.0.1:10080`；关闭 / 跟随系统 / 自定义 + 按模型源勾选；OpenCode 子进程不受影响）。
 - 细节规范：弹窗内容统一 20px 留白（小弹窗 16px）、步骤不贴边；卡片内容与边框至少 8px；
   复选框统一品牌色实心 + 白勾；复制的 Key / Base URL 都放弹窗 footer。
-- 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-settings.png`、
-  `screenshot-import.png`、`screenshot-cursor-guide.png`。
+- **探测中状态**：点「检测全部」后，待检测行的状态列显示旋转指示 +「检测中…」，按钮变为禁用「检测中…」，
+  反馈条显示正在检测的模型数量；完成后才写入延迟与可用状态。更新 Key 只读取目录，不自动探测。
+- 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-nvidia-probing.png`、
+  `screenshot-settings.png`、`screenshot-import.png`、`screenshot-cursor-guide.png`。
 - 调研记录见 [docs/research-v0.2.3.md](../../docs/research-v0.2.3.md)。
