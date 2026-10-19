@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { CheckCircle2, Download, Settings, X } from 'lucide-react'
+import { CheckCircle2, Copy, Download, Eye, EyeOff, Settings, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { AntdProvider } from '@/components/antd-provider'
 import { AccountStrip } from '@/components/account-strip'
@@ -176,6 +176,7 @@ function AppInner() {
   const [importOpen, setImportOpen] = useState(false)
   const [nvidiaKeyOpen, setNvidiaKeyOpen] = useState(false)
   const [nvidiaKey, setNvidiaKey] = useState('')
+  const [nvidiaKeyVisible, setNvidiaKeyVisible] = useState(false)
   const [settings, setSettings] = useState<DesktopSettings | null>(null)
   const [, setLocaleVersion] = useState(0)
   const [loginOpen, setLoginOpen] = useState(false)
@@ -409,7 +410,8 @@ function AppInner() {
       next.nvidia = {
         ...next.nvidia,
         models: groups.nvidia.map(toDemoModel),
-        statusText: groups.nvidia.length === 0 ? '未配置 API Key' : `运行中 · ${groups.nvidia.length} 个模型`,
+        statusText: groups.nvidia.length === 0 ? t('未配置 API Key') : t('运行中 · {n} 个模型', { n: groups.nvidia.length }),
+        listMeta: groups.nvidia.length === 0 ? next.nvidia.listMeta : t('刚刚刷新'),
         feedback: groups.nvidia.length === 0 ? t('填写 NVIDIA API Key 后读取模型。') : t('已读取 {n} 个模型。', { n: groups.nvidia.length }),
       }
       return next
@@ -793,7 +795,7 @@ function AppInner() {
             <div className="flex shrink-0 items-center gap-2.5">
               <span className="hidden items-center gap-1.5 text-[10px] text-muted-foreground md:flex">
                 <span className={cn('size-1.5 rounded-full', realStatus?.gateway.state === 'ready' ? 'bg-success' : 'bg-warning')} />
-                网关{realStatus?.gateway.state === 'ready' ? t('运行中') : t('未就绪')}
+                {t('网关')}{realStatus?.gateway.state === 'ready' ? t('运行中') : t('未就绪')}
               </span>
               <Button
                 type="button"
@@ -856,6 +858,56 @@ function AppInner() {
 
               {accountRealm ? (
                 <AccountStrip source={source} accounts={accountsForSource} onAdd={() => setLoginOpen(true)} />
+              ) : null}
+
+              {active === 'nvidia' ? (
+                <section className="mt-3 flex flex-wrap items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2.5" aria-label={t('访问凭据')}>
+                  <div className="flex shrink-0 flex-col gap-px">
+                    <span className="text-[11px] font-semibold text-text">{t('访问凭据')}</span>
+                    <span className="text-[9px] text-faint">{t('免费试用 · 上游限速')}</span>
+                  </div>
+                  <div className="flex h-8 min-w-[260px] flex-1 items-center gap-1 rounded-md border border-line bg-surface-2 pl-3 pr-1">
+                    <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-text">
+                      {settings?.nvidiaApiKey
+                        ? nvidiaKeyVisible ? settings.nvidiaApiKey : `nvapi-••••••••${settings.nvidiaApiKey.slice(-4)}`
+                        : t('未配置')}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={nvidiaKeyVisible ? t('隐藏 Key') : t('显示 Key')}
+                      title={nvidiaKeyVisible ? t('隐藏 Key') : t('显示 Key')}
+                      disabled={!settings?.nvidiaApiKey}
+                      onClick={() => setNvidiaKeyVisible(value => !value)}
+                    >
+                      {nvidiaKeyVisible ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label={t('复制 API Key')}
+                      title={t('复制 API Key')}
+                      disabled={!settings?.nvidiaApiKey}
+                      onClick={async () => {
+                        if (!settings?.nvidiaApiKey) return
+                        const ok = await window.aiBobby?.copyText(settings.nvidiaApiKey)
+                        toast.success(ok ? t('NVIDIA API Key 已复制') : t('复制失败'))
+                      }}
+                    >
+                      <Copy className="size-4" />
+                    </Button>
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={() => setNvidiaKeyOpen(true)}>{t('更新')}</Button>
+                  <button
+                    type="button"
+                    className="appearance-none border-0 bg-transparent p-0 text-[10px] text-primary hover:underline"
+                    onClick={() => void window.aiBobby?.openExternal('https://build.nvidia.com/settings')}
+                  >
+                    {t('获取 Key ↗')}
+                  </button>
+                </section>
               ) : null}
 
               {feedback ? (

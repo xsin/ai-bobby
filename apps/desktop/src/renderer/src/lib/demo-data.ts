@@ -180,7 +180,6 @@ export const SOURCES: Record<ProviderId, DemoSource> = {
     actions: [
       { id: 'refresh', label: '读取模型', icon: 'refresh' },
       { id: 'probe', label: '检测全部', icon: 'activity' },
-      { id: 'key', label: 'API Key', icon: 'plus' },
     ],
     metricDefs: [
       { key: 'found', label: '已发现' },
@@ -227,7 +226,7 @@ export const IMPORT_CLIENTS: ImportClient[] = [
 ]
 
 export function metricsFor(source: DemoSource) {
-  if (source.id === 'opencode') {
+  if (source.id === 'opencode' || source.id === 'nvidia') {
     return {
       found: source.models.length,
       available: source.models.filter(model => model.status === 'available').length,

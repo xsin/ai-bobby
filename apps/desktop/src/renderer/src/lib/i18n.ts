@@ -221,6 +221,11 @@ const en: Record<string, string> = {
   "单账号 · 可继续添加": "Single account · add more",
   "添加账号": "Add account",
   "网关 46890": "Gateway 46890",
+  "免费试用 · 上游限速": "Free trial · rate-limited",
+  "隐藏 Key": "Hide key",
+  "显示 Key": "Show key",
+  "NVIDIA API Key 已复制": "NVIDIA API key copied",
+  "复制失败": "Copy failed",
 }
 
 export function resolveLocale(choice: 'system' | Locale): Locale {

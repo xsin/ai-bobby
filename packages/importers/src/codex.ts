@@ -113,6 +113,9 @@ async function render(
   if (catalog !== undefined) {
     text = setCatalogPath(text, catalog.path)
     warnings.push('已生成 AI Bobby 模型目录；Codex 模型选择器会显示带前缀的 ID')
+    if (catalog.fallback.length > 0) {
+      warnings.push(`${catalog.fallback.length} 个模型没有现成 Codex 元数据，使用通用模板参数，建议复核 models.ai-bobby.json：${catalog.fallback.slice(0, 4).join('、')}${catalog.fallback.length > 4 ? '…' : ''}`)
+    }
   }
   try {
     parseToml(text)
@@ -167,7 +170,7 @@ async function buildCatalog(
   configPath: string,
   selection: ImportSelection,
   context: ImportContext,
-): Promise<{ path: string; content: string } | undefined> {
+): Promise<{ path: string; content: string; fallback: string[] } | undefined> {
   const sourcePath = join(dirname(configPath), 'models.json')
   const raw = await readText(sourcePath)
   if (raw === undefined) return undefined
@@ -178,31 +181,48 @@ async function buildCatalog(
     return undefined
   }
   const entries = parsed.models
-  if (!Array.isArray(entries)) return undefined
+  if (!Array.isArray(entries) || entries.length === 0) return undefined
+  const template = entries[0]
+  if (template === undefined) return undefined
   const selected = new Set(selection.modelIds)
   const available = context.models.filter(model => selected.has(model.id))
   const models: Array<Record<string, unknown>> = []
-  for (const entry of entries) {
-    const slug = typeof entry['slug'] === 'string' ? entry['slug'] : ''
-    if (slug === '') continue
-    const match = available.filter(model => model.id === slug || model.upstreamId === slug || model.id.endsWith(`/${slug}`))
-    for (const model of match) {
-      models.push({
-        ...entry,
-        slug: model.id,
-        display_name: model.displayName,
-        description: `AI Bobby · ${model.groupName}`,
-        context_window: model.contextWindow ?? entry['context_window'],
-        max_context_window: model.contextWindow ?? entry['max_context_window'],
-        supported_in_api: true,
-        visibility: 'list',
-      })
+  const fallback: string[] = []
+  for (const model of available) {
+    const existing = entries.find(entry => entry['slug'] === model.upstreamId || entry['slug'] === model.id)
+    const base = existing ?? template
+    if (existing === undefined) fallback.push(model.displayName)
+    const reasoningLevels = base['supported_reasoning_levels']
+    const entry: Record<string, unknown> = {
+      ...base,
+      slug: model.id,
+      display_name: model.displayName,
+      description: `AI Bobby · ${model.groupName}`,
+      context_window: model.contextWindow ?? base['context_window'],
+      max_context_window: model.contextWindow ?? base['max_context_window'],
+      supported_in_api: true,
+      visibility: 'list',
+      priority: models.length + 1,
+      input_modalities: model.capabilities.images ? base['input_modalities'] : ['text'],
+      supports_parallel_tool_calls: model.capabilities.tools,
     }
+    if (!model.capabilities.reasoning) {
+      entry['supported_reasoning_levels'] = []
+      entry['default_reasoning_level'] = null
+    } else if (!Array.isArray(reasoningLevels) || reasoningLevels.length === 0) {
+      entry['supported_reasoning_levels'] = [
+        { effort: 'low', description: 'Fast responses with lighter reasoning' },
+        { effort: 'medium', description: 'Balanced reasoning' },
+        { effort: 'high', description: 'More reasoning depth' },
+      ]
+    }
+    models.push(entry)
   }
   if (models.length === 0) return undefined
   return {
     path: join(dirname(configPath), 'models.ai-bobby.json'),
     content: `${JSON.stringify({ ...parsed, models }, null, 2)}\n`,
+    fallback,
   }
 }
 
