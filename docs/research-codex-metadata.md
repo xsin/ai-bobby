@@ -172,3 +172,32 @@ catalog schema 随 Codex 版本变化。CI 固定测试一个 Codex CLI 版本�
 - 内置 catalog：https://github.com/openai/codex/blob/main/codex-rs/models-manager/models.json
 - app-server `model/list`：https://github.com/openai/codex/blob/main/codex-rs/app-server/README.md
 - 本机验证：Codex CLI 0.154.0，自定义 catalog 缺条目时出现 `Model metadata for ... not found`。
+
+## 9. B（合成 + 验证）的有效性评估
+
+B 不是一个“自动得出正确元数据”的方案，而是一个**分层验证闸门**。有效性取决于验证到哪一层：
+
+| 验证层 | 能证明什么 | 不能证明什么 | 有效性 |
+|---|---|---|---|
+| L1 Schema | Codex 能解析 catalog；必填字段齐全；slug 不触发 fallback | 字段值是否符合模型真实语义 | 高（≈100% 结构错误可拦截） |
+| L2 请求形状 | Codex 发出的 model / reasoning / tools / 图片字段符合预期 | 上游是否真的支持/采纳这些参数 | 中高（能抓 4xx/协议不兼容） |
+| L3 上游 smoke | 该 Key 下模型能完成一次最小对话/工具调用 | 多轮、并行工具、长上下文、指令遵循质量 | 中（只能证明“能跑”） |
+| L4 行为评测 | 模型在固定任务集上的表现 | 与官方 Codex 行为完全一致 | 低（成本高，且无官方基线） |
+
+关键结论：
+
+- **L1/L2 很适合进 CI**：体积小、可 mock、能随 Codex 版本升级回归；这是 B 的主要价值。
+- **L3 只能作为发布前手动检查**：免费额度、限流、渠道风控（WorkBuddy AI `11-128`）会造成假阴性；
+  不能因为一次 smoke 失败就断定元数据错误。
+- **L4 不能自动化到“每个模型”**：需要人工任务集和评分，且不同厂商对 reasoning effort 的解释不同；
+  最多按 provider 抽样，不能作为发布门禁。
+- B **无法验证** `instructions_template` 的质量。模板写错时 L1-L3 全绿，但模型行为可能明显变差；
+  这类字段仍必须人工复核。
+- B 的最大风险是**虚假信心**：如果把 L1/L2 通过标记成“Codex 已验证”，用户会以为行为也已保证。
+  应把覆盖状态拆成 `schema-valid` / `request-valid` / `behavior-reviewed`，UI 只对最后一档显示“已验证”。
+
+投入产出：
+
+- 对“避免用户勾选后在 Codex 里直接报错/不可用”，B 的 L1+L2 **有效且成本低**，建议做。
+- 对“保证模型在 Codex 里表现正确”，B 的边际收益低；这部分只能靠人工元数据 + 小规模行为评测。
+- 因此推荐：**B 做结构/请求回归，A 做语义登记**；不要用 B 自动生成 `CODEX_METADATA` 的语义字段。
