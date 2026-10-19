@@ -350,7 +350,8 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
   `ghost`（行内/低频操作，无边框）。禁止在调用处覆写颜色、边框、高度和字号。
 - 高度 30px、字号 11px、圆角 6px、图标 14px 统一由 `components/ui/button.tsx` 定义；
   页面只允许调整布局类（`gap`、宽度等）。
-- hover/disabled 行为随变体统一：ghost hover 用弱背景 + 前景色加深；主/次按钮 hover 只改变背景。
+- hover/disabled 行为随变体统一：ghost hover 用**品牌色浅底**（primary 12% 透明混合）+ 前景色加深；
+  主/次按钮 hover 只改变背景。不要用中性灰做 ghost hover——在已 hover 的表格行上会与行底色重合而看不见。
 - 原生 `<button>` 只在分段控件、tab、可点行等结构性场景使用，样式写在组件类里，不散落到页面。
 - 全局基础样式（`font: inherit` 等）必须放在 `@layer base`，否则会压过 Tailwind 工具类，
   造成“按钮字号看起来不对”。

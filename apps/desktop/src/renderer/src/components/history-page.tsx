@@ -318,7 +318,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           </DialogHeader>
 
           <div className="mx-[18px] my-3.5 grid grid-cols-[196px_minmax(0,1fr)] overflow-hidden rounded-lg border border-line-soft">
-            <div role="tablist" aria-orientation="vertical" aria-label="备份版本" className="flex max-h-[300px] flex-col gap-0.5 overflow-auto border-r border-line-soft bg-surface-2 p-1.5 pr-0">
+            <div role="tablist" aria-orientation="vertical" aria-label="备份版本" className="flex max-h-[300px] flex-col overflow-auto bg-surface-2">
               {versionsLoading ? (
                 <div className="px-2 py-3 text-[10px] text-faint">读取备份…</div>
               ) : versions.length === 0 ? (
@@ -345,17 +345,18 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                       node?.focus()
                     }}
                     className={cn(
-                      'restore-tab flex flex-col items-start gap-0.5 rounded-l-md border border-transparent bg-transparent px-3 py-2 text-left text-muted-foreground hover:text-text',
-                      active && 'border-line-soft border-r-surface bg-surface text-text',
+                      'restore-tab relative flex flex-col items-start gap-0.5 border-0 bg-transparent px-3.5 py-2.5 text-left text-muted-foreground hover:text-text',
+                      active && 'bg-surface text-text',
                     )}
                   >
+                    <span className={cn('absolute inset-y-0 left-0 w-0.5 bg-primary', active ? '' : 'hidden')} aria-hidden="true" />
                     <strong className="text-[11px] font-semibold">{version.baseline ? '使用 AI Bobby 前' : relativeTime(version.createdAtMs)}</strong>
                     <span className="font-mono text-[9px] text-faint">{formatDateTime(version.createdAtMs)}</span>
                   </button>
                 )
               })}
             </div>
-            <div role="tabpanel" aria-labelledby={selected ? `version-${selected.id}` : undefined} className="min-h-[218px] px-4 py-3.5">
+            <div role="tabpanel" aria-labelledby={selected ? `version-${selected.id}` : undefined} className="min-h-[218px] bg-surface px-4 py-3.5">
               {versionsError ? (
                 <p className="text-[10px] text-danger">{versionsError}</p>
               ) : selected ? (

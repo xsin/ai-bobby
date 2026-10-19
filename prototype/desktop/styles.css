@@ -127,7 +127,7 @@ button.ghost {
   background: transparent;
   color: var(--muted);
 }
-button.ghost:hover:not(:disabled) { border-color: transparent; background: var(--hover); color: var(--text); }
+button.ghost:hover:not(:disabled) { border-color: transparent; background: var(--accent-soft); color: var(--text); }
 
 
 button:focus-visible,
@@ -1936,7 +1936,7 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
   color: var(--muted);
   text-align: left;
 }
-.restore-tab:hover:not(:disabled) { border-color: transparent; background: var(--hover); }
+.restore-tab:hover:not(:disabled) { border-color: transparent; background: var(--accent-soft); }
 .restore-tab[aria-selected='true'] {
   border-color: var(--line-soft);
   border-right-color: var(--surface);
@@ -1966,7 +1966,7 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
   border-radius: 0;
 }
 .restore-tab:hover:not(:disabled) {
-  background: var(--hover);
+  background: var(--accent-soft);
 }
 .restore-tab[aria-selected='true'] {
   border: 0;
