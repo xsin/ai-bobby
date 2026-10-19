@@ -62,6 +62,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 | `screenshot-dark.png` | 首页（深色，默认） |
 | `screenshot-workbuddy.png` | WorkBuddy + 账号条 |
 | `screenshot-history.png` | 导入记录与备份合并表格 |
+| `screenshot-diff.png` | 查看差异弹窗：次要/主要按钮 |
 | `screenshot-restore.png` | 恢复弹窗：版本列表 + 默认选中基线 |
 | `screenshot-about.png` | 关于 + 赞助码 |
 | `screenshot-music.png` | Support my music + 两张专辑 + 最新歌曲 |
