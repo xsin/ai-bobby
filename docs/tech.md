@@ -1378,6 +1378,8 @@ AI Bobby 的策略：
 - 恢复历史备份时，`Services.restoreFile` 对 Codex 调用 `normalizeRestoredCodexModel`：顶层
   `model_provider === "ai-bobby"` 且 `model` 无前缀时，按当前模型表唯一匹配补前缀；否则保留并 warning。
 - 字段语义无法从上游 `/v1/models` 推导；扩展覆盖必须逐模型核实并补 `CODEX_METADATA`，不能克隆模板冒充。
+- 验证：`pnpm validate:codex` 用 `codex debug models` 让 Codex 解析生成的 catalog，断言 slug 齐全且没有
+  fallback 元数据；这是 L1 闸门，CI 可跑。
 
 ### 7.4 Claude Code
 

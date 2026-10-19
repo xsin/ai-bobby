@@ -16,12 +16,14 @@
     "typecheck": "pnpm -r --if-present typecheck",
     "clean": "pnpm -r --if-present clean",
     "release:version": "node scripts/release/version.mjs",
-    "dist:mac": "bash scripts/release/build-mac.sh"
+    "dist:mac": "bash scripts/release/build-mac.sh",
+    "validate:codex": "tsx scripts/validate-codex-catalog.mts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "tsx": "catalog:"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

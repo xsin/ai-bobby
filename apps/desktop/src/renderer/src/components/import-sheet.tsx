@@ -258,8 +258,8 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="min-h-0 flex-1">
-          <div className="space-y-5 px-5 py-4">
+        <ScrollArea className="min-h-0 min-w-0 flex-1">
+          <div className="w-full min-w-0 space-y-5 px-5 py-4">
             <section>
               <SectionTitle title={t("客户端")} hint={`${checkedClients.length} ${t('个已选择')}`} />
               <div className="space-y-1.5">
@@ -270,7 +270,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                     <label
                       key={client.id}
                       className={cn(
-                        'flex cursor-pointer items-center gap-2.5 rounded-md border px-2.5 py-2 transition-colors',
+                        'flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md border px-2.5 py-2 transition-colors',
                         checked
                           ? 'border-primary/35 bg-accent-soft'
                           : 'border-line-soft bg-surface-2 hover:border-line hover:bg-hover',

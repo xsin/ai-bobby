@@ -80,6 +80,8 @@ pub struct ModelsResponse {
   （`codex-rs/app-server/README.md`、`codex-rs/app-server-protocol/src/protocol/common.rs`）。
 - 仓库自带 `codex-rs/models-manager/models.json` 是官方模型 catalog；没有覆盖
   WorkBuddy/OpenCode/NVIDIA 的第三方模型。
+- `codex debug models` 会加载并规范化当前 catalog，输出 JSON；这是校验 catalog 的官方入口
+  （`codex debug models --help`）。本仓库的 `pnpm validate:codex` 已用它做 L1 验证。
 - 未发现官方文档提供“按 slug 查询任意模型元数据”的公开 API。
 
 ## 3. 可自动/半自动的字段
@@ -130,11 +132,10 @@ interface CodexMetadataEntry {
 
 1. **Schema 验证**：用 Codex 本身加载 catalog：
    ```bash
-   HOME=$tmp CODEX_HOME=$tmp/.codex codex exec \
-     -c 'model_catalog_json="/abs/models.ai-bobby.json"' \
-     -m 'wb/<model>' --skip-git-repo-check 'reply OK'
+   codex debug models -c 'model_catalog_json="/abs/models.ai-bobby.json"'
    ```
-   断言 stderr 不含 `Model metadata for ... not found`，且进程能发出请求。
+   输出应包含所有预期 slug，且不含 `used_fallback_model_metadata: true`。
+   `pnpm validate:codex` 已封装这一步（需要本机安装 Codex CLI）。
 2. **请求形状验证**：本地 mock `/v1/responses` 记录 body，断言：
    - `model` 为带前缀 ID；
    - 配置的 `reasoning.effort` 是否被发送；
