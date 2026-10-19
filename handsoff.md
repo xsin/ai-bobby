@@ -626,3 +626,13 @@ WorkBuddy 上游
   实测内容底部距边框 8px（+1px 边框）。
 - 新增 spec-ui §5.8：class 一物一用、文字容器禁止固定高度、卡片内容 ≥8px、
   用子元素 bottom 与容器 bottom 做自查。
+
+
+### 2026-10-19 Round 23：v0.2.3 编码进度（一）
+
+- 已完成：安装脚本 AIMatrix 路径/回退/--system 提权/chown/旧路径清理；
+  VS Code importer（chatLanguageModels.json 合并、备份、幂等、UI/历史筛选）；Cursor 仅引导弹窗；
+  `ui-guideline.md` → `spec-ui.md` 并更新引用；NVIDIA provider 包（目录/对话/真实延迟探测）脚手架。
+- 进行中：NVIDIA 接入 Services/网关/UI；代理设置（默认 http://127.0.0.1:10080，按来源）；
+  i18n 中英文；本地 0.2.3 包。
+- 发布闸门：等用户本地体验后再 tag/release；Gitalk 随 v0.2.3 部署。

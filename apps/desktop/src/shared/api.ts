@@ -50,7 +50,7 @@ export type UpdateActionResult =
 export interface ModelSnapshot {
   id: string
   name: string
-  provider: 'opencode' | 'workbuddy' | 'workbuddy-ai'
+  provider: 'opencode' | 'workbuddy' | 'workbuddy-ai' | 'nvidia'
   groupName: string
   status: string
   capabilities: { text: boolean; images: boolean; tools: boolean; reasoning: boolean }
