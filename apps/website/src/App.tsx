@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { ArrowRight, Check, Copy, Menu, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 const HeroCanvas = lazy(() => import('@/components/HeroCanvas').then(module => ({ default: module.HeroCanvas })))
 import { Logo } from '@/components/Logo'
 import { PwaPrompts } from '@/components/PwaPrompts'
@@ -153,7 +154,11 @@ function Hero({ onCopy, copied }: { onCopy: () => void; copied: boolean }) {
   return (
     <section className="hero" id="top">
       <div className="hero-bg" aria-hidden="true">
-        <Suspense fallback={<div className="hero-fallback" />}><HeroCanvas /></Suspense>
+        <Suspense fallback={<div className="hero-fallback" />}>
+          <ErrorBoundary fallback={<div className="hero-fallback" />}>
+            <HeroCanvas />
+          </ErrorBoundary>
+        </Suspense>
         <div className="hero-vignette" />
         <div className="hero-grid" />
       </div>

@@ -46,7 +46,7 @@ export default defineConfig(({ command }) => {
       },
     },
     build: {
-      target: 'es2022',
+      target: 'es2019',
       sourcemap: false,
     },
   }
