@@ -636,3 +636,11 @@ WorkBuddy 上游
 - 进行中：NVIDIA 接入 Services/网关/UI；代理设置（默认 http://127.0.0.1:10080，按来源）；
   i18n 中英文；本地 0.2.3 包。
 - 发布闸门：等用户本地体验后再 tag/release；Gitalk 随 v0.2.3 部署。
+
+
+### 2026-10-19 Round 24：NVIDIA 接入完成（后端 + UI 基础）
+
+- `settings.json`（0600）：NVIDIA Key、代理模式/地址/来源、locale。
+- Services 注册 NVIDIA adapter，启动/刷新读取目录；IPC/preload 暴露 Key、探测、代理、语言。
+- UI：侧栏 NVIDIA、来源页、API Key 弹窗、模型表、概览 4 卡、导入 NV 分组。
+- 仍待：代理真正作用于 fetch、设置页（Key/代理/语言）、i18n、本地 0.2.3 包。
