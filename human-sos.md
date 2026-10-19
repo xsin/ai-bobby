@@ -13,16 +13,16 @@
 - [ ] 走一遍：设置中英文切换、NVIDIA Key（保存后自动探测）、VS Code/Cursor 导入、Codex 导入、历史恢复。
 - [ ] 确认 Codex 新会话能选到带前缀模型，且 `/v1/responses` 不再 404。
 - [ ] 确认导入抽屉的 Codex 元数据覆盖提示符合预期。
-- [ ] 明确回复 **“可以发版”**；在此之前不 tag、不 push release、不部署网站。
+- [x] 明确回复 **“可以发版”**（2026-10-20）；v0.2.3 已发布。
 
 ## 2. 发布与部署授权（必须）
 
 当前 `main` 比 `origin/main` 领先 **27 个提交**，包含 v0.2.3 代码、Gitalk 与网站改动；均未 push。
 
-- [ ] 授权 push `main`（或指定由你 push）。
-- [ ] 授权部署网站/Gitalk 到 gh-pages（会公开评论区）。
+- [x] 授权 push `main`；已 push 并触发 Actions。
+- [x] 部署网站/Gitalk 到 gh-pages；Website workflow 通过。
 - [ ] 确认 GitHub 仓库继续 public（安装通道与 Pages 依赖）。
-- [ ] 确认 GitHub OAuth App / Gitalk client ID 仍有效（`Iv23liM54pLB6TIqnqb6`）。
+- [ ] 在生产页面实际发一条 Gitalk 评论（OAuth/评论写入仍需人工确认）。
 
 ## 3. WorkBuddy AI（国际版）渠道校验（产品决策）
 
@@ -65,10 +65,10 @@ Agent 已实测默认路径 `/Applications/AIMatrix` 与自定义 `--install-dir
 
 ## 7. 发布物料（Agent 可代做，但需要你确认口径）
 
-- [ ] 确认 v0.2.3 release notes（NVIDIA、VS Code/Cursor、代理、i18n、AIMatrix 路径、Codex 修复）。
-- [ ] 确认 x64 包是否需要（当前本地只构建了 arm64；发布脚本支持双架构）。
-- [ ] 确认 README 的安装路径/版本状态更新到 v0.2.3。
-- [ ] 确认 Gitalk 文案、评论区默认折叠/展开行为。
+- [x] v0.2.3 release notes 已发布。
+- [x] x64 + arm64 包均已由 release workflow 构建并上传。
+- [x] README（en/zh-CN/zh-TW）已更新到 v0.2.3 / AIMatrix。
+- [ ] 生产页面确认 Gitalk 默认折叠、移动端全屏行为。
 
 ## 8. 已知限制确认（发版边界）
 
