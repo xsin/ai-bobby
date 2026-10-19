@@ -50,8 +50,10 @@ API 类型，且 BYOK 不要求 GitHub 账号或 Copilot 订阅；配置保存�
 
 - 用 provider 级 `url` 让 VS Code 自动发现模型（GET `{url}/models`）；
 - 或用 `models[]` 显式列模型（每项含 `id` / `name` / `url` / `toolCalling` / 上下文等）；
-- `apiKey` 建议写成 `${input:aiBobbyApiKey}`，由 VS Code 首次使用时提示输入，避免明文落盘
-  （本机现有配置也使用这种 input 变量）。
+- `apiKey` 在 schema 里是 secret：VS Code 加载配置时会把**明文 apiKey 迁移到 SecretStorage**，
+  并把文件改写成 `${input:<secretKey>}`；`${input:...}` 本身是从 SecretStorage 读取，**不会在打开
+  VS Code 或首次使用时弹框**。弹框只出现在「Manage Language Models」里配置 provider 的时候。
+  因此导入器可以直接写入一次明文 Key，VS Code 会自行迁移到钥匙串（写后可 `chmod 600`）。
 
 **本机实测**：VS Code 1.142 已存在该文件，自定义 provider 使用
 `vendor: customendpoint`、`apiKey: ${input:...}`、每个模型写 `http://.../v1/chat/completions`。
@@ -59,8 +61,8 @@ API 类型，且 BYOK 不要求 GitHub 账号或 Copilot 订阅；配置保存�
 ### 建议的导入设计
 
 - 自动探测 Code / Code - Insiders；合并一个名为 `AI Bobby` 的 provider，不覆盖其他 provider。
-- 写 provider 级 `url: http://127.0.0.1:46890/v1` + `apiType: chat-completions`；
-  首次使用时 VS Code 提示粘贴 AI Bobby Key。
+- 写 provider 级 `url: http://127.0.0.1:46890/v1` + `apiType: chat-completions`，并写入一次实际 Key；
+  VS Code 加载后自动迁移到钥匙串，不会弹框；Key 轮换后重新导入即可。
 - JSON 解析失败则拒绝写入并提示手动处理；写前备份、原子替换；重复导入幂等。
 - 写入后提示“重启 VS Code 生效”。
 - 备选：如果自动发现不兼容，则回退为显式 `models[]`（AI Bobby `/v1/models` 的 id/name）。
@@ -87,8 +89,9 @@ Cursor 的设置不在 JSON 里，而在 SQLite：
 
 ### 建议
 
-- v0.2.3 仅提供**引导模式**：打开 Cursor Settings → Models，复制 Base URL 与 Key，用户手动粘贴；
-  勾选 Cursor 时只展示步骤，不写 `state.vscdb`。
+- v0.2.3 仅提供**引导模式**：导入面板里 Cursor 不出现复选框，只展示一条引导卡片；
+  点「查看接入步骤」打开弹窗，按 4 步操作（Settings → Models → Override Base URL → 粘贴 Key → 选模型），
+  提供复制 Base URL / Key；不写 `state.vscdb`。
 - 提示限制：Override 只影响 Chat / Agent，不影响 Tab 自动补全；开启 override 后 Cursor 托管模型也会走该地址。
 - 后续若要半自动，再加“退出 Cursor 后写入 Base URL + 模型（Key 仍手动）”作为高级选项。
 
@@ -113,11 +116,13 @@ Cursor 的设置不在 JSON 里，而在 SQLite：
 
 - 新增 provider `nvidia`，模型 ID 前缀 `nv/`，显示名 `NV. <name>`。
 - 鉴权：粘贴 API Key，`0600` 保存；提供“验证 Key / 读取模型”。
-- 模型列表：调用 `/v1/models` 后做对话探测（可批量、可单个重测），标记 `available` /
-  `chat_only` / `pending` / `unavailable`；**不展示额度/积分**，只标“免费试用 / 限速”。
+- 模型列表：调用 `/v1/models` 后做**真实最小对话探测**（可批量、可单个重测），记录首字/完整响应耗时，
+  标记 `available` / `chat_only` / `pending` / `unavailable`；超过 8 秒标「慢」、30 秒超时标「不可用」。
+  探测会消耗一次少量免费额度，界面上要明确提示。**不展示额度/积分**，只标“免费试用 / 限速”。
 - 导入：作为第 4 个分组 `NV`，可被 WorkBuddy / Codex / Claude / DSH / VS Code 目标导入。
-- 代理：Node 的 fetch 默认不走系统代理；若需要，在设置里加“网络代理”（跟随系统/自定义），
-  仅作用于上游 HTTP 请求，不影响 OpenCode 子进程。
+- 代理：Node 的 fetch 默认不走系统代理；设置里加“网络代理”，模式为关闭 / 跟随系统 / 自定义，
+  并**按模型源勾选**（NVIDIA NIM / WorkBuddy / WorkBuddy AI）——国内来源通常不需要代理，
+  只想让 NVIDIA 或 WBI 走代理。OpenCode 是子进程，设置里明确标注不受影响。
 
 来源：
 - <https://build.nvidia.com/llms.txt>
@@ -158,11 +163,11 @@ Cursor 的设置不在 JSON 里，而在 SQLite：
 
 截图：`prototype/desktop/screenshot-nvidia.png`、`screenshot-settings.png`、`screenshot-import.png`。
 
-## 待确认
+## 待确认（已按反馈更新）
 
-1. 安装脚本默认目录 `/Applications/AIMatrix`、回退与 `--system` chown 方案是否按上表执行。
-2. VS Code 自动写入是否接受 `${input:aiBobbyApiKey}`（首次粘贴 Key），还是希望直接写 Key。
-3. Cursor 本期只做引导是否可以；还是一定要尝试半自动写 SQLite。
-4. NVIDIA 是否作为正式第 4 个来源；免费试用 + 对话探测的呈现是否OK。
-5. 网络代理是否要放进本期（影响 NVIDIA / WorkBuddy）；还是先用环境变量。
-6. i18n 的范围与默认语言规则是否确认；英文文案是否需要在设计稿里逐页预览。
+1. 安装脚本默认目录 `/Applications/AIMatrix`、回退与 `--system` chown 方案：按最佳实践执行。
+2. VS Code：已确认不会在打开时弹框；导入器写一次 Key，VS Code 迁移到钥匙串。
+3. Cursor：本期只做引导；设计稿已去掉复选框，改为「查看接入步骤」弹窗。
+4. NVIDIA：已加真实对话探测与延迟/慢模型标记；慢模型标黄。
+5. 网络代理：已改为按模型源勾选（NVIDIA / WorkBuddy / WorkBuddy AI），OpenCode 标注不受影响。
+6. i18n：范围与默认规则待确认；英文文案是否需要在设计稿里逐页预览。

@@ -128,14 +128,14 @@
     auth: 'key',
     actions: [
       { id: 'refresh', label: '读取模型', icon: 'refresh' },
-      { id: 'probe', label: '验证 Key', icon: 'activity' },
+      { id: 'probe', label: '检测全部', icon: 'activity' },
     ],
     metricDefs: [
       { key: 'found', label: '已发现' },
       { key: 'available', label: '可用', tone: 'accent' },
       { key: 'pending', label: '待检测' },
     ],
-    feedback: '已读取 8 个可对话模型；免费试用额度与限速以 NVIDIA 账户为准。',
+    feedback: '已检测 8 个模型：5 个可用、2 个较慢、1 个不可用、1 个待检测；探测会真实发一条最小对话并消耗少量免费额度。',
     statusText: '运行中 · 8 个试用模型',
     serviceSub: 'NVIDIA NIM · integrate.api.nvidia.com',
     listMeta: '最近刷新 1 分钟前',
@@ -145,10 +145,10 @@
       { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'available', latency: '1.8 秒', context: '128,000', maxOutput: '4,096', checked: '1 分钟前' },
       { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'available', latency: '2.4 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/nemotron-3-super-120b', display: 'NV. Nemotron 3 Super 120B', upstream: 'nvidia/nemotron-3-super-120b-a12b', caps: ['推理'], status: 'available', latency: '3.1 秒', context: '1,000,000', maxOutput: '16,384', checked: '1 分钟前' },
-      { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '2.9 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '9.8 秒', slow: true, context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/qwen3.5-397b', display: 'NV. Qwen 3.5 397B', upstream: 'qwen/qwen3.5-397b-a17b', caps: ['推理', '图片'], status: 'available', latency: '4.6 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
-      { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '5.2 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
-      { id: 'nv/glm-5.1', display: 'NV. GLM-5.1', upstream: 'zai/glm-5.1', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
+      { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '14.6 秒', slow: true, context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/glm-5.1', display: 'NV. GLM-5.1', upstream: 'zai/glm-5.1', caps: ['推理'], status: 'unavailable', latency: '超时 30 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
       { id: 'nv/minimax-m2.7', display: 'NV. MiniMax M2.7', upstream: 'minimaxai/minimax-m2.7', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
     ],
   };
@@ -159,8 +159,8 @@
     { id: 'codex', name: 'Codex', path: '~/.codex/config.toml', status: '已探测', checked: true, note: 'responses' },
     { id: 'claude', name: 'Claude Code', path: '~/.claude/settings.json', status: '已探测', checked: true, note: 'messages' },
     { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', status: '已探测', checked: true, note: 'llm-pi-ai' },
-    { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', status: '可自动写入', checked: true, note: 'Custom Endpoint' },
-    { id: 'cursor', name: 'Cursor', path: 'Cursor Settings → Models', status: '需引导', checked: false, note: '不写数据库 · 手动粘贴' },
+    { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', status: '可自动写入', checked: true, note: 'Custom Endpoint · Key 入钥匙串' },
+    { id: 'cursor', name: 'Cursor', path: 'Cursor Settings → Models', status: '仅引导', checked: false, mode: 'guide', note: '不写数据库 · 手动粘贴' },
   ];
 
   const HISTORY = [
@@ -261,7 +261,7 @@
       nvidia: new Set(),
     },
     expanded: new Set(),
-    clients: new Map(CLIENTS.map(client => [client.id, client.checked])),
+    clients: new Map(CLIENTS.filter(client => client.mode !== 'guide').map(client => [client.id, client.checked])),
     groups: new Map([['oc', true], ['wb', true], ['wbi', true], ['nv', true]]),
     defaultModel: 'oc/big-pickle',
     probeTimer: null,
@@ -824,7 +824,7 @@
               <span class="status-text ${status.text}">${escapeHtml(status.label)}</span>
             </div>
           </td>
-          <td><span class="latency">${escapeHtml(model.latency)}</span></td>
+          <td><span class="latency${model.slow ? ' slow' : ''}">${escapeHtml(model.latency)}</span>${model.slow ? '<span class="slow-tag">慢</span>' : ''}</td>
         </tr>
         <tr class="detail-row" ${expanded ? '' : 'hidden'} data-detail="${escapeHtml(model.id)}">
           <td colspan="5">
@@ -871,7 +871,7 @@
   // ---------------------------------------------------------------------------
 
   function renderImportDrawer() {
-    $('#client-list').innerHTML = CLIENTS.map(client => {
+    $('#client-list').innerHTML = CLIENTS.filter(client => client.mode !== 'guide').map(client => {
       const checked = state.clients.get(client.id);
       return `
         <label class="client-row${checked ? ' checked' : ''}" data-client="${client.id}">
@@ -884,6 +884,18 @@
         </label>
       `;
     }).join('');
+
+    const guides = CLIENTS.filter(client => client.mode === 'guide');
+    $('#client-guide').innerHTML = guides.length === 0 ? '' : guides.map(client => `
+      <div class="guide-row">
+        <div class="guide-copy">
+          <strong>${escapeHtml(client.name)}</strong>
+          <span class="client-status warn">${escapeHtml(client.status)}</span>
+          <p>${escapeHtml(client.note)}</p>
+        </div>
+        <button type="button" class="guide-open" data-guide="${escapeHtml(client.id)}">查看接入步骤</button>
+      </div>
+    `).join('');
 
     $('#group-chips').innerHTML = [
       { id: 'oc', label: 'OC', count: SOURCES.opencode.models.filter(model => model.status === 'available').length },
@@ -1533,6 +1545,29 @@
     closeDrawer();
   });
 
+  $('#client-guide').addEventListener('click', event => {
+    const button = event.target.closest('[data-guide]');
+    if (!button) return;
+    $('#guide-modal').hidden = false;
+    $('#guide-modal').classList.add('open');
+  });
+  const closeGuide = () => {
+    $('#guide-modal').hidden = true;
+    $('#guide-modal').classList.remove('open');
+  };
+  $('#close-guide').addEventListener('click', closeGuide);
+  $('#close-guide-foot').addEventListener('click', closeGuide);
+  $('#guide-modal').addEventListener('click', event => {
+    if (event.target === $('#guide-modal')) closeGuide();
+  });
+  for (const button of $$('#guide-modal [data-copy]')) {
+    button.addEventListener('click', async () => {
+      const value = button.dataset.copy === 'url' ? 'http://127.0.0.1:46890/v1' : 'sk-ai-bobby-demo-f3a2';
+      const ok = await copyText(value);
+      showToast(ok ? (button.dataset.copy === 'url' ? 'Base URL 已复制' : 'API Key 已复制') : '复制失败');
+    });
+  }
+
   $('#add-account').addEventListener('click', openLogin);
   $('#close-login').addEventListener('click', closeLogin);
   $('#cancel-login').addEventListener('click', closeLogin);
@@ -1557,11 +1592,22 @@
     });
   }
 
-  $('#proxy-mode').addEventListener('change', event => {
-    const custom = event.target.value === 'custom';
-    $('#proxy-url').disabled = !custom;
-    if (custom) $('#proxy-url').focus();
+  const syncProxyControls = () => {
+    const mode = $('#proxy-mode').value;
+    $('#proxy-url').disabled = mode !== 'custom';
+    for (const input of $$('[data-proxy-source]')) input.disabled = mode === 'off';
+    for (const label of $$('.proxy-targets label')) label.classList.toggle('disabled', mode === 'off');
+  };
+  $('#proxy-mode').addEventListener('change', () => {
+    syncProxyControls();
+    if ($('#proxy-mode').value === 'custom') $('#proxy-url').focus();
   });
+  syncProxyControls();
+  for (const input of $$('[data-proxy-source]')) {
+    input.addEventListener('change', () => {
+      showToast(`${input.checked ? '启用' : '停用'}代理：${input.parentElement.textContent.trim()}`);
+    });
+  }
 
   $('#credential-edit').addEventListener('click', () => {
     showToast('原型演示：打开 NVIDIA API Key 输入框');
@@ -1574,6 +1620,7 @@
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape') return;
     if (!$('#floating-player').hidden) closeMusic();
+    else if (!$('#guide-modal').hidden) { $('#guide-modal').hidden = true; $('#guide-modal').classList.remove('open'); }
     else if (!$('#diff-modal').hidden) closeDiff();
     else if (!$('#login-modal').hidden) closeLogin();
     else if (!$('#drawer').hidden) closeDrawer();

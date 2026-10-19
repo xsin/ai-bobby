@@ -501,14 +501,26 @@
                     <button type="button" data-lang-choice="en" aria-pressed="false">English</button>
                   </div>
                 </div>
-                <div class="settings-row">
-                  <div><h2>网络代理</h2><p>用于 NVIDIA / WorkBuddy 等上游；OpenCode 运行时仍走系统网络。</p></div>
-                  <div class="settings-proxy">
-                    <select id="proxy-mode" aria-label="代理模式">
-                      <option value="system">跟随系统</option>
-                      <option value="custom">自定义</option>
-                    </select>
-                    <input id="proxy-url" type="url" placeholder="http://127.0.0.1:7890" disabled aria-label="代理地址">
+                <div class="settings-row settings-proxy-row">
+                  <div>
+                    <h2>网络代理</h2>
+                    <p>只影响 AI Bobby 发起的上游请求，按模型源分别启用。</p>
+                  </div>
+                  <div class="proxy-panel">
+                    <div class="proxy-mode-row">
+                      <select id="proxy-mode" aria-label="代理模式">
+                        <option value="off">关闭</option>
+                        <option value="system">跟随系统</option>
+                        <option value="custom">自定义</option>
+                      </select>
+                      <input id="proxy-url" type="url" placeholder="http://127.0.0.1:7890" disabled aria-label="代理地址">
+                    </div>
+                    <div class="proxy-targets" role="group" aria-label="应用到模型源">
+                      <label><input type="checkbox" data-proxy-source="nvidia" checked> NVIDIA NIM</label>
+                      <label><input type="checkbox" data-proxy-source="workbuddy"> WorkBuddy</label>
+                      <label><input type="checkbox" data-proxy-source="wbi" checked> WorkBuddy AI</label>
+                    </div>
+                    <p class="field-help">OpenCode 运行时由子进程联网，不受此设置影响；国内来源通常不需要代理。</p>
                   </div>
                 </div>
                 <div class="settings-row">
@@ -597,9 +609,10 @@
         <section class="drawer-section">
           <div class="section-heading">
             <h3>客户端</h3>
-            <span id="client-count">7 个目标</span>
+            <span id="client-count">6 个可写入 · 1 个引导</span>
           </div>
           <div class="client-list" id="client-list"></div>
+          <div class="client-guide" id="client-guide"></div>
         </section>
 
         <section class="drawer-section">
@@ -611,7 +624,7 @@
         </section>
 
         <section class="drawer-section">
-          <div class="section-heading"><h3>默认模型</h3><span>用于 Codex / Claude Code</span></div>
+          <div class="section-heading"><h3>默认模型</h3><span>用于 Codex / Claude Code · VS Code 自动发现</span></div>
           <select id="default-model" aria-label="默认模型"></select>
           <label class="check-row"><input type="checkbox" id="set-default"> 同时设为目标客户端的默认模型</label>
           <p class="field-help">「客户端」指导入目标（Codex / Claude Code / DSH / WorkBuddy / VS Code / Cursor），不是 AI Bobby。这里只影响 Codex 与 Claude Code 的默认模型字段；VS Code 会自动发现全部模型，Cursor 需在编辑器内手动选择。</p>
@@ -649,6 +662,29 @@
         <div class="modal-foot">
           <button type="button" id="cancel-restore">取消</button>
           <button type="button" class="primary" id="confirm-restore">恢复此版本</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal" id="guide-modal" hidden role="dialog" aria-modal="true" aria-labelledby="guide-title">
+      <div class="modal-card guide-card-modal">
+        <div class="modal-head">
+          <div>
+            <h2 id="guide-title">在 Cursor 中接入 AI Bobby</h2>
+            <p>Cursor 的设置存在 SQLite 与钥匙串里，AI Bobby 不写它的数据库，按下面步骤手动粘贴即可。</p>
+          </div>
+          <button class="icon-button" id="close-guide" type="button" aria-label="关闭接入步骤">×</button>
+        </div>
+        <ol class="guide-steps">
+          <li><span>1</span><div><strong>打开 Cursor 设置</strong><p><code>Settings → Models → API Keys</code></p></div></li>
+          <li><span>2</span><div><strong>开启 Base URL override</strong><p>打开 <code>Override OpenAI Base URL</code>，粘贴下面的地址。</p><code class="guide-url">http://127.0.0.1:46890/v1</code></div></li>
+          <li><span>3</span><div><strong>粘贴 API Key</strong><p>填入 AI Bobby 的 Key；Cursor 会自己加密保存，AI Bobby 不代写。</p><button type="button" class="guide-copy" data-copy="key">复制 Key</button></div></li>
+          <li><span>4</span><div><strong>选择模型</strong><p>回到 Chat / Agent 选择 AI Bobby 模型；Tab 自动补全仍走 Cursor 自己的模型。</p></div></li>
+        </ol>
+        <div class="modal-note">只影响 Chat / Agent；开启 override 后 Cursor 托管模型也会走该地址，切回时记得关闭。</div>
+        <div class="modal-foot">
+          <button type="button" id="close-guide-foot">关闭</button>
+          <button type="button" class="primary" data-copy="url">复制 Base URL</button>
         </div>
       </div>
     </div>

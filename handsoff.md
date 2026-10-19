@@ -586,3 +586,13 @@ WorkBuddy 上游
 - 设计稿：新增 NVIDIA NIM 来源页、VS Code / Cursor 导入目标、设置「界面语言 / 网络代理」、
   概览 4 个来源；版本标识 0.2.3。新增/刷新截图 `screenshot-nvidia/settings/import/overview`。
 - 未改生产代码，等待设计确认后再编码。
+
+
+### 2026-10-19 Round 19：v0.2.3 设计二次调整（待确认）
+
+- VS Code 事实修正：`${input:...}` 从 SecretStorage 读取，**不会打开 VS Code 时弹框**；VS Code 会把明文 Key
+  迁移到钥匙串。导入器写一次实际 Key 即可。
+- Cursor：导入抽屉不出复选框，改「查看接入步骤」弹窗（4 步 + 复制 URL/Key），不写 SQLite/Keychain。
+- NVIDIA：检测改为真实最小对话探测，显示耗时；>8s 标「慢」，超时标不可用；提示探测消耗少量额度。
+- 网络代理：关闭 / 跟随系统 / 自定义 + 按模型源勾选（NVIDIA / WorkBuddy / WBI），OpenCode 不受影响。
+- 设计稿与 `docs/research-v0.2.3.md` 已更新；生产代码未动，等确认。
