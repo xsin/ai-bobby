@@ -553,3 +553,12 @@ WorkBuddy 上游
 - 修复：`ErrorBoundary` 包 App + HeroCanvas；`build.target` es2022→es2019；`#root` 内置 inline-style 静态首屏；
   `polyfills.ts` 补 `at`。验证：屏蔽 chunk、禁用 JS、移动模拟三种情况都有内容。
 - 记录：apps/website/README.md「移动端兼容」。
+
+### 2026-10-19 Round 15：PWA 更新提醒核实
+
+- 代码已有更新提醒：`PwaPrompts` 用 `registerSW({ immediate: true })`，`onNeedRefresh` 显示
+  “发现新版本 / 刷新” toast，点击 `updateSW(true)`（skipWaiting + reload）；注册后每小时 + 页面重新可见时检查更新。
+- 端到端验证：先装 v1 SW，构建 v2 后 `registration.update()` → 1 秒内出现更新 toast；
+  点“刷新”后页面 reload、新 SW 接管、toast 消失。
+- 限制：更新 toast 依赖旧页面还能运行；若旧包已白屏（无 React 树）则无法显示，只能等关闭全部标签后新 SW 激活，
+  或清站点数据。新构建的静态首屏 + ErrorBoundary 可避免再次进入这种状态。
