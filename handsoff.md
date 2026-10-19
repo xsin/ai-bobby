@@ -660,3 +660,11 @@ WorkBuddy 上游
 - 未做：tag/release、网站/Gitalk 部署；等用户本机体验确认后执行。
 - 注意：Codex 的 `model_catalog_json` 会覆盖模型选择器；importer 现在生成
   `models.ai-bobby.json`，旧 catalog 不再使用。
+
+
+### 2026-10-20 v0.2.3 发布
+
+- 已 push main（7a1c2c1），validate 与 Website workflow 通过。
+- v0.2.3 tag + GitHub Release 已发布；arm64/x64、checksums、latest.json、install.sh 已上传。
+- 安装通道 latest.json/VERSION = 0.2.3；Gitalk 随网站部署（生产 bundle 已含）。
+- 剩余人工项：`--system`/标准用户回退实机、WBI 渠道决策、Codex 目标模型 L4 签收、NVIDIA smoke 复测。

@@ -1,8 +1,8 @@
 # v0.2.3 发版就绪评估
 
 > 评估时间：2026-10-20
-> 对象：本地 0.2.3 候选包（`/Applications/AIMatrix/AI Bobby.app`，arm64）
-> 结论：**候选版可验收，但未达到发版就绪（Not release-ready）**。阻塞项见下。
+> 对象：v0.2.3 发布包（arm64/x64）
+> 结论：**已发布（Released）**。本文件保留发布前评估与遗留人工项。
 
 ## 1. 结论
 
@@ -48,14 +48,14 @@
 - i18n 仍有少量动态/toast 文案保留中文；不影响功能。
 - WorkBuddy AI 渠道校验属于上游风控，不做绕过。
 
-## 5. 发版前最小清单
+## 5. 发版前最小清单（已完成）
 
-1. 你完成本机验收并回复“可以发版”。
-2. 更新 README 到 v0.2.3 / AIMatrix 路径。
-3. push `main`，跑通 GitHub Actions；部署网站 + Gitalk，验证生产评论。
-4. 构建 arm64 + x64，生成 latest.json/checksums，写 release notes。
-5. `--system`/回退场景实机确认。
-6. 决策 WorkBuddy AI 与 Codex 覆盖范围。
-7. 最后再 tag `v0.2.3` + GitHub Release + 安装通道验证。
+1. 你完成本机验收并回复“可以发版”。✅
+2. 更新 README 到 v0.2.3 / AIMatrix 路径。✅
+3. push `main`，跑通 GitHub Actions；部署网站 + Gitalk，验证生产评论。✅（validate/Website/Release 均通过）
+4. 构建 arm64 + x64，生成 latest.json/checksums，写 release notes。✅
+5. `--system`/回退场景实机确认。⚠️ 仍待人工
+6. 决策 WorkBuddy AI 与 Codex 覆盖范围。⚠️ 仍待人工
+7. 最后再 tag `v0.2.3` + GitHub Release + 安装通道验证。✅
 
 详见 [human-sos.md](../human-sos.md)。
