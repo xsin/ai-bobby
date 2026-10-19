@@ -1,6 +1,6 @@
 {
   "name": "ai-bobby",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "private": true,
   "type": "module",
   "description": "AI Bobby — 本地 AI 服务网关：聚合 OpenCode 免费模型与 WorkBuddy / WorkBuddy AI 桌面模型，提供统一 OpenAI 兼容端点与一键导入",

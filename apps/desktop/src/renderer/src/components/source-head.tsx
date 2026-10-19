@@ -17,8 +17,8 @@ export function SourceHead({ source, selectedCount, probing, onAction }: SourceH
   return (
     <section className="flex items-start justify-between gap-6 border-b border-line pb-4">
       <div className="min-w-0">
-        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-text">{source.title}</h2>
-        <p className="mt-1 text-[12px] text-muted-foreground">{source.subtitle}</p>
+        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-text">{t(source.title)}</h2>
+        <p className="mt-1 text-[12px] text-muted-foreground">{t(source.subtitle)}</p>
         <div className="mt-3 flex items-center gap-2">
           {source.actions.map(action => (
             <Button
@@ -35,7 +35,7 @@ export function SourceHead({ source, selectedCount, probing, onAction }: SourceH
               ) : (
                 <Activity className="size-3.5" />
               )}
-              {probing && action.id === 'probe' ? '检测中…' : action.label}
+              {probing && action.id === 'probe' ? t('检测中…') : t(action.label)}
             </Button>
           ))}
         </div>
@@ -46,7 +46,7 @@ export function SourceHead({ source, selectedCount, probing, onAction }: SourceH
           const value = metrics[def.key as keyof typeof metrics] ?? 0
           return (
             <div key={def.key} className="text-right">
-              <dt className="text-[11px] text-muted-foreground">{def.label}</dt>
+              <dt className="text-[11px] text-muted-foreground">{t(def.label)}</dt>
               <dd
                 className={cn(
                   'mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-text',

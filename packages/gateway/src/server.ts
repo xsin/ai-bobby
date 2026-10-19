@@ -162,7 +162,11 @@ export class GatewayService {
       const modelId = isObject(body) && typeof body['model'] === 'string' ? body['model'] : ''
       if (modelId === '') throw new GatewayError('invalid_request', 400, 'model 必须是字符串')
       const model = this.options.registry.find(modelId)
-      if (model === undefined) throw new GatewayError('not_found', 404, `模型不存在：${modelId}`)
+      if (model === undefined) {
+        const candidate = this.options.registry.list({ all: true }).find(item => item.upstreamId === modelId)
+        const hint = candidate === undefined ? '' : `；请使用带来源前缀的 ID，如 ${candidate.id}`
+        throw new GatewayError('not_found', 404, `模型不存在：${modelId}${hint}`)
+      }
       const adapter = this.options.adapters.get(model.provider)
       if (adapter === undefined) throw new GatewayError('upstream', 502, `来源未启用：${model.provider}`)
       const parsed = parseChatRequest(body, model)
@@ -322,7 +326,11 @@ export class GatewayService {
       const modelId = isObject(body) && typeof body['model'] === 'string' ? body['model'] : ''
       if (modelId === '') throw new GatewayError('invalid_request', 400, 'model 必须是字符串')
       const model = this.options.registry.find(modelId)
-      if (model === undefined) throw new GatewayError('not_found', 404, `模型不存在：${modelId}`)
+      if (model === undefined) {
+        const candidate = this.options.registry.list({ all: true }).find(item => item.upstreamId === modelId)
+        const hint = candidate === undefined ? '' : `；请使用带来源前缀的 ID，如 ${candidate.id}`
+        throw new GatewayError('not_found', 404, `模型不存在：${modelId}${hint}`)
+      }
       const adapter = this.options.adapters.get(model.provider)
       if (adapter === undefined) throw new GatewayError('upstream', 502, `来源未启用：${model.provider}`)
       const parsed = protocol === 'responses'

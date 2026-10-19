@@ -80,7 +80,21 @@ function render(
   }
   const model = selection.defaultModelId ?? selection.modelIds[0]
   let textBase = withoutBlock
-  if (selection.setAsDefault && model !== undefined) {
+  const parsedBefore = (() => {
+    try {
+      return parseToml(source) as Record<string, unknown>
+    } catch {
+      return undefined
+    }
+  })()
+  const currentModel = parsedBefore?.['model']
+  const currentProvider = parsedBefore?.['model_provider']
+  const prefixed = typeof currentModel === 'string' && /^(oc|wb|wbi|nv)\//.test(currentModel)
+  if (currentProvider === 'ai-bobby' && typeof currentModel === 'string' && !prefixed && model !== undefined) {
+    // A previous hub used raw upstream ids; AI Bobby needs the provider prefix.
+    textBase = setDefaultModel(textBase, model)
+    warnings.push(`已把 model 从 ${currentModel} 改为 ${model}（AI Bobby 需要带来源前缀）`)
+  } else if (selection.setAsDefault && model !== undefined) {
     textBase = setDefaultModel(textBase, model)
   }
   const block = [

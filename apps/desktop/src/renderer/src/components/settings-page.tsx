@@ -54,7 +54,7 @@ export function SettingsPage({
       <div className="border-b border-line pb-4">
         <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">PREFERENCES</div>
         <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">{t('设置')}</h1>
-        <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">外观、本地网关、更新与关于都集中在这页；所有设置只作用于本机。</p>
+        <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">{t('外观、本地网关、更新与关于都集中在这页；所有设置只作用于本机。')}</p>
       </div>
 
       <section className="mt-4 overflow-hidden rounded-lg border border-line-soft bg-surface">
@@ -192,14 +192,14 @@ export function SettingsPage({
         <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-3.5">
           <div>
             <h2 className="text-[12px] font-semibold text-text">{t('版本与更新')}</h2>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">当前 v{appInfo?.version ?? '0.2.1'}；t('新版本先提示，不静默替换。')</p>
-            <p className="mt-1 max-w-[520px] truncate font-mono text-[9px] text-faint">更新源 {appInfo?.updateSource ?? 'https://xsin.github.io/ai-bobby/releases/latest/latest.json'}</p>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">当前 v{appInfo?.version ?? '0.2.1'}；{t('新版本先提示，不静默替换。')}</p>
+            <p className="mt-1 max-w-[520px] truncate font-mono text-[9px] text-faint">{t('更新源')} {appInfo?.updateSource ?? 'https://xsin.github.io/ai-bobby/releases/latest/latest.json'}</p>
             {lastMessage ? <p className="mt-1 text-[10px] text-muted-foreground">{lastMessage}</p> : null}
           </div>
           <div className="flex items-center gap-2">
             <label className="flex cursor-pointer items-center gap-2 text-[10px] text-muted-foreground">
               <Switch checked={autoCheck} onCheckedChange={onAutoCheckChange} />
-              自动检查
+              {t('自动检查')}
             </label>
             <Button
               type="button"
@@ -223,8 +223,8 @@ export function SettingsPage({
             <p className="mt-0.5 text-[10px] text-muted-foreground">{t('AI Bobby 是本地优先的 AI 服务网关。')}</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={onOpenAbout}>关于 <ExternalLink className="size-3" /></Button>
-            <Button type="button" variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={onOpenUpdateSource}>更新源 <ExternalLink className="size-3" /></Button>
+            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={onOpenAbout}>{t('关于')} <ExternalLink className="size-3" /></Button>
+            <Button type="button" variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={onOpenUpdateSource}>{t('更新源')} <ExternalLink className="size-3" /></Button>
           </div>
         </div>
       </section>

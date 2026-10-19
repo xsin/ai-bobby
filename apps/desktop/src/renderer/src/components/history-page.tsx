@@ -158,12 +158,12 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">OTHER · HISTORY</div>
           <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">{t("导入历史")}</h1>
           <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">
-            每次写入都会先备份；在这里查看差异、打开配置目录或恢复备份。
+            {t('每次写入都会先备份；在这里查看差异、打开配置目录或恢复备份。')}
           </p>
         </div>
         <div className="flex items-center gap-2 pt-4">
           <Button type="button" variant="outline" size="sm" onClick={onRefresh} disabled={loading}>
-            {loading ? '刷新中…' : '刷新'}
+            {loading ? t('刷新中…') : t('刷新')}
           </Button>
         </div>
       </div>
@@ -198,7 +198,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                 filter === id && 'border-line bg-surface text-text shadow-sm',
               )}
             >
-              {label}
+              {t(label)}
             </button>
           ))}
         </div>
@@ -253,10 +253,10 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                       <div className="mt-0.5 flex flex-wrap items-center gap-1.5 text-[10px] text-muted-foreground">
                         <span>{formatTime(entry.createdAtMs)}</span>
                         <span aria-hidden="true">·</span>
-                        <span>{entry.modelCount} 个模型</span>
+                        <span>{entry.modelCount} {t('个模型')}</span>
                         <span aria-hidden="true">·</span>
                         <span className={cn('rounded px-1.5 py-px text-[9px]', restored ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')}>
-                          {restored ? '已恢复' : '成功'}
+                          {restored ? t('已恢复') : t('成功')}
                         </span>
                       </div>
                       <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px]">

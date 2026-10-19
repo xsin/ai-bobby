@@ -76,13 +76,13 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">OVERVIEW</div>
           <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">{t("概览")}</h1>
           <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">
-            当前网关、模型源与最近导入的一览；点卡片进入对应页面。
+            {t("当前网关、模型源与最近导入的一览；点卡片进入对应页面。")}
           </p>
         </div>
         <div className="flex items-center gap-2 pt-4">
           <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onRefresh}>
             <Activity className="size-3.5" />
-            刷新数据
+            {t("刷新数据")}
           </Button>
         </div>
       </div>
@@ -91,16 +91,16 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
           <span className="text-[10px] text-faint">{t("网关")}</span>
           <strong className={cn('mt-0.5 block text-[20px] font-semibold tracking-[-0.025em]', gatewayReady ? 'text-text' : 'text-warning')}>
-            {gatewayReady ? '运行中' : status?.gateway.state === 'starting' ? '启动中' : '未就绪'}
+            {gatewayReady ? t('运行中') : status?.gateway.state === 'starting' ? t('启动中') : t('未就绪')}
           </strong>
           <small className="mt-0.5 block text-[10px] text-muted-foreground">
-            127.0.0.1:{status?.gateway.port ?? 46890} · {totalModels} 个模型
+            127.0.0.1:{status?.gateway.port ?? 46890} · {totalModels} {t("个模型")}
           </small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
           <span className="text-[10px] text-faint">{t("模型源")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{allSources.length}</strong>
-          <small className="mt-0.5 block text-[10px] text-muted-foreground">可用 {availableModels} / 待检测 {pendingModels}</small>
+          <small className="mt-0.5 block text-[10px] text-muted-foreground">{t("可用")} {availableModels} / {t("待检测")} {pendingModels}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
           <span className="text-[10px] text-faint">{t("积分")}</span>
@@ -113,7 +113,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
             {latest ? formatTime(latest.createdAtMs) : '—'}
           </strong>
           <small className="mt-0.5 block text-[10px] text-muted-foreground">
-            {latest ? `${TARGET_LABEL[latest.target] ?? latest.target} · ${latest.modelCount} 个模型` : '还没有导入记录'}
+            {latest ? `${TARGET_LABEL[latest.target] ?? latest.target} · ${latest.modelCount} ${t("个模型")}` : '还没有导入记录'}
           </small>
         </div>
       </div>
@@ -125,8 +125,8 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
           const available = source.models.filter(model => model.status === 'available').length
           const accounts = source.accounts?.length ?? 0
           const detail = meta.id === 'opencode'
-            ? '无需登录 · 按价格字段筛免费模型'
-            : `${accounts} 个账号 · round-robin`
+            ? t('无需登录 · 按价格字段筛免费模型')
+            : `${accounts} ${t('个账号')} · round-robin`
           return (
             <button
               key={meta.id}
@@ -136,16 +136,16 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
             >
               <span className="flex items-baseline gap-1.5">
                 <Icon className="size-3.5 self-center text-primary" />
-                <strong className="text-[12px] font-semibold text-text">{meta.label}</strong>
-                <span className="text-[10px] text-faint">{meta.note}</span>
+                <strong className="text-[12px] font-semibold text-text">{t(meta.label)}</strong>
+                <span className="text-[10px] text-faint">{t(meta.note)}</span>
               </span>
               <span className="text-[27px] font-light leading-none tracking-[-0.03em] text-text tabular-nums">
                 {source.models.length}{' '}
                 <small className="ml-1 text-[11px] font-normal tracking-normal text-muted-foreground">{t("个模型")}</small>
               </span>
-              <span className="text-[10px] text-muted-foreground">可用 {available} · {detail}</span>
+              <span className="text-[10px] text-muted-foreground">{t("可用")} {available} · {detail}</span>
               <span className="mt-0.5 flex items-center gap-0.5 text-[10px] text-primary">
-                查看模型 <ArrowUpRight className="size-3" />
+                {t("查看模型")} <ArrowUpRight className="size-3" />
               </span>
             </button>
           )

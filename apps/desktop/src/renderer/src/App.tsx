@@ -69,9 +69,9 @@ function emptySources(): Record<ProviderId, DemoSource> {
     copy[key] = { ...copy[key], models: [], accounts: [], credits: '0' }
   }
   copy.opencode.feedback = 'OpenCode provider 接入后，这里会显示免费模型。'
-  copy.nvidia.feedback = '填写 NVIDIA API Key 后读取模型。'
-  copy.workbuddy.feedback = '还没有 WorkBuddy 账号；点击“添加账号”开始。'
-  copy.wbi.feedback = '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
+  copy.nvidia.feedback = t('填写 NVIDIA API Key 后读取模型。')
+  copy.workbuddy.feedback = t('还没有 WorkBuddy 账号；点击“添加账号”开始。')
+  copy.wbi.feedback = t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。')
   return copy
 }
 
@@ -385,14 +385,14 @@ function AppInner() {
         models: groups.opencode.map(toDemoModel),
         statusText: status.gateway.state === 'ready' ? `运行中 · ${status.models.length} 个模型` : '网关未就绪',
         serviceSub: status.gateway.state === 'ready' ? `网关 ${status.gateway.port}` : status.gateway.error || '网关未就绪',
-        feedback: groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 模型。` : next.opencode.feedback,
+        feedback: groups.opencode.length > 0 ? t('目录已刷新：{n} 个 OpenCode 模型。', { n: groups.opencode.length }) : next.opencode.feedback,
       }
       next.workbuddy = {
         ...next.workbuddy,
         models: groups.workbuddy.map(toDemoModel),
         accounts: cn.map(toDemoAccount),
         credits: creditSummary(cn),
-        feedback: cn.length === 0 ? '还没有 WorkBuddy 账号；点击“添加账号”开始。' : `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。`,
+        feedback: cn.length === 0 ? t('还没有 WorkBuddy 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.workbuddy.length, accounts: cn.length }),
         statusText: cn.length === 0 ? '未登录' : `运行中 · ${cn.length} 个账号`,
       }
       next.wbi = {
@@ -400,14 +400,14 @@ function AppInner() {
         models: groups.wbi.map(toDemoModel),
         accounts: intl.map(toDemoAccount),
         credits: creditSummary(intl),
-        feedback: intl.length === 0 ? '还没有 WorkBuddy AI 账号；点击“添加账号”开始。' : `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。`,
+        feedback: intl.length === 0 ? t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.wbi.length, accounts: intl.length }),
         statusText: intl.length === 0 ? '未登录' : `运行中 · ${intl.length} 个账号`,
       }
       next.nvidia = {
         ...next.nvidia,
         models: groups.nvidia.map(toDemoModel),
         statusText: groups.nvidia.length === 0 ? '未配置 API Key' : `运行中 · ${groups.nvidia.length} 个模型`,
-        feedback: groups.nvidia.length === 0 ? '填写 NVIDIA API Key 后读取模型。' : `已读取 ${groups.nvidia.length} 个模型。`,
+        feedback: groups.nvidia.length === 0 ? t('填写 NVIDIA API Key 后读取模型。') : t('已读取 {n} 个模型。', { n: groups.nvidia.length }),
       }
       return next
     })
@@ -416,10 +416,10 @@ function AppInner() {
     const summary = active === 'opencode'
       ? groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 免费模型。` : 'OpenCode 运行时尚未就绪；稍后会自动重试。'
       : active === 'workbuddy'
-        ? cn.length > 0 ? `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。` : '还没有 WorkBuddy 账号；点击“添加账号”开始。'
+        ? cn.length > 0 ? t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.workbuddy.length, accounts: cn.length }) : t('还没有 WorkBuddy 账号；点击“添加账号”开始。')
         : active === 'wbi'
-          ? intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
-          : groups.nvidia.length > 0 ? `已读取 ${groups.nvidia.length} 个 NVIDIA 模型。` : '填写 NVIDIA API Key 后读取模型。'
+          ? intl.length > 0 ? t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.wbi.length, accounts: intl.length }) : t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。')
+          : groups.nvidia.length > 0 ? `已读取 ${groups.nvidia.length} 个 NVIDIA 模型。` : t('填写 NVIDIA API Key 后读取模型。')
     // Each source may finish loading at a different time (OpenCode downloads a
     // runtime first), so seeded selection is applied per source once its models
     // are known, instead of once globally.
@@ -868,12 +868,12 @@ function AppInner() {
               <section className="flex min-h-0 flex-col pt-3">
                 <div className="mb-2 flex items-end justify-between gap-3">
                   <div>
-                    <h3 className="text-[13px] font-semibold text-text">模型清单</h3>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground">勾选决定导入，点击行查看详情。</p>
+                    <h3 className="text-[13px] font-semibold text-text">{t('模型清单')}</h3>
+                    <p className="mt-0.5 text-[11px] text-muted-foreground">{t('勾选决定导入，点击行查看详情。')}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="whitespace-nowrap text-[10px] text-faint">{source.listMeta}</span>
-                    <Button type="button" variant="ghost" size="sm" className="text-primary" onClick={selectAll}>全选可用</Button>
+                    <span className="whitespace-nowrap text-[10px] text-faint">{t(source.listMeta)}</span>
+                    <Button type="button" variant="ghost" size="sm" className="text-primary" onClick={selectAll}>{t('全选可用')}</Button>
                   </div>
                 </div>
 
@@ -889,8 +889,8 @@ function AppInner() {
                 </div>
 
                 <div className="flex items-center justify-between py-2 pr-[84px] text-[10px] text-faint">
-                  <span>{available} 个可用 · {abnormal} 个仅对话 / 待检测 / 不可用</span>
-                  <span>共 {source.models.length} 个模型</span>
+                  <span>{available} {t('个可用')} · {abnormal} {t('个仅对话 / 待检测 / 不可用')}</span>
+                  <span>{t('共')} {source.models.length} {t('个模型')}</span>
                 </div>
               </section>
             </main>
@@ -990,7 +990,7 @@ function AppInner() {
         selectedIdsByGroup={selectedIdsByGroup}
         selectedTotal={globalSelected}
         onApplied={() => {
-          setFeedback('已写入客户端；重启对应客户端后生效。')
+          setFeedback(t('已写入客户端；重启对应客户端后生效。'))
           toast.success('已写入客户端；重启对应客户端后生效')
           void loadHistory()
         }}
@@ -1013,7 +1013,7 @@ function AppInner() {
           }
           const changed = plans.filter(plan => plan.changed)
           const warnings = plans.flatMap(plan => plan.warnings)
-          setFeedback(changed.length === 0 ? `配置已是最新（${plans.length} 个客户端），无需重复写入。` : `已写入 ${changed.length} 个客户端；重启对应客户端后生效。`)
+          setFeedback(changed.length === 0 ? t('配置已是最新（{n} 个客户端），无需重复写入。', { n: plans.length }) : t('已写入 {n} 个客户端；重启对应客户端后生效。', { n: changed.length }))
           if (warnings.length > 0) toast.warning(warnings[0]!)
           toast.success(changed.length === 0 ? '配置已是最新' : `已写入 ${changed.length} 个客户端`)
           void loadHistory()

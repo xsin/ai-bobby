@@ -36,6 +36,7 @@ function statusTextTone(tone: 'success' | 'warning' | 'danger' | 'neutral') {
 function routeFor(id: string) {
   if (id.startsWith('oc/')) return 'OpenCode'
   if (id.startsWith('wb/')) return 'WorkBuddy'
+  if (id.startsWith('nv/')) return 'NVIDIA NIM'
   return 'WorkBuddy AI'
 }
 
@@ -48,7 +49,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
 
   const columns: NonNullable<TableProps<DemoModel>['columns']> = [
     {
-      title: '模型',
+      title: t('模型'),
       dataIndex: 'display',
       key: 'display',
       width: 'auto',
@@ -56,7 +57,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
         <div className="flex min-w-0 items-center gap-1.5">
           <button
             type="button"
-            aria-label={`${expandedKeys.includes(model.id) ? '收起' : '展开'} ${model.display} 详情`}
+            aria-label={`${expandedKeys.includes(model.id) ? t('收起') : t('展开')} ${model.display}`}
             className="app-no-drag flex size-5 shrink-0 appearance-none items-center justify-center rounded border-0 bg-transparent text-faint hover:bg-surface-2 hover:text-text"
             onClick={event => {
               event.stopPropagation()
@@ -75,7 +76,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
       ),
     },
     {
-      title: '能力',
+      title: t('能力'),
       dataIndex: 'caps',
       key: 'caps',
       width: 130,
@@ -98,14 +99,14 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
       ),
     },
     {
-      title: '计费',
+      title: t('计费'),
       dataIndex: 'billing',
       key: 'billing',
       width: 132,
       render: (_value, model) => <BillingCell billing={model.billing} />,
     },
     {
-      title: '状态',
+      title: t('状态'),
       dataIndex: 'status',
       key: 'status',
       width: 120,
@@ -114,7 +115,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
         return (
           <div className="flex items-center gap-1.5 whitespace-nowrap">
             <span className={cn('size-1.5 rounded-full', statusTone(meta.tone))} />
-            <span className={cn('text-[11px]', statusTextTone(meta.tone))}>{meta.label}</span>
+            <span className={cn('text-[11px]', statusTextTone(meta.tone))}>{t(meta.label)}</span>
           </div>
         )
       },
@@ -135,23 +136,23 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
     const meta = STATUS_META[model.status]
     return (
       <div className="grid grid-cols-2 gap-x-5 gap-y-2 px-2 py-2.5 sm:grid-cols-4">
-        <Detail label="上游 ID" value={model.upstream} mono />
-        <Detail label="上下文" value={`${model.context} tokens`} />
-        <Detail label="最大输出" value={`${model.maxOutput} tokens`} />
-        <Detail label="最近检测" value={model.checked} />
-        <Detail label="能力" value={model.caps.join(' / ')} />
+        <Detail label={t("上游")} value={model.upstream} mono />
+        <Detail label={t("上下文")} value={`${model.context} tokens`} />
+        <Detail label={t("最大输出")} value={`${model.maxOutput} tokens`} />
+        <Detail label={t("最近检测")} value={model.checked} />
+        <Detail label={t("能力")} value={model.caps.join(' / ')} />
         <Detail
-          label="计费"
+          label={t("计费")}
           value={
             model.billing === undefined
               ? '—'
               : model.billing.free
-                ? '免费'
-                : model.billing.credits ?? (model.billing.rateUnknown ? '未知' : '—')
+                ? t('免费')
+                : model.billing.credits ?? (model.billing.rateUnknown ? t('未知') : '—')
           }
         />
-        <Detail label="路由" value={routeFor(model.id)} />
-        <Detail label="状态" value={meta.label + (model.accounts ? ` · ${model.accounts} 个账号` : '')} />
+        <Detail label={t("路由")} value={routeFor(model.id)} />
+        <Detail label={t("状态")} value={meta.label + (model.accounts ? ` · ${model.accounts} ${t('个账号')}` : '')} />
         <div className="col-span-2 flex items-center gap-2 pt-1 sm:col-span-4">
           <Button
             type="button"

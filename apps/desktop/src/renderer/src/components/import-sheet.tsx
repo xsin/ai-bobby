@@ -245,14 +245,14 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
         <SheetHeader className="border-b border-line bg-toolbar px-5 py-4 text-left">
           <SheetTitle className="text-[15px] font-semibold text-text">{t("导入到客户端")}</SheetTitle>
           <SheetDescription className="text-[11px] text-muted-foreground">
-            变更自动预览，确认后写入；只改 AI Bobby 自己的条目。
+            {t('变更自动预览，确认后写入；只改 AI Bobby 自己的条目。')}
           </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-5 px-5 py-4">
             <section>
-              <SectionTitle title={t("客户端")} hint={`${checkedClients.length} 个已选择`} />
+              <SectionTitle title={t("客户端")} hint={`${checkedClients.length} ${t('个已选择')}`} />
               <div className="space-y-1.5">
                 {IMPORT_CLIENTS.map(client => {
                   const Icon = CLIENT_ICONS[client.id]
@@ -304,7 +304,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             </section>
 
             <section>
-              <SectionTitle title={t("分组")} hint="WorkBuddy 目标自动排除自身分组" />
+              <SectionTitle title={t("分组")} hint={t('WorkBuddy 目标自动排除自身分组')} />
               <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(groups) as GroupId[]).map(group => {
                   const checked = groups[group]
@@ -334,7 +334,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             </section>
 
             <section>
-              <SectionTitle title={t("默认模型")} hint="用于 Codex / Claude Code" />
+              <SectionTitle title={t("默认模型")} hint={t('用于 Codex / Claude Code')} />
               <Select value={defaultModel} onValueChange={setDefaultModel}>
                 <SelectTrigger className="h-8 w-full border-line bg-surface text-[11px]">
                   <SelectValue placeholder={t("选择默认模型")} />
@@ -349,11 +349,11 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
               </Select>
               <label className="mt-2 flex cursor-pointer items-center gap-2 text-[11px] text-muted-foreground">
                 <Checkbox checked={setAsDefault} onCheckedChange={value => setSetAsDefault(value === true)} />
-                同时设为目标客户端的默认模型
+                {t('同时设为目标客户端的默认模型')}
               </label>
               <p className="mt-1.5 text-[10px] leading-relaxed text-faint">
                 「客户端」指导入目标（Codex / Claude Code / DSH / WorkBuddy），不是 AI Bobby。
-                这里只影响 Codex 与 Claude Code 的默认模型字段，AI Bobby 网关本身不变；WorkBuddy 与 DSH 暂不支持默认模型。
+                {t('这里只影响 Codex 与 Claude Code 的默认模型字段；VS Code 会自动发现全部模型。')}
               </p>
             </section>
 
@@ -363,7 +363,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                 hint={previewing ? '更新中…' : window.aiBobby ? '自动更新 · 只读，不会写入' : '原型预览'}
               />
               <p className="mb-2 text-[10px] leading-relaxed text-faint">
-                勾选模型、切换分组或客户端时这里会自动更新；点「写入」之前不会修改任何文件。
+                {t('勾选模型、切换分组或客户端时这里会自动更新；点「写入」之前不会修改任何文件。')}
               </p>
               {previewError ? (
                 <p className="rounded-md border border-danger/30 bg-danger-soft px-2.5 py-2 text-[10px] text-danger">
@@ -383,7 +383,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
 
         <SheetFooter className="flex-row items-center justify-between gap-3 border-t border-line bg-toolbar px-5 py-3 sm:justify-between">
           <span className="text-[10px] text-muted-foreground">
-            已选 {selectedTotal} 个模型 · {checkedClients.length} 个客户端
+            {t('已选')} {selectedTotal} {t('个模型')} · {checkedClients.length} {t('个客户端')}
           </span>
           <div className="flex gap-2">
             <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
