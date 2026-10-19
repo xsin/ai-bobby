@@ -8,13 +8,13 @@ AI Bobby 是一个本地优先的桌面 AI 网关：把 **OpenCode 免费模型�
 
 [English](./README.md) · [简体中文](./README.zh-CN.md) · [繁體中文](./README.zh-TW.md)
 
-*桌面界面目前只有简体中文。*
+*桌面界面支持简体中文 / English，默认跟随系统语言。*
 
-> **状态（2026-10-19）：** `v0.2.2` 已发布。修复 WorkBuddy / WorkBuddy AI 的 `deepseek`
-> 上游 abort；导入备份改为 1 份基线 + 最近 5 份，并支持按版本恢复；统一按钮与 hover；
-> 移动端落地页增加兜底。网关（Chat / Responses / Messages）、OpenCode 免费模型、
-> WorkBuddy 双版本 provider、四个 importer、自动更新与 curl 安装链路均已上线。
-> **WorkBuddy 仍需要你本人扫码登录。**
+> **状态（2026-10-20）：** `v0.2.3` 已发布。新增 NVIDIA NIM 来源、VS Code 导入、Cursor 引导、
+> 分源代理、中英文界面与 `/Applications/AIMatrix` 安装布局；Codex 导入现在写入带前缀的模型 ID/catalog，
+> 并保留基线 + 最近 5 份备份与按版本恢复。
+> 网关（`Chat / Responses / Messages`）、OpenCode 免费池、WorkBuddy 双版本、NVIDIA、自动更新与
+> curl 安装通道均已上线。**WorkBuddy 仍需要你本人扫码登录。**
 > 落地页：<https://xsin.github.io/ai-bobby/>
 
 ![OpenCode 页](docs/screenshots/01-opencode-dark.png)
@@ -23,7 +23,7 @@ AI Bobby 是一个本地优先的桌面 AI 网关：把 **OpenCode 免费模型�
 
 - **一个端点** —— `http://127.0.0.1:46890/v1` 同时支持 OpenAI Chat Completions、
   OpenAI Responses 和 Anthropic Messages。
-- **三个模型来源** —— OpenCode 免费池、WorkBuddy（国内版）、WorkBuddy AI（国际版），
+- **四个模型来源** —— OpenCode 免费池、WorkBuddy（国内版）、WorkBuddy AI（国际版）、NVIDIA NIM，
   合并成一份模型清单，并标注免费或计费倍率。
 - **多账号** —— 每个来源可添加多个 WorkBuddy 账号，默认 round-robin + 失败切换。
 - **一键导入** —— 把 AI Bobby 端点写入 WorkBuddy、Codex、Claude Code 和 DeepSeek Harness，
@@ -46,13 +46,13 @@ curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh -o install
 less install.sh && bash install.sh
 ```
 
-- 默认安装到 `~/Applications/AI Bobby.app`；`--system` 可装到 `/Applications`。
-- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
+- 默认安装到 `/Applications/AIMatrix/AI Bobby.app`；`--system` 强制系统路径并请求管理员授权；标准用户回退 `~/Applications/AIMatrix`。
+- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.3>
 - 二进制托管在 **GitHub Releases**；gh-pages 只放安装脚本、版本号、校验和与更新清单。
 - 当前版本未做 Apple 公证。首次打开若被 Gatekeeper 阻止：
 
 ```bash
-xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+xattr -dr com.apple.quarantine "/Applications/AIMatrix/AI Bobby.app"
 ```
 
 ## 为什么 macOS 会提示联网
@@ -242,7 +242,7 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 **首次打开提示“已损坏”/无法打开**
 
 ```bash
-xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+xattr -dr com.apple.quarantine "/Applications/AIMatrix/AI Bobby.app"
 ```
 
 **46890 端口被占用**
@@ -302,9 +302,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 -d out/renderer
 发布（本地）：
 
 ```sh
-bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.2
-bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.2
-node scripts/release/validate.mjs release-site/releases/0.2.2
+bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.3
+bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.3
+node scripts/release/validate.mjs release-site/releases/0.2.3
 ```
 
 CI：推送 `v*` tag 触发 [.github/workflows/release.yml](./.github/workflows/release.yml)，

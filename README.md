@@ -8,13 +8,12 @@ one API key, three protocols, and a native macOS control panel.
 
 [English](./README.md) · [简体中文](./README.zh-CN.md) · [繁體中文](./README.zh-TW.md)
 
-*The desktop UI is currently Simplified Chinese; button names here are translated for readability.*
+*The desktop UI ships with Simplified Chinese and English; language follows the system by default.*
 
-> **Status (2026-10-19):** `v0.2.2` is released. It fixes the WorkBuddy / WorkBuddy AI
-> `deepseek` upstream abort, keeps one baseline + five rolling backups with per-version restore,
-> unifies buttons/hover, and makes the landing page resilient on older mobile browsers.
-> The gateway (`Chat / Responses / Messages`), OpenCode free models, dual WorkBuddy providers,
-> all four importers, auto-update and the curl installer are live.
+> **Status (2026-10-20):** `v0.2.3` is released. It adds the NVIDIA NIM source, VS Code import,
+> Cursor guidance, per-source proxy, zh/en UI and the `/Applications/AIMatrix` install layout.
+> Codex import now writes prefixed model ids/catalog, and the gateway handles `Chat / Responses /
+> Messages`, OpenCode free models, dual WorkBuddy providers, NVIDIA, auto-update and the curl installer.
 > **WorkBuddy still requires you to scan the official QR code yourself.**
 > Website: <https://xsin.github.io/ai-bobby/>
 
@@ -24,11 +23,11 @@ one API key, three protocols, and a native macOS control panel.
 
 - **One endpoint** — `http://127.0.0.1:46890/v1` speaks OpenAI Chat Completions,
   OpenAI Responses and Anthropic Messages.
-- **Three model sources** — OpenCode's free pool, WorkBuddy (CN) and WorkBuddy AI (INTL),
+- **Four model sources** — OpenCode's free pool, WorkBuddy (CN), WorkBuddy AI (INTL) and NVIDIA NIM,
   merged into one model list with per-model pricing hints.
 - **Multi-account** — add several WorkBuddy accounts per source; round-robin with failover.
-- **One-click import** — write the AI Bobby endpoint into WorkBuddy, Codex, Claude Code and
-  DeepSeek Harness, with a live diff preview before anything is touched.
+- **One-click import** — write the AI Bobby endpoint into WorkBuddy, Codex, Claude Code,
+  DeepSeek Harness and VS Code (Cursor is guided), with a live diff preview before anything is touched.
 - **History & restore** — every write is backed up; restore the baseline or any of the last five
   snapshots from the History page.
 - **Local only** — binds to `127.0.0.1:46890`, rejects browser `Origin` requests, and sends no telemetry.
@@ -48,14 +47,14 @@ curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh -o install
 less install.sh && bash install.sh
 ```
 
-- Installs to `~/Applications/AI Bobby.app` by default; `--system` installs to `/Applications`.
-- Latest release: <https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
+- Installs to `/Applications/AIMatrix/AI Bobby.app` by default; `--system` forces the same system path with admin auth; standard users fall back to `~/Applications/AIMatrix`.
+- Latest release: <https://github.com/xsin/ai-bobby/releases/tag/v0.2.3>
 - Binaries live on **GitHub Releases**; gh-pages only hosts the installer, version, checksums
   and the update manifest.
 - The build is not notarized by Apple. If Gatekeeper blocks the first launch:
 
 ```bash
-xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+xattr -dr com.apple.quarantine "/Applications/AIMatrix/AI Bobby.app"
 ```
 
 ## Why macOS asks for network access
@@ -267,7 +266,7 @@ More: [light theme](docs/screenshots/06-opencode-light.png),
 **"App is damaged" / cannot open on first launch**
 
 ```bash
-xattr -dr com.apple.quarantine "$HOME/Applications/AI Bobby.app"
+xattr -dr com.apple.quarantine "/Applications/AIMatrix/AI Bobby.app"
 ```
 
 **Port 46890 is already in use**
@@ -302,6 +301,10 @@ still depends on login, membership, copyright and region.
 
 - WorkBuddy real-account login still needs manual verification; only the official login page has been
   exercised end-to-end so far.
+- WorkBuddy AI may reject third-party requests with `11-128` channel verification; this is upstream
+  risk control, not a client-running requirement.
+- Codex only receives models with curated `CODEX_METADATA`; other models are skipped in the Codex
+  picker and shown in the import preview.
 - OpenCode native tools are prompt-level only; there is no enforced sandbox. Do not let untrusted
   prompts drive local tools.
 - Free-model probing/latency caching for OpenCode is not implemented yet; the catalog is marked
@@ -332,9 +335,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 -d out/renderer
 Local release build:
 
 ```sh
-bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.2
-bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.2
-node scripts/release/validate.mjs release-site/releases/0.2.2
+bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.3
+bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.3
+node scripts/release/validate.mjs release-site/releases/0.2.3
 ```
 
 CI: pushing a `v*` tag runs [.github/workflows/release.yml](./.github/workflows/release.yml),
@@ -351,7 +354,7 @@ packages/core         Domain model, registry, settings, logging
 packages/workbuddy    WorkBuddy dual-version login/accounts/catalog/chat/scheduling
 packages/opencode     OpenCode runtime / free filtering / forwarding
 packages/gateway      46890 gateway and three protocol codecs
-packages/importers    One-click import for four clients
+packages/importers    One-click import for WorkBuddy/Codex/Claude/DSH/VS Code
 scripts/release       Versioning, build, signing, manifest, installer
 docs/prd.md           Product scope, FRs, UI, acceptance
 docs/tech.md          Architecture, protocols, login/accounts, updates, tests
