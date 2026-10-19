@@ -570,3 +570,10 @@ WorkBuddy 上游
 - `v0.2.2` tag → Release workflow 成功（arm64 + x64，ad-hoc 签名）：
   GitHub Release `v0.2.2` 含 zip/checksums/latest.json/install.sh；`releases/latest/latest.json` 已指向 0.2.2。
 - 发布前本地验证：69 项测试、typecheck、arm64 打包；`Info.plist` 0.2.2、名称 AI Bobby、自定义 icon.icns。
+
+### 2026-10-19 Round 17：README 三语 + 仓库元数据
+
+- README 默认英文，新增 `README.zh-CN.md` / `README.zh-TW.md`，三份顶部互链；
+  内容按用户路径重排（安装 → 首次使用 → 接入客户端 → 导入 → 历史 → 排障 → 开发）。
+- 繁体版按台湾用语转换（閘道 / 匯入 / 預設 / 還原 / 使用者 等），并注明界面仅简体。
+- GitHub About 已更新：双语描述 + homepage `https://xsin.github.io/ai-bobby`（`gh repo edit` 生效）。
