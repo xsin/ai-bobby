@@ -1,5 +1,5 @@
 import { constants } from 'node:fs'
-import { access, copyFile, mkdir, open, readFile, readdir, rename, rm, stat, writeFile } from 'node:fs/promises'
+import { access, copyFile, mkdir, open, readFile, readdir, rename, rm, stat, utimes, writeFile } from 'node:fs/promises'
 import { basename, dirname, join } from 'node:path'
 import type { ImportPlan, ImportTarget } from './types'
 
@@ -51,6 +51,10 @@ export async function withLock<T>(path: string, fn: () => Promise<T>): Promise<T
 
 const BASELINE_SUFFIX = '.ai-bobby-baseline.bak'
 
+export function baselineBackupPath(path: string): string {
+  return `${path}${BASELINE_SUFFIX}`
+}
+
 /**
  * Snapshot a target before a write. Per target we keep one immutable baseline
  * (the file as it was before AI Bobby first touched it) plus the newest five
@@ -60,7 +64,7 @@ export async function backup(path: string): Promise<string | undefined> {
   if (!(await exists(path))) return undefined
   const dir = dirname(path)
   const base = `${basename(path)}.ai-bobby-`
-  const baseline = `${path}${BASELINE_SUFFIX}`
+  const baseline = baselineBackupPath(path)
   if (!(await exists(baseline))) {
     // Seed the baseline from the oldest rolling backup when upgrading an
     // existing install, so it still describes the pre-AI-Bobby file.
@@ -68,7 +72,12 @@ export async function backup(path: string): Promise<string | undefined> {
       .filter(name => name.startsWith(base) && name.endsWith('.bak') && name !== basename(baseline))
       .sort()
     const seed = existing[0]
-    await copyFile(seed === undefined ? path : join(dir, seed), baseline)
+    const source = seed === undefined ? path : join(dir, seed)
+    await copyFile(source, baseline)
+    // Keep the snapshot's original timestamp so "baseline" shows when that
+    // pre-AI-Bobby file was actually written, not when we copied it.
+    const sourceInfo = await stat(source).catch(() => undefined)
+    if (sourceInfo !== undefined) await utimes(baseline, sourceInfo.atime, sourceInfo.mtime).catch(() => undefined)
   }
   const stamp = new Date().toISOString().replace(/[:.]/g, '-')
   const target = `${path}.ai-bobby-${stamp}.bak`

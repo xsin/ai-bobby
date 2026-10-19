@@ -221,16 +221,18 @@ body {
   box-sizing: border-box;
 }
 
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
+@layer base {
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
 
-button {
-  -webkit-user-select: none;
-  user-select: none;
+  button {
+    -webkit-user-select: none;
+    user-select: none;
+  }
 }
 
 ::selection {

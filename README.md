@@ -197,12 +197,12 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 | 概览：网关、模型源、积分与最近导入 | 左侧栏多页导航 + 模型清单 |
 | ![History](docs/screenshots/07-history-dark.png) | ![Import sheet](docs/screenshots/03-import-light.png) |
 | 导入记录与备份合并表格 | 全局导入：实时预览 + 默认模型 |
-| ![About](docs/screenshots/08-about-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
-| 关于 ZEO、音乐与赞助 | 非模态更新条 |
-| ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) | ![Light](docs/screenshots/06-opencode-light.png) |
-| WorkBuddy 多账号、额度与计费 | 浅色主题下的模型清单 |
+| ![Restore](docs/screenshots/13-restore-dark.png) | ![Update](docs/screenshots/05-update-dark.png) |
+| 恢复：基线 + 最近 5 份版本切换 | 非模态更新条 |
+| ![About](docs/screenshots/08-about-dark.png) | ![WorkBuddy](docs/screenshots/02-workbuddy-dark.png) |
+| 关于 ZEO、音乐与赞助 | WorkBuddy 多账号、额度与计费 |
 
-更多截图：[全局播放器](docs/screenshots/09-music-player-dark.png)、
+更多截图：[浅色主题](docs/screenshots/06-opencode-light.png)、[全局播放器](docs/screenshots/09-music-player-dark.png)、
 [设置页（主题唯一入口）](docs/screenshots/10-settings-dark.png)、
 [收起的侧边栏](docs/screenshots/11-collapsed-dark.png)、
 [登录弹窗](docs/screenshots/04-login-light.png)。
@@ -212,7 +212,8 @@ AI_BOBBY_DATA_DIR=~/.ai-bobby pnpm --filter @ai-bobby/cli status
 - 每次实际写入客户端前，importer 会先备份目标文件；每个目标保留 1 份基线（首次写入前）+ 最近 5 份备份。
 - **历史记录**页把导入记录与备份合并成一张表：客户端、时间·模型数·状态、配置路径、备份文件。
   可按客户端筛选、按路径搜索；支持「查看差异」（只读 diff）、「打开目录」（Finder 定位）和「恢复」。
-- 点“恢复”会先备份当前文件，再把历史备份写回；失败不会覆盖当前文件。
+- 点“恢复”可在弹窗里选择版本：基线（使用 AI Bobby 前）或最近 5 份滚动备份，默认选中基线；
+  恢复前会先备份当前文件，失败不会覆盖。
 - 记录与备份只在本机：`import-history.json` 为 `0600`，diff 中的 Key/token 会先脱敏。
 - 重复导入且内容未变时返回 `changed:false`，不会新增历史或备份。
 

@@ -32,7 +32,7 @@ export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusB
           type="button"
           variant="ghost"
           size="sm"
-          className="h-6 gap-1 px-1.5 text-[10px] text-muted-foreground"
+          className="gap-1 text-muted-foreground"
           onClick={onCopyKey}
           title="复制 API Key"
         >

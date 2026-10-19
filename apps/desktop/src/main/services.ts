@@ -16,6 +16,7 @@ import {
 } from '@ai-bobby/workbuddy'
 import type {
   AccountSnapshot,
+  BackupVersion,
   GatewayStatus,
   ImportBackupSnapshot,
   ImportHistoryEntry,
@@ -32,6 +33,7 @@ import {
   WorkBuddyImporter,
   atomicWrite,
   backup,
+  baselineBackupPath,
   exists,
   readText,
   type Importer,
@@ -296,30 +298,97 @@ export class Services {
     }
   }
 
+  /** Baseline plus rolling backups for one target, newest rolling first. */
+  async backupVersions(target: ImportTargetName): Promise<BackupVersion[]> {
+    const importer = this.importers[target]
+    const { path } = await importer.detect()
+    const versions: BackupVersion[] = []
+    const baseline = baselineBackupPath(path)
+    const baselineInfo = await stat(baseline).catch(() => undefined)
+    if (baselineInfo !== undefined) {
+      versions.push({
+        id: `baseline:${target}`,
+        target,
+        path,
+        backupPath: baseline,
+        createdAtMs: baselineInfo.mtimeMs,
+        size: baselineInfo.size,
+        baseline: true,
+      })
+    }
+    const rolling: BackupVersion[] = []
+    const seen = new Set<string>()
+    for (const entry of await this.loadHistory()) {
+      if (entry.target !== target || entry.backupPath === undefined || seen.has(entry.backupPath)) continue
+      seen.add(entry.backupPath)
+      const info = await stat(entry.backupPath).catch(() => undefined)
+      if (info === undefined) continue
+      rolling.push({
+        id: `entry:${entry.id}`,
+        target,
+        path: entry.path,
+        backupPath: entry.backupPath,
+        createdAtMs: entry.createdAtMs,
+        size: info.size,
+        baseline: false,
+      })
+    }
+    rolling.sort((a, b) => b.createdAtMs - a.createdAtMs)
+    return [...versions, ...rolling]
+  }
+
+  async restoreBackupVersion(id: string): Promise<ImportPlanSnapshot> {
+    const separator = id.indexOf(':')
+    const kind = separator === -1 ? '' : id.slice(0, separator)
+    const key = separator === -1 ? '' : id.slice(separator + 1)
+    if (kind === 'baseline' && key !== '') {
+      const target = key as ImportTargetName
+      const importer = this.importers[target]
+      if (importer === undefined) throw new Error('未知的导入目标')
+      const { path } = await importer.detect()
+      return this.restoreFile(target, path, baselineBackupPath(path), 0)
+    }
+    if (kind === 'entry' && key !== '') return this.restoreEntry(key)
+    // Backwards compatibility with plain history ids.
+    return this.restoreEntry(id)
+  }
+
   async restoreImportBackup(id: string): Promise<ImportPlanSnapshot> {
-    const entries = await this.loadHistory()
-    const entry = entries.find(item => item.id === id)
+    return this.restoreBackupVersion(`entry:${id}`)
+  }
+
+  private async restoreEntry(id: string): Promise<ImportPlanSnapshot> {
+    const entry = (await this.loadHistory()).find(item => item.id === id)
     if (entry?.backupPath === undefined) throw new Error('找不到可恢复的备份')
-    const content = await readText(entry.backupPath)
+    return this.restoreFile(entry.target, entry.path, entry.backupPath, entry.modelCount)
+  }
+
+  private async restoreFile(
+    target: ImportTargetName,
+    path: string,
+    backupPath: string,
+    modelCount: number,
+  ): Promise<ImportPlanSnapshot> {
+    const content = await readText(backupPath)
     if (content === undefined) throw new Error('备份文件不存在')
-    const currentBackup = await backup(entry.path)
-    await atomicWrite(entry.path, content, 0o600)
+    const currentBackup = await backup(path)
+    await atomicWrite(path, content, 0o600)
     await this.recordHistory({
       id: randomUUID(),
       action: 'restore',
-      target: entry.target,
-      path: entry.path,
+      target,
+      path,
       createdAtMs: Date.now(),
-      modelCount: entry.modelCount,
+      modelCount,
       ...(currentBackup === undefined ? {} : { backupPath: currentBackup }),
       warnings: [],
     }).catch(error => logger.warn('failed to record restore history', { error: String(error) }))
     return {
-      target: entry.target,
-      path: entry.path,
+      target,
+      path,
       detected: true,
       changed: true,
-      diff: `已从 ${entry.backupPath} 恢复`,
+      diff: `已从 ${backupPath} 恢复`,
       warnings: [],
       requiresRestart: true,
       ...(currentBackup === undefined ? {} : { backupPath: currentBackup }),

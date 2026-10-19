@@ -6,12 +6,11 @@ import { metricsFor, type DemoSource, type SourceAction } from '@/lib/demo-data'
 interface SourceHeadProps {
   source: DemoSource
   selectedCount: number
-  totalCount: number
   probing: boolean
   onAction: (action: SourceAction['id']) => void
 }
 
-export function SourceHead({ source, selectedCount, totalCount, probing, onAction }: SourceHeadProps) {
+export function SourceHead({ source, selectedCount, probing, onAction }: SourceHeadProps) {
   const metrics = metricsFor(source)
 
   return (
@@ -63,7 +62,6 @@ export function SourceHead({ source, selectedCount, totalCount, probing, onActio
           <dt className="text-[11px] text-muted-foreground">已选</dt>
           <dd className="mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-primary">
             {selectedCount}
-            <span className="ml-0.5 text-[12px] font-normal text-faint">/ {totalCount}</span>
           </dd>
         </div>
       </dl>

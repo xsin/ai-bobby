@@ -77,7 +77,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
           </p>
         </div>
         <div className="flex items-center gap-2 pt-4">
-          <Button type="button" variant="outline" size="sm" className="h-8 gap-1.5 border-line bg-surface text-[11px]" onClick={onRefresh}>
+          <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={onRefresh}>
             <Activity className="size-3.5" />
             刷新数据
           </Button>

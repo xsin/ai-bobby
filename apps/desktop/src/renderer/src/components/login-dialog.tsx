@@ -78,7 +78,7 @@ export function LoginDialog({ open, onOpenChange, source, busy, error, onStart }
               type="button"
               variant="outline"
               size="sm"
-              className="h-8 border-line bg-surface text-[11px]"
+              
               disabled={busy}
               onClick={() => onOpenChange(false)}
             >
@@ -87,7 +87,7 @@ export function LoginDialog({ open, onOpenChange, source, busy, error, onStart }
             <Button
               type="button"
               size="sm"
-              className="h-8 gap-1.5 bg-primary text-[11px] text-primary-foreground"
+              className="gap-1.5 bg-primary text-primary-foreground"
               disabled={busy}
               onClick={onStart}
             >

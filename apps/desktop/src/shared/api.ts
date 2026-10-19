@@ -126,6 +126,16 @@ export interface ImportHistorySnapshot {
   backups: ImportBackupSnapshot[]
 }
 
+export interface BackupVersion {
+  id: string
+  target: ImportTargetName
+  path: string
+  backupPath: string
+  createdAtMs: number
+  size?: number
+  baseline: boolean
+}
+
 export type MusicAppFailureReason =
   | 'unsupported-platform'
   | 'no-app'
@@ -154,6 +164,8 @@ export interface AiBobbyApi {
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   getImportHistory(): Promise<ImportHistorySnapshot>
   getImportedModelIds(): Promise<string[]>
+  getBackupVersions(target: ImportTargetName): Promise<BackupVersion[]>
+  restoreBackupVersion(id: string): Promise<ImportPlanSnapshot>
   restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
   playInMusicApp(songId: string): Promise<MusicAppResult>
   openMusicAlbum(href: string): Promise<MusicAlbumResult>

@@ -156,7 +156,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1.5 border-line bg-surface px-2 text-[11px]"
+            className="gap-1.5"
             onClick={() => onProbe(model.id)}
           >
             <RefreshCw className="size-3" />
@@ -166,7 +166,7 @@ export function ModelTable({ source, models, selected, onSelectionChange, onProb
             type="button"
             variant="ghost"
             size="sm"
-            className="h-7 gap-1.5 px-2 text-[11px]"
+            className="gap-1.5"
             onClick={() => {
               void navigator.clipboard.writeText(model.id).then(
                 () => toast.success(`已复制 ${model.id}`),

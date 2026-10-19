@@ -344,6 +344,17 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 - 原生 `<button>` 不写 `border` 时仍可能带入 UA 默认边框；只画单边边框时，用
   `border-x-0 border-t-0 border-b border-solid` 明确清零其他边。
 
+### 5.6 按钮系统
+
+- 只使用 `Button` 的三档变体：`default`（主操作，主色填充）、`outline`（次要操作，白底描边）、
+  `ghost`（行内/低频操作，无边框）。禁止在调用处覆写颜色、边框、高度和字号。
+- 高度 30px、字号 11px、圆角 6px、图标 14px 统一由 `components/ui/button.tsx` 定义；
+  页面只允许调整布局类（`gap`、宽度等）。
+- hover/disabled 行为随变体统一：ghost hover 用弱背景 + 前景色加深；主/次按钮 hover 只改变背景。
+- 原生 `<button>` 只在分段控件、tab、可点行等结构性场景使用，样式写在组件类里，不散落到页面。
+- 全局基础样式（`font: inherit` 等）必须放在 `@layer base`，否则会压过 Tailwind 工具类，
+  造成“按钮字号看起来不对”。
+
 
 ## 6. Agent 行为约束（逐条遵守）
 
@@ -361,6 +372,7 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 12. **shadcn 组件新增前，优先通过 shadcn MCP 确认 registry 中存在该组件**；不得猜测组件名称或手动编写非标准实现。
 13. **尺寸与间距遵循 4px 网格**：padding / margin / gap / 固定宽高优先取 4px 的倍数；布局节奏优先 8px；偏离网格必须说明原因（见第 5.4 节）。
 14. **可点击元素必须有手型与 hover 反馈**：整行/整卡可点；禁用态用 `not-allowed`；只画单边边框时显式清零其他边（见第 5.5 节）。
+15. **按钮只用三档变体**：主操作 `default`、次要 `outline`、行内 `ghost`；尺寸/字号/hover 只在 `Button` 组件定义，调用处不得覆写（见第 5.6 节）。
 
 
 ## 7. 快速判定表

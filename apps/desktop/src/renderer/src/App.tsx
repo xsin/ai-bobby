@@ -308,7 +308,7 @@ function AppInner() {
     }
   }, [])
 
-  const restoreBackup = useCallback(async (id: string) => {
+  const restoreVersion = useCallback(async (id: string) => {
     const api = window.aiBobby
     if (!api) {
       toast.info('浏览器预览：不会写入真实配置')
@@ -316,9 +316,9 @@ function AppInner() {
     }
     setRestoringId(id)
     try {
-      const plan = await api.restoreImportBackup(id)
-      toast.success(`已恢复 ${plan.path.split('/').pop() ?? plan.path}`)
-      setFeedback(`已恢复一个导入备份；当前文件已再次备份。`)
+      const plan = await api.restoreBackupVersion(id)
+      toast.success(`已恢复到所选版本：${plan.path.split('/').pop() ?? plan.path}`)
+      setFeedback('已恢复到所选备份版本；当前文件已再次备份。')
       await loadHistory()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : String(error))
@@ -750,7 +750,7 @@ function AppInner() {
               <Button
                 type="button"
                 size="sm"
-                className="h-8 gap-1.5 bg-primary px-3 text-[12px] text-primary-foreground"
+                className="gap-1.5 bg-primary text-primary-foreground"
                 onClick={() => setImportOpen(true)}
               >
                 <Download className="size-3.5" />
@@ -791,7 +791,6 @@ function AppInner() {
               <SourceHead
                 source={source}
                 selectedCount={selectedSet.size}
-                totalCount={source.models.length}
                 probing={probing}
                 onAction={handleAction}
               />
@@ -818,7 +817,7 @@ function AppInner() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="whitespace-nowrap text-[10px] text-faint">{source.listMeta}</span>
-                    <Button type="button" variant="ghost" size="sm" className="h-6 px-1.5 text-[10px] text-primary" onClick={selectAll}>全选可用</Button>
+                    <Button type="button" variant="ghost" size="sm" className="text-primary" onClick={selectAll}>全选可用</Button>
                   </div>
                 </div>
 
@@ -845,7 +844,7 @@ function AppInner() {
               loading={historyLoading}
               restoringId={restoringId}
               onRefresh={() => void loadHistory()}
-              onRestore={restoreBackup}
+              onRestoreVersion={restoreVersion}
               onOpenDirectory={openDirectory}
             />
           ) : page === 'about' ? (

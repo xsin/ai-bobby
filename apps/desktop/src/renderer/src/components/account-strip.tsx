@@ -53,7 +53,7 @@ export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
         variant="outline"
         size="sm"
         onClick={onAdd}
-        className="h-7 shrink-0 gap-1 rounded-md border-dashed border-line bg-transparent px-2 text-[11px] text-muted-foreground"
+        className="shrink-0 gap-1 border-dashed bg-transparent text-muted-foreground"
       >
         <Plus className="size-3.5" />
         添加账号

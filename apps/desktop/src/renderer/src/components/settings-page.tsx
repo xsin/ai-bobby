@@ -64,7 +64,7 @@ export function SettingsPage({
                   variant="outline"
                   size="sm"
                   onClick={() => setChoice(theme.id)}
-                  className={cn('h-7 gap-1.5 border-line bg-surface text-[10px]', active && 'border-primary/40 bg-accent-soft text-text')}
+                  className={cn('gap-1.5', active && 'border-primary/40 bg-accent-soft text-text')}
                 >
                   <Icon className="size-3.5" />
                   {theme.label}
@@ -82,7 +82,7 @@ export function SettingsPage({
           </div>
           <div className="flex items-center gap-2">
             <code className="max-w-[300px] truncate font-mono text-[10px] text-muted-foreground">http://127.0.0.1:{status?.gateway.port ?? 46890}/v1</code>
-            <Button type="button" variant="outline" size="sm" className="h-7 border-line bg-surface text-[10px]" onClick={onCopyEndpoint}>复制</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onCopyEndpoint}>复制</Button>
           </div>
         </div>
 
@@ -93,7 +93,7 @@ export function SettingsPage({
           </div>
           <div className="flex items-center gap-2">
             <code className="font-mono text-[10px] text-muted-foreground">{status?.apiKeyMasked ?? '读取中…'}</code>
-            <Button type="button" variant="outline" size="sm" className="h-7 border-line bg-surface text-[10px]" onClick={onCopyKey}>复制</Button>
+            <Button type="button" variant="outline" size="sm" onClick={onCopyKey}>复制</Button>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export function SettingsPage({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 border-line bg-surface text-[10px]"
+              className="gap-1.5"
               disabled={checking}
               onClick={onCheckUpdates}
             >
@@ -131,8 +131,8 @@ export function SettingsPage({
             <p className="mt-0.5 text-[10px] text-muted-foreground">AI Bobby 是本地优先的 AI 服务网关。</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-7 gap-1 border-line bg-surface text-[10px]" onClick={onOpenAbout}>关于 <ExternalLink className="size-3" /></Button>
-            <Button type="button" variant="ghost" size="sm" className="h-7 gap-1 px-1.5 text-[10px] text-muted-foreground" onClick={onOpenUpdateSource}>更新源 <ExternalLink className="size-3" /></Button>
+            <Button type="button" variant="outline" size="sm" className="gap-1" onClick={onOpenAbout}>关于 <ExternalLink className="size-3" /></Button>
+            <Button type="button" variant="ghost" size="sm" className="gap-1 text-muted-foreground" onClick={onOpenUpdateSource}>更新源 <ExternalLink className="size-3" /></Button>
           </div>
         </div>
       </section>

@@ -359,10 +359,10 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             已选 {selectedTotal} 个模型 · {checkedClients.length} 个客户端
           </span>
           <div className="flex gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-8 border-line bg-surface text-[11px]" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" size="sm" onClick={() => onOpenChange(false)}>
               取消
             </Button>
-            <Button type="button" size="sm" className="h-8 bg-primary text-[11px] text-primary-foreground" onClick={apply}>
+            <Button type="button" size="sm" className="bg-primary text-primary-foreground" onClick={apply}>
               写入
             </Button>
           </div>

@@ -68,7 +68,7 @@ export function UpdateBanner({
           <Button
             type="button"
             size="sm"
-            className="h-7 gap-1.5 bg-primary px-2.5 text-[11px] text-primary-foreground"
+            className="bg-primary text-primary-foreground"
             disabled={installing}
             onClick={onInstall}
           >
@@ -79,7 +79,7 @@ export function UpdateBanner({
           <Button
             type="button"
             size="sm"
-            className="h-7 gap-1.5 bg-primary px-2.5 text-[11px] text-primary-foreground"
+            className="bg-primary text-primary-foreground"
             disabled={downloading}
             onClick={onDownload}
           >
@@ -91,7 +91,7 @@ export function UpdateBanner({
           type="button"
           variant="ghost"
           size="sm"
-          className="h-7 px-2 text-[11px] text-muted-foreground"
+          className="text-muted-foreground"
           onClick={onDismiss}
         >
           稍后

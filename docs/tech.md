@@ -290,7 +290,7 @@ components/
   import-sheet.tsx           # shadcn Sheet；选择变化时调用 importPreview 实时预览 diff
   login-dialog.tsx           # 登录提示（真实登录由主进程 BrowserWindow 承载）
   update-banner.tsx          # 非模态更新条（发现/下载/就绪）
-  history-page.tsx           # 导入记录与备份合并表格；查看差异/打开目录/恢复
+  history-page.tsx           # 记录/备份合并表格；查看差异、打开目录、恢复(基线+5 版本 tab)
   about-page.tsx             # ZEO 个人 IP、项目、音乐、赞助
   settings-page.tsx          # 主题、网关、Key、版本与更新
   floating-avatar.tsx        # 可拖动应用 LOGO 头像
@@ -1452,7 +1452,8 @@ interface AiBobbyApi {
   importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   getImportHistory(): Promise<ImportHistorySnapshot>
-  restoreImportBackup(id: string): Promise<ImportPlanSnapshot>
+  getBackupVersions(target: ImportTargetName): Promise<BackupVersion[]>
+  restoreBackupVersion(id: string): Promise<ImportPlanSnapshot>
   playInMusicApp(songId: string): Promise<MusicAppResult>
 
   checkForUpdates(manual?: boolean): Promise<UpdateCheckResult>
@@ -1502,6 +1503,8 @@ App
 - `selected`：跨来源的选中模型集合；导入抽屉共享。
 - `page`：多页导航；`sidebarCollapsed`、主题、自动检查、头像/播放器位置存 `localStorage`。
 - `history`：`getImportHistory()` 拉取；进入历史页、导入后、恢复后刷新。
+- 恢复：打开弹窗时 `getBackupVersions(target)` 读取“基线 + 滚动备份”，默认选基线；
+  `restoreBackupVersion(id)` 只接受 `baseline:<target>` / `entry:<historyId>`，先备份当前文件再覆盖。
 - `musicTrack`：全局单曲状态；App 唤起成功时关闭，关闭 iframe 时卸载；失败时作为兜底播放。
 - 主题：`data-theme` + CSS 变量；只在设置页修改。
 

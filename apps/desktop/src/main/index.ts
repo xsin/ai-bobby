@@ -145,6 +145,16 @@ function registerIpc(): void {
     return services.importedModelIds()
   })
 
+  ipcMain.handle('import:backup-versions', async (_event, target: import('../shared/api').ImportTargetName) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.backupVersions(target)
+  })
+
+  ipcMain.handle('import:restore-version', async (_event, id: string) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.restoreBackupVersion(String(id))
+  })
+
   ipcMain.handle('import:restore-backup', async (_event, id: string) => {
     if (!services) throw new Error('服务尚未启动')
     return services.restoreImportBackup(id)
