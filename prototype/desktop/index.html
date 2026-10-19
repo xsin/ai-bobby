@@ -603,9 +603,9 @@
           </div>
           <button class="icon-button" id="close-restore" type="button" aria-label="关闭恢复窗口">×</button>
         </div>
-        <div class="restore-body">
-          <div class="restore-versions" id="restore-versions" role="radiogroup" aria-label="备份版本"></div>
-          <div class="restore-details" id="restore-details"></div>
+        <div class="restore-tabs" id="restore-tabs">
+          <div class="restore-tablist" id="restore-versions" role="tablist" aria-orientation="vertical" aria-label="备份版本"></div>
+          <div class="restore-tabpanel" id="restore-details" role="tabpanel"></div>
         </div>
         <div class="modal-note">恢复前会先备份当前文件；恢复只写入这个客户端，不影响其他客户端。</div>
         <div class="modal-foot">

@@ -586,7 +586,7 @@
     const set = BACKUP_SETS[record.client] || BACKUP_SETS.workbuddy;
     const versions = set.map((version, index) => ({
       id: `${record.client}-v${index}`,
-      label: version.baseline ? '使用 AI Bobby 前' : `第 ${index + 1} 次写入前`,
+      label: version.baseline ? '使用 AI Bobby 前' : relativeTime(version.at),
       relative: relativeTime(version.at),
       target: record.target,
       ...version,
@@ -610,36 +610,29 @@
 
   function renderRestoreVersions() {
     const versions = state.restoreVersions;
-    const baseline = versions.find(version => version.baseline);
-    const rolling = versions.filter(version => !version.baseline);
-    const row = version => `
-      <button type="button" class="restore-version${version.id === state.selectedVersion ? ' selected' : ''}" data-version="${version.id}" role="radio" aria-checked="${version.id === state.selectedVersion}">
-        <span class="restore-radio" aria-hidden="true"></span>
-        <span class="restore-version-copy">
-          <strong>${escapeHtml(version.baseline ? version.label : version.relative)}</strong>
-          <small>${escapeHtml(version.at)}${version.baseline ? '' : ` · ${escapeHtml(version.label)}`} · ${escapeHtml(version.size)}</small>
-        </span>
-        ${version.baseline ? '<span class="chip baseline">基线</span>' : ''}
+    const tab = version => {
+      const selected = version.id === state.selectedVersion;
+      return `
+      <button type="button" class="restore-tab" id="tab-${version.id}" data-version="${version.id}" role="tab" aria-selected="${selected}" aria-controls="restore-details" tabindex="${selected ? '0' : '-1'}">
+        <strong>${escapeHtml(version.baseline ? '使用 AI Bobby 前' : version.relative)}</strong>
+        <span>${escapeHtml(version.at)}</span>
       </button>`;
-    $('#restore-versions').innerHTML = [
-      baseline ? row(baseline) : '',
-      rolling.length > 0 ? '<div class="restore-divider">历史备份 · 最新在前</div>' : '',
-      ...rolling.map(row),
-    ].join('');
+    };
+    $('#restore-versions').innerHTML = versions.map(tab).join('');
 
     const selected = versions.find(version => version.id === state.selectedVersion) || versions[0];
     if (!selected) return;
+    $('#restore-details').setAttribute('aria-labelledby', `tab-${selected.id}`);
     $('#restore-details').innerHTML = `
       <div class="restore-summary">
         <span class="restore-summary-label">将恢复到</span>
-        <strong class="restore-summary-title">${escapeHtml(selected.baseline ? '使用 AI Bobby 前' : selected.label)}</strong>
-        <span class="restore-summary-when">${escapeHtml(selected.relative)} · ${escapeHtml(selected.at)}</span>
+        <strong class="restore-summary-title">${escapeHtml(selected.baseline ? '使用 AI Bobby 前' : selected.relative)}</strong>
+        <span class="restore-summary-when">${escapeHtml(selected.at)}</span>
         <dl class="restore-facts">
           <div><dt>备份文件</dt><dd>${escapeHtml(selected.file)}</dd></div>
-          <div><dt>文件大小</dt><dd>${escapeHtml(selected.size)}</dd></div>
           <div><dt>目标文件</dt><dd>${escapeHtml(selected.target)}</dd></div>
         </dl>
-        <p class="restore-outcome">${selected.baseline ? '恢复后：移除这个客户端里所有 AI Bobby 条目' : `恢复后：写入 ${selected.models} 个 AI Bobby 模型（该次写入前的状态）`}</p>
+        <p class="restore-outcome">${selected.baseline ? '恢复后：移除这个客户端里所有 AI Bobby 条目' : '恢复后：写入这个客户端在该时间点的配置；之后导入的模型会被移除'}</p>
       </div>`;
   }
 
@@ -1377,6 +1370,17 @@
     if (!button) return;
     state.selectedVersion = button.dataset.version;
     renderRestoreVersions();
+  });
+  $('#restore-versions').addEventListener('keydown', event => {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+    event.preventDefault();
+    const versions = state.restoreVersions;
+    if (versions.length === 0) return;
+    const index = Math.max(0, versions.findIndex(version => version.id === state.selectedVersion));
+    const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + versions.length) % versions.length;
+    state.selectedVersion = versions[next].id;
+    renderRestoreVersions();
+    document.querySelector(`#tab-${versions[next].id}`)?.focus();
   });
   $('#confirm-restore').addEventListener('click', () => {
     const record = state.pendingRestore;
