@@ -1946,3 +1946,34 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .restore-tab strong { font-size: 11px; font-weight: 600; }
 .restore-tab span { color: var(--faint); font-size: 9px; font-family: var(--mono); }
 .restore-tabpanel { min-height: 218px; padding: 14px 16px; }
+
+
+/* Restore dialog v4: borderless tablist, selected tab merges with the panel */
+.restore-tabs {
+  grid-template-columns: 196px minmax(0, 1fr);
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  background: var(--surface);
+}
+.restore-tablist {
+  padding: 0;
+  border-right: 0;
+  background: var(--surface-2);
+}
+.restore-tab {
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 0;
+}
+.restore-tab:hover:not(:disabled) {
+  background: var(--hover);
+}
+.restore-tab[aria-selected='true'] {
+  border: 0;
+  background: var(--surface);
+  box-shadow: inset 2px 0 0 var(--accent);
+}
+.restore-tabpanel {
+  padding: 14px 16px;
+  background: var(--surface);
+}
