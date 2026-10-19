@@ -359,8 +359,9 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 
 ### 5.7 细节规范（v0.2.3 起）
 
-- **弹窗内容留白**：modal body 左右统一 18px（与 header/footer 对齐）；列表、步骤、代码块必须
-  使用同一内边距，禁止贴边。优先复用 shadcn `DialogContent` 的内边距，页面不要再写 `padding: 0`。
+- **弹窗内容留白**：modal body 左右统一 20px（与 header/footer 对齐；小尺寸弹窗可用 16px）；
+  列表、步骤、代码块必须使用同一内边距，禁止贴边。所有间距回到 4px 网格，
+  不允许出现 18px、14px 这类非 4 倍数值。优先复用 shadcn `DialogContent` 的内边距。
 - **耗时颜色**：统一按秒数着色——`≤1s` 绿（`--green`）、`≤2s` 黄（`--amber`）、`>2s` 红（`--red`）；
   超时按红。不要在文案里再加“慢”字，所有模型源共用同一套规则。
 - **复选框**：选中态统一品牌色实心 + 白色勾；未选中态只留描边。禁止使用 `accent-color` 导致

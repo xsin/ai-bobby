@@ -607,3 +607,12 @@ WorkBuddy 上游
 - Checkbox 统一品牌色实心 + 白勾；弹窗/列表细节写入 ui-guideline §5.7。
 - 落地页：接入 Gitalk 2（@aifire/gitalk 2.0.0-beta.2），左下角默认收起，展开桌面固定左下、
   移动端全屏；配置 `number: 1`、proxy 已配；本地 origin 被 CORS 拒绝属预期。
+
+
+### 2026-10-19 Round 21：4px 网格修正
+
+- Cursor 引导弹窗 18px → 20px（列表 4/20/12）；modal head/foot/note 18px → 20px。
+- 新组件间距归到 4 的倍数：Key 字段 26px 图标 → 28px、padding 12px；guide 行 8/12；
+  代理输入 32px 高、gap 8/12；概览 4 卡 gap 12。
+- ui-guideline §5.7 明确：弹窗 20px（小弹窗 16px），禁止 18/14 等非 4 倍数。
+- 其他验收项保持通过；Gitalk 仍未部署，等发布确认。

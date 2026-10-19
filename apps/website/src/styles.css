@@ -512,7 +512,7 @@ h1 {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   color: var(--muted);
   font-size: 12px;
   transition: color 0.2s ease;
@@ -1570,7 +1570,7 @@ h2 {
 
 .toast span:not(.toast-pulse):not(.toast-icon) {
   display: block;
-  margin-top: 2px;
+  margin-top: 4px;
   overflow: hidden;
   color: var(--faint);
   font-family: var(--mono);
@@ -1957,7 +1957,7 @@ a:focus-visible {
   flex-direction: column;
   overflow: hidden;
   border: 1px solid var(--line-strong);
-  border-radius: 18px;
+  border-radius: 20px;
   background: var(--surface-solid);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
 }
@@ -1967,17 +1967,17 @@ a:focus-visible {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 12px 14px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--line);
   background: var(--surface-solid);
 }
 .comments-head strong { display: block; color: var(--text); font: 600 14px var(--sans); }
-.comments-head span { display: block; margin-top: 2px; color: var(--faint); font: 10px var(--mono); }
+.comments-head span { display: block; margin-top: 4px; color: var(--faint); font: 10px var(--mono); }
 .comments-close {
   display: grid;
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
   place-items: center;
   border: 1px solid var(--line);
   border-radius: 8px;
