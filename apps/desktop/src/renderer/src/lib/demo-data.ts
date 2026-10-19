@@ -1,4 +1,4 @@
-export type ProviderId = 'opencode' | 'workbuddy' | 'wbi'
+export type ProviderId = 'opencode' | 'workbuddy' | 'wbi' | 'nvidia'
 
 export type ModelStatus =
   | 'available'
@@ -34,9 +34,9 @@ export interface DemoModel {
 }
 
 export interface SourceAction {
-  id: 'refresh' | 'probe' | 'credits'
+  id: 'refresh' | 'probe' | 'credits' | 'key'
   label: string
-  icon: 'refresh' | 'activity'
+  icon: 'refresh' | 'activity' | 'plus'
 }
 
 export interface MetricDefinition {
@@ -171,6 +171,33 @@ export const SOURCES: Record<ProviderId, DemoSource> = {
       { id: 'wbi/claude-5-sonnet', display: 'WBI. Claude-5-Sonnet', upstream: 'claude-5-sonnet', caps: ['推理', '图片'], status: 'pending', latency: '—', accounts: 0, context: '200,000', maxOutput: '64,000', checked: '尚未检测' },
     ],
   },
+  nvidia: {
+    id: 'nvidia',
+    label: 'NVIDIA NIM',
+    eyebrow: 'NVIDIA NIM · 免费试用',
+    title: 'NVIDIA NIM',
+    subtitle: '用 NVIDIA 免费试用额度接入 Llama / Nemotron / DeepSeek 等模型',
+    actions: [
+      { id: 'refresh', label: '读取模型', icon: 'refresh' },
+      { id: 'probe', label: '检测全部', icon: 'activity' },
+      { id: 'key', label: 'API Key', icon: 'plus' },
+    ],
+    metricDefs: [
+      { key: 'found', label: '已发现' },
+      { key: 'available', label: '可用', tone: 'accent' },
+      { key: 'pending', label: '待检测' },
+    ],
+    feedback: '填写 NVIDIA API Key 后读取模型；检测会真实发一条最小对话并消耗少量免费额度。',
+    statusText: '未配置 API Key',
+    serviceSub: 'NVIDIA NIM · integrate.api.nvidia.com',
+    credits: '0',
+    listMeta: '尚未读取',
+    lastHeader: '耗时',
+    models: [
+      { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '4,096', checked: '尚未检测' },
+      { id: 'nv/nemotron-3-super-120b', display: 'NV. Nemotron 3 Super 120B', upstream: 'nvidia/nemotron-3-super-120b-a12b', caps: ['推理'], status: 'pending', latency: '—', context: '1,000,000', maxOutput: '16,384', checked: '尚未检测' },
+    ],
+  },
 }
 
 export const STATUS_META: Record<ModelStatus, { label: string; tone: 'success' | 'warning' | 'danger' | 'neutral' }> = {
@@ -179,8 +206,7 @@ export const STATUS_META: Record<ModelStatus, { label: string; tone: 'success' |
   pending: { label: '待检测', tone: 'neutral' },
   unavailable: { label: '不可用', tone: 'danger' },
   rate_limited: { label: '限流', tone: 'warning' },
-  no_account: { label: '无账号', tone: 'neutral' },
-}
+  no_account: { label: '无账号', tone: 'neutral' },}
 
 export interface ImportClient {
   id: 'workbuddy' | 'wbi' | 'codex' | 'claude' | 'dsh' | 'vscode'

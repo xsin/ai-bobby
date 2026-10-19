@@ -1,5 +1,6 @@
 import {
   ChevronsLeft,
+  Cpu,
   ChevronsRight,
   Globe2,
   Hexagon,
@@ -30,6 +31,7 @@ const SOURCE_ITEMS: Array<{ id: ProviderId; label: string; icon: typeof Terminal
   { id: 'opencode', label: 'OpenCode', icon: Terminal },
   { id: 'workbuddy', label: 'WorkBuddy', icon: Hexagon },
   { id: 'wbi', label: 'WorkBuddy AI', icon: Globe2 },
+  { id: 'nvidia', label: 'NVIDIA NIM', icon: Cpu },
 ]
 
 export function Sidebar({

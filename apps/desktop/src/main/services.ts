@@ -3,8 +3,10 @@ import { chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { appVersion } from './version'
+import { SettingsStore, defaultSettings, type AppSettings } from './settings'
 import { ModelRegistry, createLogger } from '@ai-bobby/core'
 import { GatewayService } from '@ai-bobby/gateway'
+import { NvidiaProvider } from '@ai-bobby/nvidia'
 import { OpenCodeProvider } from '@ai-bobby/opencode'
 import {
   AccountStore,
@@ -46,6 +48,9 @@ const logger = createLogger('info')
 export class Services {
   private readonly registry = new ModelRegistry()
   private readonly providers = new Map<'workbuddy' | 'workbuddy-ai', WorkBuddyProvider>()
+  private readonly nvidia = new NvidiaProvider({ apiKey: '' })
+  private readonly settingsStore: SettingsStore
+  private settings: AppSettings = defaultSettings()
   private readonly adapters = new Map()
   private readonly opencode: OpenCodeProvider
   private readonly store: AccountStore
@@ -62,12 +67,14 @@ export class Services {
   constructor(private readonly mainWindow: () => BrowserWindow | undefined) {
     this.dataDir = process.env.AI_BOBBY_DATA_DIR?.trim() || app.getPath('userData')
     this.historyFile = join(this.dataDir, 'import-history.json')
+    this.settingsStore = new SettingsStore(this.dataDir)
     // AccountStore is 0600 for now. safeStorage.isEncryptionAvailable() can
     // block on a locked Keychain during headless startup, so encryption is an
     // explicit future opt-in rather than a startup dependency.
     this.store = AccountStore.inDataDir(this.dataDir)
     this.opencode = new OpenCodeProvider({ dataDir: this.dataDir, log: (message: string) => logger.info(message) })
     this.adapters.set('opencode', this.opencode)
+    this.adapters.set('nvidia', this.nvidia)
     this.importers = {
       workbuddy: new WorkBuddyImporter('workbuddy'),
       'workbuddy-ai': new WorkBuddyImporter('workbuddy-ai'),
@@ -85,6 +92,8 @@ export class Services {
   }
 
   async start(): Promise<void> {
+    this.settings = await this.settingsStore.load()
+    this.nvidia.setApiKey(this.settings.nvidiaApiKey)
     this.key = await ensureApiKey(this.dataDir)
     const port = Number(process.env.AI_BOBBY_PORT || 46890)
     const gateway = new GatewayService({
@@ -156,6 +165,15 @@ export class Services {
           logger.warn('opencode catalog refresh failed', { error: String(error) })
         }
       })(),
+      (async () => {
+        if (this.settings.nvidiaApiKey === '') return
+        try {
+          const models = await this.nvidia.refreshModels()
+          this.registry.replace('nvidia', models)
+        } catch (error) {
+          logger.warn('nvidia catalog refresh failed', { error: String(error) })
+        }
+      })(),
     ])
     this.refreshedAtMs = Date.now()
     return this.snapshot()
@@ -183,6 +201,48 @@ export class Services {
       apiKeyMasked: maskKey(this.key),
       refreshedAtMs: this.refreshedAtMs,
     }
+  }
+
+  async getSettings(): Promise<AppSettings> {
+    return this.settings
+  }
+
+  async setNvidiaKey(apiKey: string): Promise<GatewayStatus> {
+    this.settings = { ...this.settings, nvidiaApiKey: apiKey.trim() }
+    await this.settingsStore.save(this.settings)
+    this.nvidia.setApiKey(this.settings.nvidiaApiKey)
+    try {
+      if (this.settings.nvidiaApiKey !== '') {
+        const models = await this.nvidia.refreshModels()
+        this.registry.replace('nvidia', models)
+      } else {
+        this.registry.remove('nvidia')
+      }
+    } catch (error) {
+      logger.warn('nvidia catalog refresh failed', { error: String(error) })
+      throw error
+    }
+    this.refreshedAtMs = Date.now()
+    return this.snapshot()
+  }
+
+  async probeNvidia(): Promise<GatewayStatus> {
+    await this.nvidia.probeAll(4)
+    this.registry.replace('nvidia', this.nvidia.listModels())
+    this.refreshedAtMs = Date.now()
+    return this.snapshot()
+  }
+
+  async setProxy(proxy: AppSettings['proxy']): Promise<AppSettings> {
+    this.settings = { ...this.settings, proxy }
+    await this.settingsStore.save(this.settings)
+    return this.settings
+  }
+
+  async setLocale(locale: AppSettings['locale']): Promise<AppSettings> {
+    this.settings = { ...this.settings, locale }
+    await this.settingsStore.save(this.settings)
+    return this.settings
   }
 
   async login(providerId: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot> {

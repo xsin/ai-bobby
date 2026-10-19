@@ -126,6 +126,20 @@ export interface ImportHistorySnapshot {
   backups: ImportBackupSnapshot[]
 }
 
+export type LocaleChoice = 'system' | 'zh' | 'en'
+export type ProxyMode = 'off' | 'system' | 'custom'
+export type ProxySource = 'nvidia' | 'workbuddy' | 'workbuddy-ai'
+
+export interface DesktopSettings {
+  nvidiaApiKey: string
+  proxy: {
+    mode: ProxyMode
+    url: string
+    sources: Record<ProxySource, boolean>
+  }
+  locale: LocaleChoice
+}
+
 export interface BackupVersion {
   id: string
   target: ImportTargetName
@@ -164,6 +178,11 @@ export interface AiBobbyApi {
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>
   getImportHistory(): Promise<ImportHistorySnapshot>
   getImportedModelIds(): Promise<string[]>
+  getSettings(): Promise<DesktopSettings>
+  setNvidiaKey(apiKey: string): Promise<GatewayStatus>
+  probeNvidia(): Promise<GatewayStatus>
+  setProxy(proxy: DesktopSettings['proxy']): Promise<DesktopSettings>
+  setLocale(locale: LocaleChoice): Promise<DesktopSettings>
   getBackupVersions(target: ImportTargetName): Promise<BackupVersion[]>
   restoreBackupVersion(id: string): Promise<ImportPlanSnapshot>
   restoreImportBackup(id: string): Promise<ImportPlanSnapshot>

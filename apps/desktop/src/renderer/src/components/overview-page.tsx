@@ -1,4 +1,4 @@
-import { Activity, ArrowUpRight, Globe2, Hexagon, Terminal } from 'lucide-react'
+import { Activity, ArrowUpRight, Cpu, Globe2, Hexagon, Terminal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { DemoSource, ProviderId } from '@/lib/demo-data'
@@ -17,6 +17,7 @@ const SOURCE_META: Array<{ id: ProviderId; label: string; note: string; icon: ty
   { id: 'opencode', label: 'OpenCode', note: '免费模型池', icon: Terminal },
   { id: 'workbuddy', label: 'WorkBuddy', note: '国内版', icon: Hexagon },
   { id: 'wbi', label: 'WorkBuddy AI', note: '国际版', icon: Globe2 },
+  { id: 'nvidia', label: 'NVIDIA NIM', note: '免费试用', icon: Cpu },
 ]
 
 const TARGET_LABEL: Record<string, string> = {
@@ -25,6 +26,7 @@ const TARGET_LABEL: Record<string, string> = {
   codex: 'Codex',
   claude: 'Claude Code',
   dsh: 'DeepSeek Harness',
+  vscode: 'VS Code',
 }
 
 function formatTime(ms: number): string {
@@ -115,7 +117,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
         </div>
       </div>
 
-      <section className="mt-2.5 grid grid-cols-1 gap-2.5 md:grid-cols-3" aria-label="模型源">
+      <section className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4" aria-label="模型源">
         {SOURCE_META.map(meta => {
           const source = sources[meta.id]
           const Icon = meta.icon

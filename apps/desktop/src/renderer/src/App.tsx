@@ -17,6 +17,7 @@ import { FloatingAvatar } from '@/components/floating-avatar'
 import { FloatingMusicPlayer } from '@/components/floating-music-player'
 import { UpdateBanner } from '@/components/update-banner'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { cn } from '@/lib/utils'
 import { toProviderGroups } from '@/lib/import-groups'
 import type { MusicTrack } from '@/lib/music'
@@ -44,6 +45,7 @@ const PAGE_META: Record<NavPage, { section: string; title: string }> = {
   opencode: { section: '模型来源', title: 'OpenCode' },
   workbuddy: { section: '模型来源', title: 'WorkBuddy' },
   wbi: { section: '模型来源', title: 'WorkBuddy AI' },
+  nvidia: { section: '模型来源', title: 'NVIDIA NIM' },
   history: { section: '其他', title: '历史记录' },
   about: { section: 'ABOUT', title: '关于' },
   settings: { section: '偏好', title: '设置' },
@@ -65,6 +67,7 @@ function emptySources(): Record<ProviderId, DemoSource> {
     copy[key] = { ...copy[key], models: [], accounts: [], credits: '0' }
   }
   copy.opencode.feedback = 'OpenCode provider 接入后，这里会显示免费模型。'
+  copy.nvidia.feedback = '填写 NVIDIA API Key 后读取模型。'
   copy.workbuddy.feedback = '还没有 WorkBuddy 账号；点击“添加账号”开始。'
   copy.wbi.feedback = '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
   return copy
@@ -77,7 +80,7 @@ function cloneSources(): Record<ProviderId, DemoSource> {
 }
 
 function emptySelection(): Record<ProviderId, Set<string>> {
-  return { opencode: new Set(), workbuddy: new Set(), wbi: new Set() }
+  return { opencode: new Set(), workbuddy: new Set(), wbi: new Set(), nvidia: new Set() }
 }
 
 function installedSelection(
@@ -94,6 +97,7 @@ function installedSelection(
     opencode: keep(groups.opencode),
     workbuddy: keep(groups.workbuddy),
     wbi: keep(groups.wbi),
+    nvidia: keep(groups.nvidia),
   }
 }
 
@@ -156,6 +160,7 @@ function AppInner() {
     opencode: false,
     workbuddy: false,
     wbi: false,
+    nvidia: false,
   })
   const [accounts, setAccounts] = useState<Record<'workbuddy' | 'wbi', DemoAccount[]>>({
     workbuddy: SOURCES.workbuddy.accounts ?? [],
@@ -164,6 +169,8 @@ function AppInner() {
   const [feedback, setFeedback] = useState<string | null>(SOURCES.opencode.feedback)
   const [probing, setProbing] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+  const [nvidiaKeyOpen, setNvidiaKeyOpen] = useState(false)
+  const [nvidiaKey, setNvidiaKey] = useState('')
   const [loginOpen, setLoginOpen] = useState(false)
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState<string | undefined>()
@@ -201,6 +208,7 @@ function AppInner() {
       opencode: selected.opencode.size,
       workbuddy: selected.workbuddy.size,
       wbi: selected.wbi.size,
+      nvidia: selected.nvidia.size,
     }),
     [selected],
   )
@@ -210,6 +218,7 @@ function AppInner() {
       opencode: [...selected.opencode],
       workbuddy: [...selected.workbuddy],
       wbi: [...selected.wbi],
+      nvidia: [...selected.nvidia],
     }),
     [selected],
   )
@@ -219,6 +228,7 @@ function AppInner() {
       opencode: `${selected.opencode.size}/${sources.opencode.models.length}`,
       workbuddy: `${selected.workbuddy.size}/${sources.workbuddy.models.length}`,
       wbi: `${selected.wbi.size}/${sources.wbi.models.length}`,
+      nvidia: `${selected.nvidia.size}/${sources.nvidia.models.length}`,
     }),
     [selected, sources],
   )
@@ -226,7 +236,7 @@ function AppInner() {
   const navigate = useCallback(
     (next: NavPage) => {
       setPage(next)
-      if (next === 'opencode' || next === 'workbuddy' || next === 'wbi') {
+      if (next === 'opencode' || next === 'workbuddy' || next === 'wbi' || next === 'nvidia') {
         setActive(next)
         setFeedback(sources[next].feedback)
       }
@@ -328,11 +338,12 @@ function AppInner() {
   }, [loadHistory])
 
   const applyStatus = useCallback((status: GatewayStatus) => {
-    const groups: Record<ProviderId, ModelSnapshot[]> = { opencode: [], workbuddy: [], wbi: [] }
+    const groups: Record<ProviderId, ModelSnapshot[]> = { opencode: [], workbuddy: [], wbi: [], nvidia: [] }
     for (const model of status.models) {
       if (model.provider === 'opencode') groups.opencode.push(model)
       else if (model.provider === 'workbuddy') groups.workbuddy.push(model)
-      else groups.wbi.push(model)
+      else if (model.provider === 'workbuddy-ai') groups.wbi.push(model)
+      else groups.nvidia.push(model)
     }
     const cn = status.accounts.filter(account => account.realm === 'cn')
     const intl = status.accounts.filter(account => account.realm === 'intl')
@@ -361,21 +372,29 @@ function AppInner() {
         feedback: intl.length === 0 ? '还没有 WorkBuddy AI 账号；点击“添加账号”开始。' : `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。`,
         statusText: intl.length === 0 ? '未登录' : `运行中 · ${intl.length} 个账号`,
       }
+      next.nvidia = {
+        ...next.nvidia,
+        models: groups.nvidia.map(toDemoModel),
+        statusText: groups.nvidia.length === 0 ? '未配置 API Key' : `运行中 · ${groups.nvidia.length} 个模型`,
+        feedback: groups.nvidia.length === 0 ? '填写 NVIDIA API Key 后读取模型。' : `已读取 ${groups.nvidia.length} 个模型。`,
+      }
       return next
     })
     setAccounts({ workbuddy: cn.map(toDemoAccount), wbi: intl.map(toDemoAccount) })
-    const total = groups.opencode.length + groups.workbuddy.length + groups.wbi.length
+    const total = groups.opencode.length + groups.workbuddy.length + groups.wbi.length + groups.nvidia.length
     const summary = active === 'opencode'
       ? groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 免费模型。` : 'OpenCode 运行时尚未就绪；稍后会自动重试。'
       : active === 'workbuddy'
         ? cn.length > 0 ? `目录已刷新：${groups.workbuddy.length} 个模型，${cn.length} 个账号可用。` : '还没有 WorkBuddy 账号；点击“添加账号”开始。'
-        : intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
+        : active === 'wbi'
+          ? intl.length > 0 ? `目录已刷新：${groups.wbi.length} 个模型，${intl.length} 个账号可用。` : '还没有 WorkBuddy AI 账号；点击“添加账号”开始。'
+          : groups.nvidia.length > 0 ? `已读取 ${groups.nvidia.length} 个 NVIDIA 模型。` : '填写 NVIDIA API Key 后读取模型。'
     // Each source may finish loading at a different time (OpenCode downloads a
     // runtime first), so seeded selection is applied per source once its models
     // are known, instead of once globally.
     const installedNow = installedSelection(importedModelIds.current, groups)
     const pendingSelection: Partial<Record<ProviderId, Set<string>>> = {}
-    for (const key of ['opencode', 'workbuddy', 'wbi'] as ProviderId[]) {
+    for (const key of ['opencode', 'workbuddy', 'wbi', 'nvidia'] as ProviderId[]) {
       if (selectionInitialized.current[key] || groups[key].length === 0) continue
       selectionInitialized.current[key] = true
       pendingSelection[key] = installedNow[key]
@@ -508,14 +527,19 @@ function AppInner() {
   )
 
   const handleAction = useCallback(
-    (action: 'refresh' | 'probe' | 'credits') => {
+    (action: 'refresh' | 'probe' | 'credits' | 'key') => {
+      if (action === 'key') {
+        setNvidiaKeyOpen(true)
+        return
+      }
       if (window.aiBobby) {
         setProbing(true)
-        void window.aiBobby.refresh().then(status => {
+        const call = action === 'probe' && active === 'nvidia' ? window.aiBobby.probeNvidia() : window.aiBobby.refresh()
+        void call.then(status => {
           setRealStatus(status)
           applyStatus(status)
           setProbing(false)
-          toast.success(action === 'credits' ? '额度已刷新' : '模型目录已刷新')
+          toast.success(action === 'credits' ? '额度已刷新' : active === 'nvidia' && action === 'probe' ? 'NVIDIA 检测完成' : '模型目录已刷新')
         }).catch(error => {
           setProbing(false)
           toast.error(error instanceof Error ? error.message : String(error))
@@ -786,7 +810,7 @@ function AppInner() {
               onNavigate={navigate}
               onRefresh={() => handleAction('refresh')}
             />
-          ) : page === 'opencode' || page === 'workbuddy' || page === 'wbi' ? (
+          ) : page === 'opencode' || page === 'workbuddy' || page === 'wbi' || page === 'nvidia' ? (
             <main className="min-h-0 flex-1 overflow-auto px-5 pt-4">
               <SourceHead
                 source={source}
@@ -876,6 +900,52 @@ function AppInner() {
 
       <FloatingAvatar onOpenAbout={openAbout} />
       <FloatingMusicPlayer track={musicTrack} onClose={() => setMusicTrack(null)} />
+
+      <Dialog open={nvidiaKeyOpen} onOpenChange={setNvidiaKeyOpen}>
+        <DialogContent className="max-w-[440px] border-line bg-surface">
+          <DialogHeader className="text-left">
+            <DialogTitle className="text-[15px] font-semibold text-text">NVIDIA API Key</DialogTitle>
+            <DialogDescription className="text-[11px] text-muted-foreground">
+              在 build.nvidia.com/settings 生成 Key；只保存在本机 0600 文件，不写入日志。
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            type="password"
+            value={nvidiaKey}
+            onChange={event => setNvidiaKey(event.target.value)}
+            placeholder="nvapi-..."
+            aria-label="NVIDIA API Key"
+            className="h-9 w-full rounded-md border border-line bg-surface-2 px-3 font-mono text-[11px] text-text outline-none placeholder:text-faint focus:border-primary/50"
+          />
+          <DialogFooter>
+            <Button type="button" variant="outline" size="sm" onClick={() => setNvidiaKeyOpen(false)}>取消</Button>
+            <Button
+              type="button"
+              size="sm"
+              disabled={nvidiaKey.trim() === ''}
+              onClick={async () => {
+                const api = window.aiBobby
+                if (!api) {
+                  setNvidiaKeyOpen(false)
+                  toast.success('浏览器预览：未写入 Key')
+                  return
+                }
+                try {
+                  const status = await api.setNvidiaKey(nvidiaKey.trim())
+                  setRealStatus(status)
+                  applyStatus(status)
+                  setNvidiaKeyOpen(false)
+                  toast.success('NVIDIA API Key 已保存，模型目录已读取')
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : String(error))
+                }
+              }}
+            >
+              保存并读取
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ImportSheet
         open={importOpen}

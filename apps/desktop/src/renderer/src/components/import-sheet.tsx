@@ -49,7 +49,7 @@ interface ImportSheetProps {
 }
 
 type ClientId = ImportClient['id']
-type GroupId = 'oc' | 'wb' | 'wbi'
+type GroupId = 'oc' | 'wb' | 'wbi' | 'nv'
 
 const CLIENT_ICONS: Record<ClientId, typeof Terminal> = {
   workbuddy: FolderGit2,
@@ -64,6 +64,7 @@ const GROUP_LABELS: Record<GroupId, string> = {
   oc: 'OC',
   wb: 'WB',
   wbi: 'WBI',
+  nv: 'NV',
 }
 
 const TARGET_MAP: Record<ClientId, ImportTargetName> = {
@@ -88,7 +89,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
     Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, true])) as Record<ClientId, boolean>,
   )
-  const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: true })
+  const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: true, nv: true })
   const [defaultModel, setDefaultModel] = useState('oc/big-pickle')
   const [cursorGuideOpen, setCursorGuideOpen] = useState(false)
   const [setAsDefault, setSetAsDefault] = useState(false)
@@ -465,11 +466,11 @@ function SectionTitle({ title, hint }: { title: string; hint: string }) {
 }
 
 function groupOf(provider: ProviderId): GroupId {
-  return provider === 'opencode' ? 'oc' : provider === 'workbuddy' ? 'wb' : 'wbi'
+  return provider === 'opencode' ? 'oc' : provider === 'workbuddy' ? 'wb' : provider === 'nvidia' ? 'nv' : 'wbi'
 }
 
 function providerOf(group: GroupId): ProviderId {
-  return group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : 'wbi'
+  return group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : group === 'nv' ? 'nvidia' : 'wbi'
 }
 
 interface DiffLine {
@@ -484,7 +485,7 @@ function buildDiff(
   defaultModel: string,
 ): DiffLine[] {
   if (clients.length === 0) return [{ type: 'dim', text: '# 请选择至少一个客户端' }]
-  if (!groups.oc && !groups.wb && !groups.wbi) return [{ type: 'dim', text: '# 请选择至少一个分组' }]
+  if (!groups.oc && !groups.wb && !groups.wbi && !groups.nv) return [{ type: 'dim', text: '# 请选择至少一个分组' }]
 
   const lines: DiffLine[] = [
     { type: 'dim', text: '# AI Bobby · dry-run 预览（不会写入任何文件）' },
@@ -495,12 +496,12 @@ function buildDiff(
   for (const client of clients) {
     if (client.id === 'workbuddy') {
       lines.push({ type: 'add', text: 'WorkBuddy（国内）  ~/.workbuddy/models.json' })
-      lines.push({ type: 'add', text: `+ ${countOf('oc') + countOf('wbi')} 个模型（自动排除 WB 自身分组）` })
+      lines.push({ type: 'add', text: `+ ${countOf('oc') + countOf('wbi') + countOf('nv')} 个模型（自动排除 WB 自身分组）` })
       lines.push({ type: 'dim', text: '  url = http://127.0.0.1:46890/v1/chat/completions' })
       lines.push({ type: 'dim', text: '  apiKey = sk-…f3a2 · aiBobbyOwner = ai-bobby-v1' })
     } else if (client.id === 'wbi') {
       lines.push({ type: 'add', text: 'WorkBuddy AI（国际）  ~/.workbuddy-ai/models.json' })
-      lines.push({ type: 'add', text: `+ ${countOf('oc') + countOf('wb')} 个模型（自动排除 WBI 自身分组）` })
+      lines.push({ type: 'add', text: `+ ${countOf('oc') + countOf('wb') + countOf('nv')} 个模型（自动排除 WBI 自身分组）` })
       lines.push({ type: 'dim', text: '  url = http://127.0.0.1:46890/v1/chat/completions' })
     } else if (client.id === 'codex') {
       lines.push({ type: 'add', text: 'Codex  ~/.codex/config.toml' })

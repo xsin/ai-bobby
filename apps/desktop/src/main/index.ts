@@ -145,6 +145,31 @@ function registerIpc(): void {
     return services.importedModelIds()
   })
 
+  ipcMain.handle('settings:get', async () => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.getSettings()
+  })
+
+  ipcMain.handle('settings:nvidia-key', async (_event, apiKey: string) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.setNvidiaKey(String(apiKey))
+  })
+
+  ipcMain.handle('settings:probe-nvidia', async () => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.probeNvidia()
+  })
+
+  ipcMain.handle('settings:proxy', async (_event, proxy: import('../shared/api').DesktopSettings['proxy']) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.setProxy(proxy)
+  })
+
+  ipcMain.handle('settings:locale', async (_event, locale: import('../shared/api').LocaleChoice) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.setLocale(locale)
+  })
+
   ipcMain.handle('import:backup-versions', async (_event, target: import('../shared/api').ImportTargetName) => {
     if (!services) throw new Error('服务尚未启动')
     return services.backupVersions(target)
