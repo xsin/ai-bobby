@@ -480,3 +480,14 @@ WorkBuddy 上游
 7. 设置页：主题切换、自动检查开关、检查更新、Key/端点复制。
 8. DeepSeek Harness：在导入抽屉重新写入一次，重启 DSH 后不再提示 `AI_BOBBY_API_KEY`。
 9. 真实客户端：Codex / Claude Code / DSH 各发一次消息；WorkBuddy 账号额度与扫码登录需你本人复验。
+
+### 2026-10-19 Round 10：网关 abort 修复 + 第五轮设计稿
+
+- 网关 BUG（issues #6）：`req.on('close')` 在请求体读完时就触发，导致所有 fetch 上游（WB/WBI）在发起前被 abort，
+  立即 502 `This operation was aborted`；OC 走子进程所以正常。改为 `res.on('close')` 且仅 `!res.writableEnded` 时 abort，
+  新增“延迟 provider 不被 abort”回归测试；实测 WB/WBI `deepseek-v4.1-flash` 流式恢复。
+- 备份基线（issues #4）：`backup()` 改为每目标保留 1 份不可轮转基线 + 最近 5 份滚动备份（最多 6 份）；
+  老装机从现存最旧备份播种基线；`latestBackup` 跳过基线。新增保留与迁移测试。
+- 设计稿（issues #1/#2/#3/#5，待用户确认）：`已选` 只显示数字；统一按钮系统（secondary/primary/ghost，字号/hover 一处定义）；
+  历史行三个 ghost 按钮统一；恢复弹窗列出基线 + 5 份备份、默认选中基线并联动明细；新增 `screenshot-restore.png`。
+- 生产 UI 未动这三项，等确认后再改。
