@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils'
 import { toProviderGroups } from '@/lib/import-groups'
 import type { MusicTrack } from '@/lib/music'
 import { ThemeProvider } from '@/lib/theme'
+import { resolveLocale, setRuntimeLocale, t } from '@/lib/i18n'
 import {
   SOURCES,
   isUsable,
@@ -173,6 +174,7 @@ function AppInner() {
   const [nvidiaKeyOpen, setNvidiaKeyOpen] = useState(false)
   const [nvidiaKey, setNvidiaKey] = useState('')
   const [settings, setSettings] = useState<DesktopSettings | null>(null)
+  const [, setLocaleVersion] = useState(0)
   const [loginOpen, setLoginOpen] = useState(false)
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState<string | undefined>()
@@ -198,6 +200,12 @@ function AppInner() {
   const [historyLoading, setHistoryLoading] = useState(false)
   const [restoringId, setRestoringId] = useState<string | null>(null)
   const [musicTrack, setMusicTrack] = useState<MusicTrack | null>(null)
+
+  useEffect(() => {
+    if (settings === null) return
+    setRuntimeLocale(resolveLocale(settings.locale))
+    setLocaleVersion(value => value + 1)
+  }, [settings])
 
   const source = sources[active]
   const accountRealm = active === 'workbuddy' ? 'workbuddy' : active === 'wbi' ? 'wbi' : undefined
@@ -776,13 +784,13 @@ function AppInner() {
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-line bg-toolbar px-5">
             <div className="flex min-w-0 flex-col gap-px">
-              <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-faint">{PAGE_META[page].section}</span>
-              <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-text">{PAGE_META[page].title}</span>
+              <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-faint">{t(PAGE_META[page].section)}</span>
+              <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-text">{t(PAGE_META[page].title)}</span>
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
               <span className="hidden items-center gap-1.5 text-[10px] text-muted-foreground md:flex">
                 <span className={cn('size-1.5 rounded-full', realStatus?.gateway.state === 'ready' ? 'bg-success' : 'bg-warning')} />
-                网关{realStatus?.gateway.state === 'ready' ? '运行中' : '未就绪'}
+                网关{realStatus?.gateway.state === 'ready' ? t('运行中') : t('未就绪')}
               </span>
               <Button
                 type="button"
@@ -802,7 +810,7 @@ function AppInner() {
                 onClick={() => setImportOpen(true)}
               >
                 <Download className="size-3.5" />
-                导入
+                {t('导入')}
                 {globalSelected > 0 ? (
                   <span className="min-w-[18px] rounded-full bg-white/20 px-1.5 text-[10px] leading-4 text-primary-foreground">{globalSelected}</span>
                 ) : null}

@@ -13,6 +13,7 @@ import {
 import { BrandMark } from '@/components/brand-mark'
 import { cn } from '@/lib/utils'
 import type { ProviderId } from '@/lib/demo-data'
+import { t } from '@/lib/i18n'
 
 export type NavPage = ProviderId | 'overview' | 'history' | 'about' | 'settings'
 
@@ -90,7 +91,7 @@ export function Sidebar({
 
       <nav className="min-h-0 flex-1 overflow-auto px-2 py-3">
         {!collapsed ? (
-          <div className="px-2 pb-1.5 pt-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">总览</div>
+          <div className="px-2 pb-1.5 pt-1 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">{t('总览')}</div>
         ) : null}
         <button
           type="button"
@@ -100,10 +101,10 @@ export function Sidebar({
           aria-current={page === 'overview' ? 'page' : undefined}
         >
           <LayoutDashboard className={cn('size-[17px] shrink-0', page === 'overview' ? 'text-primary' : 'text-faint group-hover:text-muted-foreground')} />
-          {!collapsed ? <span className="min-w-0 flex-1 truncate">概览</span> : null}
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">{t('概览')}</span> : null}
         </button>
         {!collapsed ? (
-          <div className="px-2 pb-1.5 pt-4 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">模型来源</div>
+          <div className="px-2 pb-1.5 pt-4 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">{t('模型来源')}</div>
         ) : <div className="my-2 h-px bg-line-soft" />}
         {SOURCE_ITEMS.map(item => {
           const Icon = item.icon
@@ -131,7 +132,7 @@ export function Sidebar({
         })}
 
         {!collapsed ? (
-          <div className="px-2 pb-1.5 pt-4 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">其他</div>
+          <div className="px-2 pb-1.5 pt-4 font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">{t('其他')}</div>
         ) : <div className="my-2 h-px bg-line-soft" />}
         <button
           type="button"
@@ -141,7 +142,7 @@ export function Sidebar({
           aria-current={page === 'history' ? 'page' : undefined}
         >
           <History className={cn('size-[17px] shrink-0', page === 'history' ? 'text-primary' : 'text-faint')} />
-          {!collapsed ? <span className="min-w-0 flex-1 truncate">历史记录</span> : null}
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">{t('历史记录')}</span> : null}
           {!collapsed && historyCount > 0 ? (
             <span className="min-w-5 rounded bg-surface-2 px-1.5 text-center font-mono text-[9px] leading-4 text-faint">{historyCount}</span>
           ) : null}
@@ -154,7 +155,7 @@ export function Sidebar({
           aria-current={page === 'about' ? 'page' : undefined}
         >
           <UserRound className={cn('size-[17px] shrink-0', page === 'about' ? 'text-primary' : 'text-faint')} />
-          {!collapsed ? <span className="min-w-0 flex-1 truncate">关于</span> : null}
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">{t('关于')}</span> : null}
         </button>
       </nav>
 
@@ -167,7 +168,7 @@ export function Sidebar({
           aria-current={page === 'settings' ? 'page' : undefined}
         >
           <Settings className={cn('size-[17px] shrink-0', page === 'settings' ? 'text-primary' : 'text-faint')} />
-          {!collapsed ? <span className="min-w-0 flex-1 truncate">设置</span> : null}
+          {!collapsed ? <span className="min-w-0 flex-1 truncate">{t('设置')}</span> : null}
         </button>
         {!collapsed ? (
           <div className="mt-1 flex items-center gap-1.5 px-2 pt-1 text-[10px] text-faint">
