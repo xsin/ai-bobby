@@ -18,10 +18,10 @@ export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusB
       <div className="flex min-w-0 items-center gap-2">
         <span className="size-1.5 rounded-full bg-success" />
         <span className="text-[11px] text-text" role="status">
-          {source.statusText}
+          {t(source.statusText)}
         </span>
         <span className="h-3 w-px bg-line" />
-        <span className="truncate text-faint">{source.serviceSub}</span>
+        <span className="truncate text-faint">{t(source.serviceSub)}</span>
       </div>
 
       <div className="flex min-w-0 items-center gap-2.5">

@@ -211,6 +211,16 @@ const en: Record<string, string> = {
   "微信": "WeChat",
   "更多方式": "More ways",
   "文本": "Text",
+  "目录已刷新：{n} 个 OpenCode 免费模型。": "Catalog refreshed: {n} OpenCode free models.",
+  "已读取 {n} 个 NVIDIA 模型。": "Loaded {n} NVIDIA models.",
+  "运行中 · {n} 个模型": "Running · {n} models",
+  "网关 {port}": "Gateway {port}",
+  "运行中 · {n} 个账号": "Running · {n} accounts",
+  "未登录": "Signed out",
+  "round-robin · 失败切换": "round-robin · failover",
+  "单账号 · 可继续添加": "Single account · add more",
+  "添加账号": "Add account",
+  "网关 46890": "Gateway 46890",
 }
 
 export function resolveLocale(choice: 'system' | Locale): Locale {

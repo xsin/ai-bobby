@@ -18,7 +18,7 @@ export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
       <div className="flex min-w-[58px] shrink-0 flex-col gap-px border-r border-line-soft pr-2.5">
         <span className="text-[11px] font-semibold text-text">{t("账号")}</span>
         <span className="whitespace-nowrap text-[10px] text-faint">
-          {accounts.length > 1 ? 'round-robin · 失败切换' : '单账号 · 可继续添加'}
+          {accounts.length > 1 ? t('round-robin · 失败切换') : t('单账号 · 可继续添加')}
         </span>
       </div>
 
@@ -57,7 +57,7 @@ export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
         className="shrink-0 gap-1 border-dashed bg-transparent text-muted-foreground"
       >
         <Plus className="size-3.5" />
-        添加账号
+        {t('添加账号')}
       </Button>
     </section>
   )

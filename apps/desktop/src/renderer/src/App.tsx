@@ -387,7 +387,7 @@ function AppInner() {
         ...next.opencode,
         models: groups.opencode.map(toDemoModel),
         statusText: status.gateway.state === 'ready' ? `运行中 · ${status.models.length} 个模型` : '网关未就绪',
-        serviceSub: status.gateway.state === 'ready' ? `网关 ${status.gateway.port}` : status.gateway.error || '网关未就绪',
+        serviceSub: status.gateway.state === 'ready' ? t('网关 {port}', { port: status.gateway.port }) : status.gateway.error || '网关未就绪',
         feedback: groups.opencode.length > 0 ? t('目录已刷新：{n} 个 OpenCode 模型。', { n: groups.opencode.length }) : next.opencode.feedback,
       }
       next.workbuddy = {
@@ -396,7 +396,7 @@ function AppInner() {
         accounts: cn.map(toDemoAccount),
         credits: creditSummary(cn),
         feedback: cn.length === 0 ? t('还没有 WorkBuddy 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.workbuddy.length, accounts: cn.length }),
-        statusText: cn.length === 0 ? '未登录' : `运行中 · ${cn.length} 个账号`,
+        statusText: cn.length === 0 ? t('未登录') : t('运行中 · {n} 个账号', { n: cn.length }),
       }
       next.wbi = {
         ...next.wbi,
@@ -404,7 +404,7 @@ function AppInner() {
         accounts: intl.map(toDemoAccount),
         credits: creditSummary(intl),
         feedback: intl.length === 0 ? t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.wbi.length, accounts: intl.length }),
-        statusText: intl.length === 0 ? '未登录' : `运行中 · ${intl.length} 个账号`,
+        statusText: intl.length === 0 ? t('未登录') : t('运行中 · {n} 个账号', { n: intl.length }),
       }
       next.nvidia = {
         ...next.nvidia,
@@ -417,12 +417,12 @@ function AppInner() {
     setAccounts({ workbuddy: cn.map(toDemoAccount), wbi: intl.map(toDemoAccount) })
     const total = groups.opencode.length + groups.workbuddy.length + groups.wbi.length + groups.nvidia.length
     const summary = active === 'opencode'
-      ? groups.opencode.length > 0 ? `目录已刷新：${groups.opencode.length} 个 OpenCode 免费模型。` : 'OpenCode 运行时尚未就绪；稍后会自动重试。'
+      ? groups.opencode.length > 0 ? t('目录已刷新：{n} 个 OpenCode 免费模型。', { n: groups.opencode.length }) : 'OpenCode 运行时尚未就绪；稍后会自动重试。'
       : active === 'workbuddy'
         ? cn.length > 0 ? t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.workbuddy.length, accounts: cn.length }) : t('还没有 WorkBuddy 账号；点击“添加账号”开始。')
         : active === 'wbi'
           ? intl.length > 0 ? t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.wbi.length, accounts: intl.length }) : t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。')
-          : groups.nvidia.length > 0 ? `已读取 ${groups.nvidia.length} 个 NVIDIA 模型。` : t('填写 NVIDIA API Key 后读取模型。')
+          : groups.nvidia.length > 0 ? t('已读取 {n} 个 NVIDIA 模型。', { n: groups.nvidia.length }) : t('填写 NVIDIA API Key 后读取模型。')
     // Each source may finish loading at a different time (OpenCode downloads a
     // runtime first), so seeded selection is applied per source once its models
     // are known, instead of once globally.
