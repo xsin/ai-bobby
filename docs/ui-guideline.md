@@ -372,6 +372,18 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
   说明哪些来源不生效（如 OpenCode 子进程）。
 - **页脚按钮**：同一弹窗里的复制类操作放在 footer，使用同一 variant，不散落在步骤正文里。
 
+### 5.8 容器与内容防贴边
+
+- **一个 class 只对应一个角色**：容器与按钮/控件不得共用类名（例如历史 bug：`.guide-copy`
+  同时是容器和复制按钮，按钮的 `height: 24px` 把容器裁切，最后一行文字压在边框上）。
+  容器用 `-text/-body/-list`，控件用 `-button/-action`。
+- **文字容器不要写固定 `height`**：用 `padding` + `min-height` 让内容撑开；固定高度只用于
+  单行控件（输入框、按钮、tab）。
+- 卡片/列表/引导行的内容与边框至少保留 **8px** 内边距；`border` 不计入 padding。
+- 自查方式：DevTools 里比较最后一个子元素的 `bottom` 与容器 `border box bottom`，
+  差值应 ≥ `padding-bottom`（含 1px 边框则为 padding + 1）。也可以用截图放大检查。
+- 出现“文字贴边/被裁切”时，先查 class 是否被复用、是否有固定高度，再调间距。
+
 ## 6. Agent 行为约束（逐条遵守）
 
 1. **MCP 优先**：生成任何 antd 或 ProComponents 代码前，先调用 antd_info / antd_doc / antd_changelog（或降级到 antd CLI）核实当前版本 API。禁止凭记忆生成。

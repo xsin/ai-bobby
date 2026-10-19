@@ -898,7 +898,7 @@
     const guides = CLIENTS.filter(client => client.mode === 'guide');
     $('#client-guide').innerHTML = guides.length === 0 ? '' : guides.map(client => `
       <div class="guide-row">
-        <div class="guide-copy">
+        <div class="guide-text">
           <strong>${escapeHtml(client.name)}</strong>
           <span class="client-status warn">${escapeHtml(client.status)}</span>
           <p>${escapeHtml(client.note)}</p>

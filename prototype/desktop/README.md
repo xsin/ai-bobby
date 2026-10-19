@@ -99,8 +99,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
   分组新增 `NV`。
 - **设置**：新增「界面语言」（跟随系统 / 简体中文 / English）与「网络代理」
   （默认自定义 `http://127.0.0.1:10080`；关闭 / 跟随系统 / 自定义 + 按模型源勾选；OpenCode 子进程不受影响）。
-- 细节规范：弹窗内容统一 20px 留白（小弹窗 16px）、步骤不贴边；复选框统一品牌色实心 + 白勾；
-  复制的 Key / Base URL 都放弹窗 footer。
+- 细节规范：弹窗内容统一 20px 留白（小弹窗 16px）、步骤不贴边；卡片内容与边框至少 8px；
+  复选框统一品牌色实心 + 白勾；复制的 Key / Base URL 都放弹窗 footer。
 - 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-settings.png`、
   `screenshot-import.png`、`screenshot-cursor-guide.png`。
 - 调研记录见 [docs/research-v0.2.3.md](../../docs/research-v0.2.3.md)。
