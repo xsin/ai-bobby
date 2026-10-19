@@ -577,3 +577,12 @@ WorkBuddy 上游
   内容按用户路径重排（安装 → 首次使用 → 接入客户端 → 导入 → 历史 → 排障 → 开发）。
 - 繁体版按台湾用语转换（閘道 / 匯入 / 預設 / 還原 / 使用者 等），并注明界面仅简体。
 - GitHub About 已更新：双语描述 + homepage `https://xsin.github.io/ai-bobby`（`gh repo edit` 生效）。
+
+### 2026-10-19 Round 18：v0.2.3 调研与设计稿
+
+- 调研：`docs/research-v0.2.3.md`（安装脚本路径/提权、VS Code Custom Endpoint、Cursor SQLite 限制、
+  NVIDIA NIM 免费层、i18n 范围）。结论：VS Code 可自动写 `chatLanguageModels.json`；Cursor 本期只引导；
+  NVIDIA 走 API Key + `/v1/models` + 对话探测；Node fetch 不走系统代理，需要时可加设置项。
+- 设计稿：新增 NVIDIA NIM 来源页、VS Code / Cursor 导入目标、设置「界面语言 / 网络代理」、
+  概览 4 个来源；版本标识 0.2.3。新增/刷新截图 `screenshot-nvidia/settings/import/overview`。
+- 未改生产代码，等待设计确认后再编码。

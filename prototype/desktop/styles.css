@@ -1669,7 +1669,7 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .metric-unit { margin-left: 3px; color: var(--faint); font-size: 12px; font-weight: 400; letter-spacing: 0; }
 
 .overview-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 16px; }
-.overview-sources { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.overview-sources { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
 .overview-source {
   display: flex;
   flex-direction: column;
@@ -1976,4 +1976,55 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .restore-tabpanel {
   padding: 14px 16px;
   background: var(--surface);
+}
+
+/* v0.2.3: NVIDIA credential row + language/proxy settings */
+.credential-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.credential-row code {
+  min-width: 0;
+  flex: 1;
+  font: 11px/1.4 var(--mono);
+  color: var(--text);
+}
+.credential-row button {
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 9px;
+  font-size: 10px;
+}
+.credential-link {
+  flex: 0 0 auto;
+  color: var(--accent);
+  font-size: 10px;
+  text-decoration: none;
+}
+.credential-link:hover { text-decoration: underline; }
+.settings-proxy {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.settings-proxy select,
+.settings-proxy input {
+  height: 30px;
+  padding: 0 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--text);
+  font: 10px var(--mono);
+}
+.settings-proxy input { width: 200px; }
+.settings-proxy input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media (max-width: 1180px) {
+  .overview-sources { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

@@ -120,12 +120,47 @@
     no_account: { label: '无账号', dot: 'neutral', text: 'neutral' },
   };
 
+  SOURCES.nvidia = {
+    label: 'NVIDIA NIM',
+    eyebrow: 'NVIDIA NIM · 免费试用',
+    title: 'NVIDIA NIM',
+    subtitle: '用 NVIDIA 免费试用额度接入 Llama / Nemotron / DeepSeek 等模型',
+    auth: 'key',
+    actions: [
+      { id: 'refresh', label: '读取模型', icon: 'refresh' },
+      { id: 'probe', label: '验证 Key', icon: 'activity' },
+    ],
+    metricDefs: [
+      { key: 'found', label: '已发现' },
+      { key: 'available', label: '可用', tone: 'accent' },
+      { key: 'pending', label: '待检测' },
+    ],
+    feedback: '已读取 8 个可对话模型；免费试用额度与限速以 NVIDIA 账户为准。',
+    statusText: '运行中 · 8 个试用模型',
+    serviceSub: 'NVIDIA NIM · integrate.api.nvidia.com',
+    listMeta: '最近刷新 1 分钟前',
+    lastHeader: '耗时',
+    credential: { masked: 'nvapi-…9f3c', note: '免费试用 · 上游限速' },
+    models: [
+      { id: 'nv/llama-3.3-70b-instruct', display: 'NV. Llama 3.3 70B Instruct', upstream: 'meta/llama-3.3-70b-instruct', caps: ['推理'], status: 'available', latency: '1.8 秒', context: '128,000', maxOutput: '4,096', checked: '1 分钟前' },
+      { id: 'nv/llama-4-maverick', display: 'NV. Llama 4 Maverick', upstream: 'meta/llama-4-maverick-17b-128e-instruct', caps: ['推理', '图片'], status: 'available', latency: '2.4 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/nemotron-3-super-120b', display: 'NV. Nemotron 3 Super 120B', upstream: 'nvidia/nemotron-3-super-120b-a12b', caps: ['推理'], status: 'available', latency: '3.1 秒', context: '1,000,000', maxOutput: '16,384', checked: '1 分钟前' },
+      { id: 'nv/deepseek-v3.2', display: 'NV. DeepSeek V3.2', upstream: 'deepseek-ai/deepseek-v3.2', caps: ['推理'], status: 'available', latency: '2.9 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/qwen3.5-397b', display: 'NV. Qwen 3.5 397B', upstream: 'qwen/qwen3.5-397b-a17b', caps: ['推理', '图片'], status: 'available', latency: '4.6 秒', context: '128,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/kimi-k2.5', display: 'NV. Kimi K2.5', upstream: 'moonshotai/kimi-k2.5', caps: ['推理'], status: 'chat_only', latency: '5.2 秒', context: '1,000,000', maxOutput: '8,192', checked: '1 分钟前' },
+      { id: 'nv/glm-5.1', display: 'NV. GLM-5.1', upstream: 'zai/glm-5.1', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
+      { id: 'nv/minimax-m2.7', display: 'NV. MiniMax M2.7', upstream: 'minimaxai/minimax-m2.7', caps: ['推理'], status: 'pending', latency: '—', context: '128,000', maxOutput: '8,192', checked: '尚未检测' },
+    ],
+  };
+
   const CLIENTS = [
     { id: 'workbuddy', name: 'WorkBuddy（国内）', path: '~/.workbuddy/models.json', status: '已探测', checked: true, note: '排除 WB 自身分组' },
     { id: 'wbi', name: 'WorkBuddy AI（国际）', path: '~/.workbuddy-ai/models.json', status: '已探测', checked: true, note: '排除 WBI 自身分组' },
     { id: 'codex', name: 'Codex', path: '~/.codex/config.toml', status: '已探测', checked: true, note: 'responses' },
     { id: 'claude', name: 'Claude Code', path: '~/.claude/settings.json', status: '已探测', checked: true, note: 'messages' },
     { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', status: '已探测', checked: true, note: 'llm-pi-ai' },
+    { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', status: '可自动写入', checked: true, note: 'Custom Endpoint' },
+    { id: 'cursor', name: 'Cursor', path: 'Cursor Settings → Models', status: '需引导', checked: false, note: '不写数据库 · 手动粘贴' },
   ];
 
   const HISTORY = [
@@ -211,6 +246,7 @@
     tab: 'opencode',
     page: 'opencode',
     themeChoice: 'dark',
+    langChoice: 'system',
     historyFilter: 'all',
     historyQuery: '',
     pendingRestore: null,
@@ -222,10 +258,11 @@
       opencode: new Set(),
       workbuddy: new Set(),
       wbi: new Set(),
+      nvidia: new Set(),
     },
     expanded: new Set(),
     clients: new Map(CLIENTS.map(client => [client.id, client.checked])),
-    groups: new Map([['oc', true], ['wb', true], ['wbi', true]]),
+    groups: new Map([['oc', true], ['wb', true], ['wbi', true], ['nv', true]]),
     defaultModel: 'oc/big-pickle',
     probeTimer: null,
     toastTimer: null,
@@ -241,9 +278,10 @@
     'wb/glm-5.3-flash',
     'wbi/deepseek-v4.1-flash',
     'wbi/glm-5.3-flash',
+    'nv/llama-3.3-70b-instruct',
   ]) {
     const [group] = id.split('/');
-    const tab = group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : 'wbi';
+    const tab = group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : group === 'wbi' ? 'wbi' : 'nvidia';
     state.selection[tab].add(id);
   }
 
@@ -283,6 +321,13 @@
   function metricsFor(tabKey) {
     const src = SOURCES[tabKey];
     const models = src.models;
+    if (src.auth === 'key') {
+      return {
+        found: models.length,
+        available: models.filter(model => model.status === 'available').length,
+        pending: models.filter(model => model.status === 'pending').length,
+      };
+    }
     if (tabKey === 'opencode') {
       return {
         found: models.length,
@@ -336,9 +381,8 @@
     const lastHeader = $('.timing-heading');
     if (lastHeader) lastHeader.textContent = src.lastHeader;
 
-    $('#account-strip').hidden = state.tab === 'opencode';
-    if (state.tab !== 'opencode') {
-      $('#account-note').textContent = src.accounts.length > 1
+    if (state.tab !== 'opencode' && src.auth !== 'key') {
+      $('#account-note').textContent = (src.accounts || []).length > 1
         ? 'round-robin · 失败自动切换'
         : '单账号 · 可继续添加';
     }
@@ -407,6 +451,7 @@
       { id: 'opencode', label: 'OpenCode', note: '免费模型池', src: SOURCES.opencode, meta: '无需登录 · 按价格字段筛免费模型' },
       { id: 'workbuddy', label: 'WorkBuddy', note: '国内版', src: SOURCES.workbuddy, meta: `${SOURCES.workbuddy.accounts.length} 个账号 · round-robin` },
       { id: 'wbi', label: 'WorkBuddy AI', note: '国际版', src: SOURCES.wbi, meta: `${SOURCES.wbi.accounts.length} 个账号 · round-robin` },
+      { id: 'nvidia', label: 'NVIDIA NIM', note: '免费试用', src: SOURCES.nvidia, meta: 'API Key · 免费试用额度' },
     ];
     $('#overview-sources').innerHTML = cards.map(card => {
       const usable = card.src.models.filter(model => model.status === 'available').length;
@@ -725,6 +770,13 @@
 
   function renderAccountStrip() {
     const src = source();
+    if (src.auth === 'key') {
+      $('#account-strip').hidden = true;
+      $('#credential-strip').hidden = false;
+      $('#credential-key').textContent = src.credential.masked;
+      return;
+    }
+    $('#credential-strip').hidden = true;
     if (state.tab === 'opencode') {
       $('#account-strip').hidden = true;
       return;
@@ -782,7 +834,7 @@
               <div class="detail-item"><dt>最大输出</dt><dd>${escapeHtml(model.maxOutput)} tokens</dd></div>
               <div class="detail-item"><dt>最近检测</dt><dd>${escapeHtml(model.checked)}</dd></div>
               <div class="detail-item"><dt>能力</dt><dd>${escapeHtml(model.caps.join(' / '))}</dd></div>
-              <div class="detail-item"><dt>路由</dt><dd>${escapeHtml(model.id.split('/')[0] === 'oc' ? 'OpenCode' : model.id.split('/')[0] === 'wb' ? 'WorkBuddy' : 'WorkBuddy AI')}</dd></div>
+              <div class="detail-item"><dt>路由</dt><dd>${escapeHtml(model.id.split('/')[0] === 'oc' ? 'OpenCode' : model.id.split('/')[0] === 'wb' ? 'WorkBuddy' : model.id.split('/')[0] === 'wbi' ? 'WorkBuddy AI' : 'NVIDIA NIM')}</dd></div>
               <div class="detail-item"><dt>状态</dt><dd>${escapeHtml(STATUS[model.status].label)}${model.accounts ? ` · ${model.accounts} 个账号` : ''}</dd></div>
               <div class="detail-actions">
                 <button type="button" data-detail-action="probe" data-model="${escapeHtml(model.id)}">只重测这一个</button>
@@ -837,6 +889,7 @@
       { id: 'oc', label: 'OC', count: SOURCES.opencode.models.filter(model => model.status === 'available').length },
       { id: 'wb', label: 'WB', count: SOURCES.workbuddy.models.filter(model => model.status === 'available').length },
       { id: 'wbi', label: 'WBI', count: SOURCES.wbi.models.filter(model => model.status === 'available').length },
+      { id: 'nv', label: 'NV', count: SOURCES.nvidia.models.filter(model => model.status === 'available').length },
     ].map(group => {
       const checked = state.groups.get(group.id);
       return `
@@ -852,6 +905,7 @@
       { id: 'oc', label: 'OpenCode', blocked: !state.groups.get('oc') },
       { id: 'wb', label: 'WorkBuddy', blocked: !state.groups.get('wb') },
       { id: 'wbi', label: 'WorkBuddy AI', blocked: !state.groups.get('wbi') },
+      { id: 'nv', label: 'NVIDIA NIM', blocked: !state.groups.get('nv') },
     ];
     defaultSelect.innerHTML = groups.filter(group => !group.blocked).map(group => {
       const models = allModels().filter(model => model.id.startsWith(group.id + '/') && isAvailable(model));
@@ -873,12 +927,14 @@
       oc: state.groups.get('oc'),
       wb: state.groups.get('wb'),
       wbi: state.groups.get('wbi'),
+      nv: state.groups.get('nv'),
     };
   }
 
   function groupModelCount(group) {
-    const src = group === 'oc' ? SOURCES.opencode : group === 'wb' ? SOURCES.workbuddy : SOURCES.wbi;
-    return src.models.filter(model => isAvailable(model) && state.selection[group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : 'wbi'].has(model.id)).length;
+    const src = group === 'oc' ? SOURCES.opencode : group === 'wb' ? SOURCES.workbuddy : group === 'wbi' ? SOURCES.wbi : SOURCES.nvidia;
+    const tab = group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : group === 'wbi' ? 'wbi' : 'nvidia';
+    return src.models.filter(model => isAvailable(model) && state.selection[tab].has(model.id)).length;
   }
 
   function renderDiff() {
@@ -887,7 +943,7 @@
     const checkedClients = CLIENTS.filter(client => state.clients.get(client.id));
     if (checkedClients.length === 0) {
       lines.push({ type: 'dim', text: '# 请选择至少一个客户端' });
-    } else if (!groups.oc && !groups.wb && !groups.wbi) {
+    } else if (!groups.oc && !groups.wb && !groups.wbi && !groups.nv) {
       lines.push({ type: 'dim', text: '# 请选择至少一个分组' });
     } else {
       lines.push({ type: 'dim', text: '# AI Bobby · dry-run 预览（不会写入任何文件）' });
@@ -895,13 +951,13 @@
       for (const client of checkedClients) {
         if (client.id === 'workbuddy') {
           lines.push({ type: 'add', text: 'WorkBuddy（国内）  ~/.workbuddy/models.json' });
-          const count = (groups.oc ? groupModelCount('oc') : 0) + (groups.wbi ? groupModelCount('wbi') : 0);
+          const count = (groups.oc ? groupModelCount('oc') : 0) + (groups.wbi ? groupModelCount('wbi') : 0) + (groups.nv ? groupModelCount('nv') : 0);
           lines.push({ type: 'add', text: `+ ${count} 个模型（自动排除 WB 自身分组）` });
           lines.push({ type: 'dim', text: '  url = http://127.0.0.1:46890/v1/chat/completions' });
           lines.push({ type: 'dim', text: '  apiKey = sk-…f3a2 · aiBobbyOwner = ai-bobby-v1' });
         } else if (client.id === 'wbi') {
           lines.push({ type: 'add', text: 'WorkBuddy AI（国际）  ~/.workbuddy-ai/models.json' });
-          const count = (groups.oc ? groupModelCount('oc') : 0) + (groups.wb ? groupModelCount('wb') : 0);
+          const count = (groups.oc ? groupModelCount('oc') : 0) + (groups.wb ? groupModelCount('wb') : 0) + (groups.nv ? groupModelCount('nv') : 0);
           lines.push({ type: 'add', text: `+ ${count} 个模型（自动排除 WBI 自身分组）` });
           lines.push({ type: 'dim', text: '  url = http://127.0.0.1:46890/v1/chat/completions' });
         } else if (client.id === 'codex') {
@@ -915,6 +971,17 @@
           lines.push({ type: 'add', text: '+ "ANTHROPIC_BASE_URL": "http://127.0.0.1:46890"' });
           lines.push({ type: 'add', text: '+ "ANTHROPIC_AUTH_TOKEN": "sk-…f3a2"' });
           lines.push({ type: 'add', text: `+ "ANTHROPIC_MODEL": "${state.defaultModel || 'oc/big-pickle'}"` });
+        } else if (client.id === 'vscode') {
+          lines.push({ type: 'add', text: 'VS Code  ~/Library/Application Support/Code/User/chatLanguageModels.json' });
+          lines.push({ type: 'add', text: '+ vendor = "customendpoint" · name = "AI Bobby"' });
+          lines.push({ type: 'add', text: '+ url = http://127.0.0.1:46890/v1' });
+          lines.push({ type: 'dim', text: '  apiKey = ${input:aiBobbyApiKey} · 首次使用时粘贴 Key' });
+          lines.push({ type: 'dim', text: '  自动发现模型；重启 VS Code 后出现在模型选择器' });
+        } else if (client.id === 'cursor') {
+          lines.push({ type: 'dim', text: '# Cursor 仅引导，不写 SQLite / Keychain' });
+          lines.push({ type: 'dim', text: '# Settings → Models → 开启 Override OpenAI Base URL' });
+          lines.push({ type: 'add', text: '+ Base URL = http://127.0.0.1:46890/v1' });
+          lines.push({ type: 'dim', text: '  API Key 手动粘贴；仅影响 Chat / Agent，不影响 Tab' });
         } else if (client.id === 'dsh') {
           lines.push({ type: 'add', text: 'DeepSeek Harness  ~/.dsh/profiles/desktop/cordis.patch.yml' });
           lines.push({ type: 'add', text: '+ ai-bobby:' });
@@ -1477,6 +1544,28 @@
   for (const button of $$('[data-theme-choice]')) {
     button.addEventListener('click', () => applyTheme(button.dataset.themeChoice));
   }
+
+  for (const button of $$('[data-lang-choice]')) {
+    button.addEventListener('click', () => {
+      state.langChoice = button.dataset.langChoice;
+      for (const item of $$('[data-lang-choice]')) {
+        item.setAttribute('aria-pressed', String(item === button));
+      }
+      showToast(button.dataset.langChoice === 'system'
+        ? '界面语言将跟随系统（原型仅保留布局示意）'
+        : `界面语言已切换为${button.dataset.langChoice === 'en' ? ' English' : '简体中文'}（原型仅保留布局示意）`);
+    });
+  }
+
+  $('#proxy-mode').addEventListener('change', event => {
+    const custom = event.target.value === 'custom';
+    $('#proxy-url').disabled = !custom;
+    if (custom) $('#proxy-url').focus();
+  });
+
+  $('#credential-edit').addEventListener('click', () => {
+    showToast('原型演示：打开 NVIDIA API Key 输入框');
+  });
 
   $('#toggle-sidebar').addEventListener('click', () => {
     applySidebar(!$('#app-shell').classList.contains('sidebar-collapsed'));

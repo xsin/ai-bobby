@@ -65,6 +65,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 | `screenshot-history.png` | 导入记录与备份合并表格 |
 | `screenshot-diff.png` | 查看差异弹窗：次要/主要按钮 |
 | `screenshot-restore.png` | 恢复弹窗：版本列表 + 默认选中基线 |
+| `screenshot-nvidia.png` | NVIDIA NIM：免费试用 + API Key |
 | `screenshot-about.png` | 关于 + 赞助码 |
 | `screenshot-music.png` | Support my music + 两张专辑 + 最新歌曲 |
 | `screenshot-music-hot.png` | 最热歌曲 tab |
@@ -86,3 +87,13 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - `assets/music-electro-surge.jpg`：最新 EP《Electro Surge》封面。
 - `assets/music-zeo-album.jpg`：上一张专辑《ZEO》封面。
 - `assets/sponsor-alipay.jpg` / `assets/sponsor-wechat.jpg` / `assets/sponsor-qr.svg`：赞助收款码，已本地化。
+
+## v0.2.3 设计补充
+
+- **NVIDIA NIM**（新来源）：来源页含「访问凭据」卡片（API Key 掩码 / 更新 / 获取 Key）、
+  免费试用与限速提示、模型列表；侧栏与概览的模型源数量同步为 4。
+- **导入目标**：新增 VS Code（Custom Endpoint，可自动写入）与 Cursor（仅引导，不写 SQLite / Keychain）；
+  分组新增 `NV`；抽屉标题改为「7 个目标」，默认模型说明同步。
+- **设置**：新增「界面语言」（跟随系统 / 简体中文 / English）与「网络代理」（跟随系统 / 自定义）。
+- 版本标识更新为 0.2.3；新增截图：`screenshot-nvidia.png`、`screenshot-settings.png`、`screenshot-import.png`。
+- 调研记录见 [docs/research-v0.2.3.md](../docs/research-v0.2.3.md)。
