@@ -232,9 +232,12 @@ export class Services {
         const models = await this.nvidia.refreshModels()
         this.nvidia.applyProbes(this.settings.nvidiaProbes)
         this.registry.replace('nvidia', models)
-      } else {
-        this.registry.remove('nvidia')
+        this.refreshedAtMs = Date.now()
+        // A fresh key invalidates all previous probe results; probe once so the
+        // user immediately sees which models are usable with this key.
+        return await this.probeNvidia()
       }
+      this.registry.remove('nvidia')
     } catch (error) {
       logger.warn('nvidia catalog refresh failed', { error: String(error) })
       throw error

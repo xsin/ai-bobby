@@ -177,6 +177,7 @@ function AppInner() {
   const [nvidiaKeyOpen, setNvidiaKeyOpen] = useState(false)
   const [nvidiaKey, setNvidiaKey] = useState('')
   const [nvidiaKeyVisible, setNvidiaKeyVisible] = useState(false)
+  const [nvidiaKeySaving, setNvidiaKeySaving] = useState(false)
   const [settings, setSettings] = useState<DesktopSettings | null>(null)
   const [codexModels, setCodexModels] = useState<string[]>([])
   const [, setLocaleVersion] = useState(0)
@@ -999,7 +1000,7 @@ function AppInner() {
           <DialogHeader className="text-left">
             <DialogTitle className="text-[15px] font-semibold text-text">NVIDIA API Key</DialogTitle>
             <DialogDescription className="text-[11px] text-muted-foreground">
-              在 build.nvidia.com/settings 生成 Key；只保存在本机 0600 文件，不写入日志。
+              在 build.nvidia.com/settings 生成 Key；只保存在本机 0600 文件，不写入日志。保存后会自动读取目录并探测全部模型。
             </DialogDescription>
           </DialogHeader>
           <input
@@ -1015,7 +1016,7 @@ function AppInner() {
             <Button
               type="button"
               size="sm"
-              disabled={nvidiaKey.trim() === ''}
+              disabled={nvidiaKey.trim() === '' || nvidiaKeySaving}
               onClick={async () => {
                 const api = window.aiBobby
                 if (!api) {
@@ -1023,18 +1024,22 @@ function AppInner() {
                   toast.success('浏览器预览：未写入 Key')
                   return
                 }
+                setNvidiaKeySaving(true)
                 try {
                   const status = await api.setNvidiaKey(nvidiaKey.trim())
                   setRealStatus(status)
                   applyStatus(status)
                   setNvidiaKeyOpen(false)
-                  toast.success('NVIDIA API Key 已保存，模型目录已读取')
+                  const available = status.models.filter(model => model.provider === 'nvidia' && model.status === 'available').length
+                  toast.success(`NVIDIA Key 已保存并完成探测：${available} 个模型可用`)
                 } catch (error) {
                   toast.error(error instanceof Error ? error.message : String(error))
+                } finally {
+                  setNvidiaKeySaving(false)
                 }
               }}
             >
-              保存并读取
+              {nvidiaKeySaving ? '正在探测…' : '保存并探测'}
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -816,6 +816,42 @@ Origin/Referer/UA 同上
 
 ---
 
+## 4.9 NVIDIA provider（`packages/nvidia`）
+
+```ts
+class NvidiaProvider {
+  setApiKey(key: string): void
+  refreshModels(): Promise<ModelDescriptor[]>
+  probeAll(concurrency = 4): Promise<NvidiaProbeResult[]>
+  snapshot(): Record<string, NvidiaProbeSnapshot>
+  applyProbes(snapshot): void
+}
+```
+
+- 请求：`Authorization: Bearer <nvapi-key>`，`GET /v1/models` 读取目录；chat 走
+  `POST /v1/chat/completions`，SSE 映射为统一事件。
+- 探测：每个模型一条 1-token 对话，`Promise` 池并发 4；单模型超时不阻塞其他模型；
+  结果含 `status`、`latencyMs`、`checkedAtMs`、`error`。
+- 持久化：`AppSettings.nvidiaProbes` 以 **上游模型 ID** 为 key；启动时
+  `refreshModels()` 后立刻 `applyProbes(settings.nvidiaProbes)`，避免重启回到 Pending。
+- **Key 更新自动探测**（`Services.setNvidiaKey`）：
+
+  ```text
+  settings.nvidiaApiKey = key; nvidiaProbes = {}
+  save(settings)
+  nvidia.setApiKey(key)
+  models = await nvidia.refreshModels()
+  nvidia.applyProbes({})             // 新 Key 无旧结果
+  registry.replace('nvidia', models)
+  await probeNvidia()                // probeAll(4) → snapshot → save → registry.replace
+  return snapshot()
+  ```
+
+  目录读取抛错时直接向上传递，不进入 `probeNvidia()`；清空 Key 走 `registry.remove('nvidia')`。
+- 代理：`createProxyFetch(getSettings, 'nvidia')` 注入 undici `ProxyAgent`；支持
+  `off` / `system` / `custom`，默认 `http://127.0.0.1:10080`。
+- 安全：Key 只存在 `settings.json`（0600）；快照/日志不输出 Key 明文。
+
 ## 5. OpenCode provider（`packages/opencode`）
 
 > 以 `refs/RuiC-oc-ferry/src/` 为蓝本移植到 TypeScript；不改变其安全语义。
