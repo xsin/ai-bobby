@@ -9,6 +9,18 @@ import type { ModelDescriptor } from '@ai-bobby/core'
  */
 type CodexMetadata = Record<string, unknown>
 
+export type CodexVerification = 'schema-valid' | 'request-valid' | 'behavior-reviewed'
+
+export interface CodexMetadataEntry {
+  /** ISO date of the last verification run. */
+  verifiedAt: string
+  /** Primary source used for the fields (docs URL or internal test). */
+  source: string
+  /** Highest verification layer passed so far. */
+  verification: CodexVerification
+  fields: CodexMetadata
+}
+
 const REASONING_LEVELS = [
   { effort: 'low', description: 'Fast responses with lighter reasoning' },
   { effort: 'high', description: 'Extra high reasoning depth for complex problems' },
@@ -43,20 +55,30 @@ const BASE: CodexMetadata = {
 }
 
 /** Curated entries: add a model only after its Codex semantics are verified. */
-export const CODEX_METADATA: Record<string, CodexMetadata> = {
+export const CODEX_METADATA: Record<string, CodexMetadataEntry> = {
   'deepseek-v4.1-flash': {
-    description: 'DeepSeek V4.1 Flash via AI Bobby (WorkBuddy / WorkBuddy AI).',
-    default_reasoning_level: 'high',
-    supported_reasoning_levels: REASONING_LEVELS,
-    supports_parallel_tool_calls: true,
-    input_modalities: ['text', 'image'],
+    verifiedAt: '2026-10-20',
+    source: 'docs/research-codex-metadata.md',
+    verification: 'schema-valid',
+    fields: {
+      description: 'DeepSeek V4.1 Flash via AI Bobby (WorkBuddy / WorkBuddy AI).',
+      default_reasoning_level: 'high',
+      supported_reasoning_levels: REASONING_LEVELS,
+      supports_parallel_tool_calls: true,
+      input_modalities: ['text', 'image'],
+    },
   },
   'glm-5.3-flash': {
-    description: 'GLM-5.3-Flash via AI Bobby (WorkBuddy / WorkBuddy AI).',
-    default_reasoning_level: 'max',
-    supported_reasoning_levels: REASONING_LEVELS,
-    supports_parallel_tool_calls: true,
-    input_modalities: ['text', 'image'],
+    verifiedAt: '2026-10-20',
+    source: 'docs/research-codex-metadata.md',
+    verification: 'schema-valid',
+    fields: {
+      description: 'GLM-5.3-Flash via AI Bobby (WorkBuddy / WorkBuddy AI).',
+      default_reasoning_level: 'max',
+      supported_reasoning_levels: REASONING_LEVELS,
+      supports_parallel_tool_calls: true,
+      input_modalities: ['text', 'image'],
+    },
   },
 }
 
@@ -64,19 +86,23 @@ export function codexCoveredUpstreamIds(): string[] {
   return Object.keys(CODEX_METADATA).sort()
 }
 
+export function codexMetadataEntry(upstreamId: string): CodexMetadataEntry | undefined {
+  return CODEX_METADATA[upstreamId]
+}
+
 export function isCodexCovered(model: Pick<ModelDescriptor, 'upstreamId'>): boolean {
   return CODEX_METADATA[model.upstreamId] !== undefined
 }
 
 export function codexCatalogEntry(model: ModelDescriptor): CodexMetadata {
-  const metadata = CODEX_METADATA[model.upstreamId]
-  if (metadata === undefined) throw new Error(`No Codex metadata for ${model.upstreamId}`)
+  const entry = CODEX_METADATA[model.upstreamId]
+  if (entry === undefined) throw new Error(`No Codex metadata for ${model.upstreamId}`)
   return {
     ...BASE,
-    ...metadata,
+    ...entry.fields,
     slug: model.id,
     display_name: model.displayName,
-    description: metadata['description'] ?? `AI Bobby · ${model.groupName}`,
+    description: entry.fields['description'] ?? `AI Bobby · ${model.groupName}`,
     context_window: model.contextWindow ?? 1048576,
     max_context_window: model.contextWindow ?? 1048576,
     input_modalities: model.capabilities.images ? ['text', 'image'] : ['text'],

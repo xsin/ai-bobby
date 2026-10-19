@@ -17,7 +17,9 @@
     "clean": "pnpm -r --if-present clean",
     "release:version": "node scripts/release/version.mjs",
     "dist:mac": "bash scripts/release/build-mac.sh",
-    "validate:codex": "tsx scripts/validate-codex-catalog.mts"
+    "validate:codex": "tsx scripts/validate-codex-catalog.mts",
+    "validate:codex:contract": "tsx scripts/validate-codex-contract.mts",
+    "smoke:codex": "tsx scripts/smoke-codex-models.mts"
   },
   "devDependencies": {
     "@types/node": "catalog:",
