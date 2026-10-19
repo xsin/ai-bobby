@@ -45,7 +45,8 @@
     "@ai-bobby/workbuddy": "workspace:*",
     "@ai-bobby/importers": "workspace:*",
     "@ai-bobby/opencode": "workspace:*",
-    "@ai-bobby/nvidia": "workspace:*"
+    "@ai-bobby/nvidia": "workspace:*",
+    "undici": "catalog:"
   },
   "author": "xsin",
   "homepage": "https://github.com/xsin/ai-bobby",

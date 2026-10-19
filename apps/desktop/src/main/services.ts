@@ -4,6 +4,7 @@ import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
 import { appVersion } from './version'
 import { SettingsStore, defaultSettings, type AppSettings } from './settings'
+import { createProxyFetch } from './proxy'
 import { ModelRegistry, createLogger } from '@ai-bobby/core'
 import { GatewayService } from '@ai-bobby/gateway'
 import { NvidiaProvider } from '@ai-bobby/nvidia'
@@ -11,6 +12,7 @@ import { OpenCodeProvider } from '@ai-bobby/opencode'
 import {
   AccountStore,
   WORKBUDDY_VARIANTS,
+  WorkBuddyClient,
   WorkBuddyProvider,
   pollLogin,
   startLogin,
@@ -48,7 +50,7 @@ const logger = createLogger('info')
 export class Services {
   private readonly registry = new ModelRegistry()
   private readonly providers = new Map<'workbuddy' | 'workbuddy-ai', WorkBuddyProvider>()
-  private readonly nvidia = new NvidiaProvider({ apiKey: '' })
+  private readonly nvidia: NvidiaProvider
   private readonly settingsStore: SettingsStore
   private settings: AppSettings = defaultSettings()
   private readonly adapters = new Map()
@@ -68,6 +70,7 @@ export class Services {
     this.dataDir = process.env.AI_BOBBY_DATA_DIR?.trim() || app.getPath('userData')
     this.historyFile = join(this.dataDir, 'import-history.json')
     this.settingsStore = new SettingsStore(this.dataDir)
+    this.nvidia = new NvidiaProvider({ apiKey: '', fetchImpl: createProxyFetch(() => this.settings, 'nvidia') })
     // AccountStore is 0600 for now. safeStorage.isEncryptionAvailable() can
     // block on a locked Keychain during headless startup, so encryption is an
     // explicit future opt-in rather than a startup dependency.
@@ -85,7 +88,11 @@ export class Services {
     }
     for (const variant of WORKBUDDY_VARIANTS) {
       if (variant.id === 'opencode') continue
-      const provider = new WorkBuddyProvider({ variant, store: this.store })
+      const provider = new WorkBuddyProvider({
+        variant,
+        store: this.store,
+        client: new WorkBuddyClient(variant, createProxyFetch(() => this.settings, variant.id as 'workbuddy' | 'workbuddy-ai')),
+      })
       this.providers.set(variant.id as 'workbuddy' | 'workbuddy-ai', provider)
       this.adapters.set(variant.id, provider)
     }

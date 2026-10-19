@@ -1,9 +1,10 @@
 import { Check, ExternalLink, Monitor, Moon, RefreshCw, Sun } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Switch } from '@/components/ui/switch'
 import { cn } from '@/lib/utils'
 import { useTheme } from '@/lib/theme'
-import type { AppInfo, GatewayStatus, ThemeChoice } from '@shared/api'
+import type { AppInfo, DesktopSettings, GatewayStatus, ThemeChoice } from '@shared/api'
 
 interface SettingsPageProps {
   appInfo: AppInfo | null
@@ -17,6 +18,10 @@ interface SettingsPageProps {
   onCopyKey: () => void
   onCopyEndpoint: () => void
   onOpenAbout: () => void
+  settings: DesktopSettings | null
+  onUpdateProxy: (proxy: DesktopSettings['proxy']) => void
+  onUpdateLocale: (locale: DesktopSettings['locale']) => void
+  onEditNvidiaKey: () => void
 }
 
 const THEMES: Array<{ id: ThemeChoice; label: string; icon: typeof Sun }> = [
@@ -37,6 +42,10 @@ export function SettingsPage({
   onCopyKey,
   onCopyEndpoint,
   onOpenAbout,
+  settings,
+  onUpdateProxy,
+  onUpdateLocale,
+  onEditNvidiaKey,
 }: SettingsPageProps) {
   const { choice, setChoice } = useTheme()
   return (
@@ -72,6 +81,88 @@ export function SettingsPage({
                 </Button>
               )
             })}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-4 py-3.5">
+          <div>
+            <h2 className="text-[12px] font-semibold text-text">界面语言</h2>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">默认跟随系统；切换后立即生效，只影响本机界面。</p>
+          </div>
+          <div className="flex gap-1.5">
+            {([
+              ['system', '跟随系统'],
+              ['zh', '简体中文'],
+              ['en', 'English'],
+            ] as const).map(([id, label]) => (
+              <Button
+                key={id}
+                type="button"
+                variant="outline"
+                size="sm"
+                className={cn(settings?.locale === id && 'border-primary/40 bg-accent-soft text-text')}
+                onClick={() => onUpdateLocale(id)}
+              >
+                {label}
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line-soft px-4 py-3.5">
+          <div>
+            <h2 className="text-[12px] font-semibold text-text">网络代理</h2>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">只影响 AI Bobby 发起的上游请求，按模型源分别启用。</p>
+          </div>
+          <div className="flex w-[360px] flex-col gap-2">
+            <div className="flex gap-2">
+              <select
+                value={settings?.proxy.mode ?? 'custom'}
+                onChange={event => settings && onUpdateProxy({ ...settings.proxy, mode: event.target.value as DesktopSettings['proxy']['mode'] })}
+                className="h-8 rounded-md border border-line bg-surface px-2 font-mono text-[10px] text-text"
+                aria-label="代理模式"
+              >
+                <option value="off">关闭</option>
+                <option value="system">跟随系统</option>
+                <option value="custom">自定义</option>
+              </select>
+              <input
+                value={settings?.proxy.url ?? 'http://127.0.0.1:10080'}
+                disabled={settings?.proxy.mode !== 'custom'}
+                onChange={event => settings && onUpdateProxy({ ...settings.proxy, url: event.target.value })}
+                aria-label="代理地址"
+                className="h-8 min-w-0 flex-1 rounded-md border border-line bg-surface px-2 font-mono text-[10px] text-text disabled:opacity-50"
+              />
+            </div>
+            <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+              {([
+                ['nvidia', 'NVIDIA NIM'],
+                ['workbuddy', 'WorkBuddy'],
+                ['workbuddy-ai', 'WorkBuddy AI'],
+              ] as const).map(([id, label]) => (
+                <label key={id} className="flex items-center gap-1.5">
+                  <Checkbox
+                    checked={settings?.proxy.sources[id] ?? false}
+                    onCheckedChange={checked => settings && onUpdateProxy({ ...settings.proxy, sources: { ...settings.proxy.sources, [id]: checked === true } })}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+            <p className="text-[9px] leading-relaxed text-faint">OpenCode 运行时由子进程联网，不受此设置影响；国内来源通常不需要代理。</p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-line-soft px-4 py-3.5">
+          <div>
+            <h2 className="text-[12px] font-semibold text-text">NVIDIA NIM</h2>
+            <p className="mt-0.5 text-[10px] text-muted-foreground">免费试用 Key 只保存在本机；检测会真实发起一次最小对话。</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <code className="font-mono text-[10px] text-muted-foreground">
+              {settings?.nvidiaApiKey ? `nvapi-…${settings.nvidiaApiKey.slice(-4)}` : '未配置'}
+            </code>
+            <Button type="button" variant="outline" size="sm" onClick={onEditNvidiaKey}>更新 Key</Button>
           </div>
         </div>
 

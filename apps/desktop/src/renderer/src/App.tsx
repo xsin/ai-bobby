@@ -38,6 +38,7 @@ import type {
   ImportHistorySnapshot,
   UpdateInfo,
   UpdateProgress,
+  DesktopSettings,
 } from '@shared/api'
 
 const PAGE_META: Record<NavPage, { section: string; title: string }> = {
@@ -171,6 +172,7 @@ function AppInner() {
   const [importOpen, setImportOpen] = useState(false)
   const [nvidiaKeyOpen, setNvidiaKeyOpen] = useState(false)
   const [nvidiaKey, setNvidiaKey] = useState('')
+  const [settings, setSettings] = useState<DesktopSettings | null>(null)
   const [loginOpen, setLoginOpen] = useState(false)
   const [loginBusy, setLoginBusy] = useState(false)
   const [loginError, setLoginError] = useState<string | undefined>()
@@ -271,6 +273,27 @@ function AppInner() {
   useEffect(() => {
     if (page === 'history') void loadHistory()
   }, [page, loadHistory])
+
+  const updateProxy = useCallback(async (proxy: NonNullable<DesktopSettings>['proxy']) => {
+    const api = window.aiBobby
+    if (!api) {
+      setSettings(current => current === null ? current : { ...current, proxy })
+      return
+    }
+    const next = await api.setProxy(proxy)
+    setSettings(next)
+  }, [])
+
+  const updateLocale = useCallback(async (locale: DesktopSettings['locale']) => {
+    const api = window.aiBobby
+    if (!api) {
+      setSettings(current => current === null ? current : { ...current, locale })
+      return
+    }
+    const next = await api.setLocale(locale)
+    setSettings(next)
+    toast.success(locale === 'system' ? '界面语言跟随系统' : locale === 'zh' ? '界面语言：简体中文' : 'Interface: English')
+  }, [])
 
   const openAbout = useCallback(() => navigate('about'), [navigate])
   const openExternal = useCallback((url: string) => {
@@ -432,6 +455,7 @@ function AppInner() {
           importedModelIds.current = await api.getImportedModelIds().catch(() => [])
           scannedImports.current = true
         }
+        void api.getSettings().then(next => { if (alive) setSettings(next) }).catch(() => undefined)
         setRealStatus(status)
         applyStatus(status)
       } catch {
@@ -883,6 +907,10 @@ function AppInner() {
               {...(lastCheckMessage === undefined ? {} : { lastMessage: lastCheckMessage })}
               onCheckUpdates={() => void checkUpdates()}
               onOpenUpdateSource={openUpdateSource}
+              settings={settings}
+              onUpdateProxy={proxy => void updateProxy(proxy)}
+              onUpdateLocale={locale => void updateLocale(locale)}
+              onEditNvidiaKey={() => setNvidiaKeyOpen(true)}
               onCopyKey={() => void copyKey()}
               onCopyEndpoint={() => {
                 const endpoint = `http://127.0.0.1:${realStatus?.gateway.port ?? 46890}/v1`
