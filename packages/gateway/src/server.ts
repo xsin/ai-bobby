@@ -151,7 +151,12 @@ export class GatewayService {
     }
     this.active += 1
     const controller = new AbortController()
-    req.on('close', () => controller.abort())
+    // IncomingMessage 'close' fires as soon as the request body is consumed,
+    // which aborted every upstream call before it started. Abort only when the
+    // response itself closes before finishing (a real client disconnect).
+    res.on('close', () => {
+      if (!res.writableEnded) controller.abort()
+    })
     try {
       const body = await readJsonBody(req, this.maxBodyBytes)
       const modelId = isObject(body) && typeof body['model'] === 'string' ? body['model'] : ''
@@ -306,7 +311,12 @@ export class GatewayService {
     }
     this.active += 1
     const controller = new AbortController()
-    req.on('close', () => controller.abort())
+    // IncomingMessage 'close' fires as soon as the request body is consumed,
+    // which aborted every upstream call before it started. Abort only when the
+    // response itself closes before finishing (a real client disconnect).
+    res.on('close', () => {
+      if (!res.writableEnded) controller.abort()
+    })
     try {
       const body = await readJsonBody(req, this.maxBodyBytes)
       const modelId = isObject(body) && typeof body['model'] === 'string' ? body['model'] : ''

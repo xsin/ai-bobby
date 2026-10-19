@@ -31,7 +31,7 @@ class FakeProvider implements ProviderAdapter {
     return [model]
   }
 
-  async *chat(request: CanonicalRequest): AsyncIterable<CanonicalEvent> {
+  async *chat(request: CanonicalRequest, _signal?: AbortSignal): AsyncIterable<CanonicalEvent> {
     this.lastRequest = request
     this.calls += 1
     yield { type: 'start', responseId: 'cmpl_test', model: request.model.id }
@@ -51,6 +51,17 @@ class FakeProvider implements ProviderAdapter {
 
   get callCount(): number {
     return this.calls
+  }
+}
+
+/** Waits long enough for the request body to end before touching the signal. */
+class SlowProvider extends FakeProvider {
+  signalAborted = false
+
+  override async *chat(request: CanonicalRequest, signal?: AbortSignal): AsyncIterable<CanonicalEvent> {
+    await new Promise(resolve => setTimeout(resolve, 30))
+    this.signalAborted = signal?.aborted ?? false
+    yield* super.chat(request)
   }
 }
 
@@ -295,5 +306,29 @@ describe('gateway', () => {
       }),
     })
     expect(response.status).toBe(200)
+  })
+  it('keeps the upstream signal alive after the request body ends', async () => {
+    const registry = new ModelRegistry()
+    registry.replace('workbuddy', [model])
+    const provider = new SlowProvider()
+    const gateway = new GatewayService({
+      registry,
+      adapters: new Map([['workbuddy', provider]]),
+      apiKey: 'test-key',
+      port: 0,
+    })
+    const base = await start(gateway)
+    const response = await fetch(`${base}/v1/chat/completions`, {
+      method: 'POST',
+      headers: auth({ 'Content-Type': 'application/json' }),
+      body: JSON.stringify({
+        model: 'wb/hy3',
+        messages: [{ role: 'user', content: 'hi' }],
+        stream: true,
+      }),
+    })
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain('data:')
+    expect(provider.signalAborted).toBe(false)
   })
 })
