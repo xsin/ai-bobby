@@ -322,3 +322,20 @@ body {
     animation: none;
   }
 }
+
+/* Ghost buttons own their hover in plain CSS: Ant Design feeds both
+   --surface-2 and --hover from the same fill token, so the old hover colour
+   was identical to the row's hover background and therefore invisible. */
+button[data-variant='ghost']:hover:not(:disabled),
+[role='button'][data-variant='ghost']:hover:not([aria-disabled='true']) {
+  background-color: var(--hover);
+  background-color: color-mix(in oklab, var(--surface-2) 90%, var(--text) 10%);
+  color: var(--text);
+}
+
+/* Restore-dialog tabs sit on --surface-2; use the same lifted hover. */
+.restore-tab:hover:not([aria-selected='true']):not(:disabled) {
+  background-color: var(--hover);
+  background-color: color-mix(in oklab, var(--surface-2) 90%, var(--text) 10%);
+  color: var(--text);
+}
