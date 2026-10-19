@@ -505,3 +505,17 @@ WorkBuddy 上游
   日期用次级文案；移除“第 N 次写入前”和文件大小；支持上下方向键切换。
 - 右侧摘要只保留 备份文件 / 目标文件 / 恢复后影响。
 - 更新 prototype README 与 `screenshot-restore.png`；生产 UI 仍未动，等确认。
+
+### 2026-10-19 Round 11：第五轮 UI 落地（按钮 / 恢复 tab / 已选）
+
+- 按钮系统收拢到 `components/ui/button.tsx`：`default` 主操作、`outline` 次要、`ghost` 行内；
+  统一 30px 高、11px 字号；删除各页面覆写的高度/字号/边框/hover。
+- 修复按钮字号异常的根因：全局 `button { font: inherit }` 在 `@layer` 之外，压过 Tailwind 工具类；
+  已移入 `@layer base`。
+- 历史页恢复弹窗：垂直 tabmenu + tabpanel；基线置顶（默认选中），滚动备份按时间倒序；
+  tab 只显示“相对时间 + 日期”，右侧摘要含备份文件/目标文件/恢复后影响；新增
+  `getBackupVersions` / `restoreBackupVersion` IPC；记录行加“基线”标记，文案改为“基线 1 份 + 最近 5 份”。
+- 来源页“已选”只显示数字，侧边栏仍 `已选/总数`。
+- 基线快照保留源文件 mtime（升级时从最旧滚动备份播种也能显示真实时间）。
+- 文档：PRD FR-UI-9、tech §8.4/§?、ui-guideline §5.6 + 约束 #15、README 截图与历史说明。
+- 验证：全量 69 项测试通过；截图 01/07/13 刷新；应用已重启（dev、46890）。
