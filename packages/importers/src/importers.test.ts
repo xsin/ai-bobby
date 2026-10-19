@@ -10,6 +10,7 @@ import { CodexImporter } from './codex'
 import { DshImporter } from './dsh'
 import { WorkBuddyImporter } from './workbuddy'
 import { VSCodeImporter } from './vscode'
+import { normalizeRestoredCodexModel } from './codex'
 import { backup } from './common'
 import type { ImportContext } from './types'
 
@@ -219,5 +220,33 @@ describe('backup retention', () => {
     const aiBobby = saved.find(entry => entry.name === 'AI Bobby')
     expect(aiBobby?.url).toBe('http://127.0.0.1:46890/v1')
     expect(aiBobby?.apiKey).toBe('sk-test')
+  })
+
+  it('generates an AI Bobby Codex catalog with prefixed slugs', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-codex-catalog-'))
+    await mkdir(join(dir, '.codex'), { recursive: true })
+    await writeFile(join(dir, '.codex', 'models.json'), JSON.stringify({ models: [{ slug: 'deepseek-v4.1-flash', display_name: 'DeepSeek' }] }))
+    await writeFile(join(dir, '.codex', 'config.toml'), 'model = "deepseek-v4.1-flash"\nmodel_provider = "local"\n')
+    const importer = new CodexImporter(dir)
+    const context: ImportContext = {
+      models: [model('workbuddy', 'deepseek-v4.1-flash', 'DeepSeek')],
+      apiKey: 'sk-test',
+      endpoint: 'http://127.0.0.1:46890/v1',
+    }
+    await importer.apply(
+      { groups: ['workbuddy'], modelIds: ['wb/deepseek-v4.1-flash'], defaultModelId: 'wb/deepseek-v4.1-flash', setAsDefault: true },
+      context,
+    )
+    const catalog = JSON.parse(await readFile(join(dir, '.codex', 'models.ai-bobby.json'), 'utf8')) as { models: Array<{ slug: string }> }
+    expect(catalog.models[0]?.slug).toBe('wb/deepseek-v4.1-flash')
+    const config = await readFile(join(dir, '.codex', 'config.toml'), 'utf8')
+    expect(config).toContain('models.ai-bobby.json')
+    expect(config).toContain('model = "wb/deepseek-v4.1-flash"')
+  })
+
+  it('normalizes a raw model id when restoring a Codex backup', () => {
+    const restored = normalizeRestoredCodexModel('model = "deepseek-v4.1-flash"\nmodel_provider = "ai-bobby"\n', ['wb/deepseek-v4.1-flash'])
+    expect(restored.text).toContain('model = "wb/deepseek-v4.1-flash"')
+    expect(restored.warnings).toHaveLength(1)
   })
 })

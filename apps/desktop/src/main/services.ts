@@ -37,6 +37,7 @@ import {
   WorkBuddyImporter,
   VSCodeImporter,
   atomicWrite,
+  normalizeRestoredCodexModel,
   backup,
   baselineBackupPath,
   ensureBaseline,
@@ -463,8 +464,15 @@ export class Services {
   ): Promise<ImportPlanSnapshot> {
     const content = await readText(backupPath)
     if (content === undefined) throw new Error('备份文件不存在')
+    const warnings: string[] = []
+    let restored = content
+    if (target === 'codex') {
+      const normalized = normalizeRestoredCodexModel(content, this.registry.list({ all: true }).map(model => model.id))
+      restored = normalized.text
+      warnings.push(...normalized.warnings)
+    }
     const currentBackup = await backup(path)
-    await atomicWrite(path, content, 0o600)
+    await atomicWrite(path, restored, 0o600)
     await this.recordHistory({
       id: randomUUID(),
       action: 'restore',
@@ -481,7 +489,7 @@ export class Services {
       detected: true,
       changed: true,
       diff: `已从 ${backupPath} 恢复`,
-      warnings: [],
+      warnings,
       requiresRestart: true,
       ...(currentBackup === undefined ? {} : { backupPath: currentBackup }),
     }

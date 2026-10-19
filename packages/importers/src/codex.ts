@@ -1,5 +1,5 @@
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 import { parse as parseToml } from 'smol-toml'
 import { atomicWrite, backup, exists, latestBackup, normalizeEndpoint, planFor, readText, withLock } from './common'
 import type { ImportContext, ImportPlan, ImportSelection, ImportTarget, Importer } from './types'
@@ -38,15 +38,16 @@ export class CodexImporter implements Importer {
 
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const before = await readText(this.path)
-    const { text, warnings } = render(before, selection, context)
+    const { text, warnings } = await render(this.path, before, selection, context)
     return planFor(this.target, this.path, before !== undefined, before, text, warnings, true)
   }
 
   async apply(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     return withLock(this.path, async () => {
       const before = await readText(this.path)
-      const { text, warnings, blocked } = render(before, selection, context)
+      const { text, warnings, blocked, catalog } = await render(this.path, before, selection, context)
       if (blocked) return planFor(this.target, this.path, before !== undefined, before, before ?? '', warnings, true)
+      if (catalog !== undefined) await atomicWrite(catalog.path, catalog.content, 0o600)
       if (before === text) return planFor(this.target, this.path, before !== undefined, before, text, warnings, true)
       const backupPath = await backup(this.path)
       await atomicWrite(this.path, text, 0o600)
@@ -66,11 +67,12 @@ export class CodexImporter implements Importer {
   }
 }
 
-function render(
+async function render(
+  configPath: string,
   before: string | undefined,
   selection: ImportSelection,
   context: ImportContext,
-): { text: string; warnings: string[]; blocked?: boolean } {
+): Promise<{ text: string; warnings: string[]; blocked?: boolean; catalog?: { path: string; content: string } }> {
   const warnings: string[] = []
   const source = before ?? ''
   const withoutBlock = source.replace(new RegExp(`\\n?${escapeRegExp(START)}[\\s\\S]*?${escapeRegExp(END)}\\n?`, 'g'), '\n')
@@ -106,7 +108,12 @@ function render(
     `experimental_bearer_token = ${JSON.stringify(context.apiKey)}`,
     END,
   ].join('\n')
-  const text = `${textBase.replace(/\n+$/, '')}\n\n${block}\n`
+  let text = `${textBase.replace(/\n+$/, '')}\n\n${block}\n`
+  const catalog = await buildCatalog(configPath, selection, context)
+  if (catalog !== undefined) {
+    text = setCatalogPath(text, catalog.path)
+    warnings.push('已生成 AI Bobby 模型目录；Codex 模型选择器会显示带前缀的 ID')
+  }
   try {
     parseToml(text)
   } catch (error) {
@@ -114,7 +121,89 @@ function render(
     return { text: source, warnings, blocked: true }
   }
   if (model === undefined) warnings.push('没有默认模型；provider 已写入，但需要手动选择 model')
-  return { text, warnings }
+  return { text, warnings, ...(catalog === undefined ? {} : { catalog }) }
+}
+
+/**
+ * A restore is byte-exact, but old Codex backups can contain the hub-era raw
+ * model id while pointing at ai-bobby. If exactly one current model matches,
+ * rewrite it to the prefixed id; otherwise leave the file alone and warn.
+ */
+export function normalizeRestoredCodexModel(
+  text: string,
+  modelIds: readonly string[],
+): { text: string; warnings: string[] } {
+  let doc: Record<string, unknown>
+  try {
+    doc = parseToml(text) as Record<string, unknown>
+  } catch {
+    return { text, warnings: [] }
+  }
+  if (doc['model_provider'] !== 'ai-bobby') return { text, warnings: [] }
+  const model = doc['model']
+  if (typeof model !== 'string' || /^(oc|wb|wbi|nv)\//.test(model)) return { text, warnings: [] }
+  const matches = modelIds.filter(id => id === model || id.endsWith(`/${model}`))
+  if (matches.length === 1 && matches[0] !== undefined) {
+    return {
+      text: setDefaultModel(text, matches[0]),
+      warnings: [`恢复的配置包含裸模型 ${model}，已改为 ${matches[0]}（AI Bobby 需要来源前缀）`],
+    }
+  }
+  return {
+    text,
+    warnings: [`恢复的配置包含裸模型 ${model}，无法唯一确定来源前缀，Codex 可能报错`],
+  }
+}
+
+function setCatalogPath(source: string, catalogPath: string): string {
+  const lines = source.split('\n').filter(line => !/^\s*model_catalog_json\s*=/.test(line))
+  const firstTable = lines.findIndex(line => /^\s*\[/.test(line))
+  const head = firstTable === -1 ? lines : lines.slice(0, firstTable)
+  const tail = firstTable === -1 ? [] : lines.slice(firstTable)
+  return [...head, `model_catalog_json = ${JSON.stringify(catalogPath)}`, '', ...tail].join('\n')
+}
+
+async function buildCatalog(
+  configPath: string,
+  selection: ImportSelection,
+  context: ImportContext,
+): Promise<{ path: string; content: string } | undefined> {
+  const sourcePath = join(dirname(configPath), 'models.json')
+  const raw = await readText(sourcePath)
+  if (raw === undefined) return undefined
+  let parsed: { models?: Array<Record<string, unknown>> }
+  try {
+    parsed = JSON.parse(raw) as typeof parsed
+  } catch {
+    return undefined
+  }
+  const entries = parsed.models
+  if (!Array.isArray(entries)) return undefined
+  const selected = new Set(selection.modelIds)
+  const available = context.models.filter(model => selected.has(model.id))
+  const models: Array<Record<string, unknown>> = []
+  for (const entry of entries) {
+    const slug = typeof entry['slug'] === 'string' ? entry['slug'] : ''
+    if (slug === '') continue
+    const match = available.filter(model => model.id === slug || model.upstreamId === slug || model.id.endsWith(`/${slug}`))
+    for (const model of match) {
+      models.push({
+        ...entry,
+        slug: model.id,
+        display_name: model.displayName,
+        description: `AI Bobby · ${model.groupName}`,
+        context_window: model.contextWindow ?? entry['context_window'],
+        max_context_window: model.contextWindow ?? entry['max_context_window'],
+        supported_in_api: true,
+        visibility: 'list',
+      })
+    }
+  }
+  if (models.length === 0) return undefined
+  return {
+    path: join(dirname(configPath), 'models.ai-bobby.json'),
+    content: `${JSON.stringify({ ...parsed, models }, null, 2)}\n`,
+  }
 }
 
 function setDefaultModel(source: string, model: string): string {
