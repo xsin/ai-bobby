@@ -103,6 +103,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
   复选框统一品牌色实心 + 白勾；复制的 Key / Base URL 都放弹窗 footer。
 - **探测中状态**：点「检测全部」后，待检测行的状态列显示旋转指示 +「检测中…」，按钮变为禁用「检测中…」，
   反馈条显示正在检测的模型数量；完成后才写入延迟与可用状态。更新 Key 只读取目录，不自动探测。
+- **Codex 元数据覆盖**：勾选 Codex 后，导入抽屉显示「Codex 元数据 5/8」；缺少元数据的模型
+  以黄色 chip 列出，并明确“不会写入 Codex 模型选择器，其他客户端仍会导入”，避免勾选后在 Codex 里不可用。
 - 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-nvidia-probing.png`、
   `screenshot-settings.png`、`screenshot-import.png`、`screenshot-cursor-guide.png`。
 - 调研记录见 [docs/research-v0.2.3.md](../../docs/research-v0.2.3.md)。

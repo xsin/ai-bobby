@@ -2255,3 +2255,14 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 @keyframes probe-spin {
   to { transform: rotate(360deg); }
 }
+
+/* Codex metadata coverage in the import drawer. */
+.codex-missing { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.codex-missing-chip {
+  padding: 4px 8px;
+  border-radius: 4px;
+  background: var(--amber-soft);
+  color: var(--amber-text);
+  font-size: 9px;
+  font-family: var(--mono);
+}

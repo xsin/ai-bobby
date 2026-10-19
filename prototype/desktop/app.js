@@ -153,6 +153,16 @@
     ],
   };
 
+  // Models with Codex-specific metadata (slug/capabilities/instructions).
+  // Other models stay usable via the gateway but are skipped for Codex.
+  const CODEX_META = new Set([
+    'oc/deepseek-v4.1-flash',
+    'oc/glm-5.3-flash',
+    'wb/deepseek-v4.1-flash',
+    'wb/glm-5.3-flash',
+    'wbi/deepseek-v4.1-flash',
+  ]);
+
   const CLIENTS = [
     { id: 'workbuddy', name: 'WorkBuddy（国内）', path: '~/.workbuddy/models.json', status: '已探测', checked: true, note: '排除 WB 自身分组' },
     { id: 'wbi', name: 'WorkBuddy AI（国际）', path: '~/.workbuddy-ai/models.json', status: '已探测', checked: true, note: '排除 WBI 自身分组' },
@@ -886,6 +896,18 @@
   // Import drawer
   // ---------------------------------------------------------------------------
 
+  function codexStats() {
+    const selectedIds = [];
+    for (const group of ['oc', 'wb', 'wbi', 'nv']) {
+      if (!state.groups.get(group)) continue
+      const tab = group === 'oc' ? 'opencode' : group === 'wb' ? 'workbuddy' : group === 'wbi' ? 'wbi' : 'nvidia';
+      selectedIds.push(...state.selection[tab]);
+    }
+    const models = allModels().filter(model => selectedIds.includes(model.id));
+    const missing = models.filter(model => !CODEX_META.has(model.id));
+    return { total: models.length, covered: models.length - missing.length, missing };
+  }
+
   function renderImportDrawer() {
     $('#client-list').innerHTML = CLIENTS.filter(client => client.mode !== 'guide').map(client => {
       const checked = state.clients.get(client.id);
@@ -912,6 +934,19 @@
         <button type="button" class="guide-open" data-guide="${escapeHtml(client.id)}">查看接入步骤</button>
       </div>
     `).join('');
+
+    const codexChecked = state.clients.get('codex') === true;
+    const stats = codexStats();
+    $('#codex-coverage-section').hidden = !codexChecked;
+    if (codexChecked) {
+      $('#codex-coverage-count').textContent = `${stats.covered}/${stats.total}`;
+      $('#codex-coverage-note').textContent = stats.missing.length === 0
+        ? `已选 ${stats.total} 个模型都有 Codex 元数据，会全部写入 Codex 选择器。`
+        : `${stats.missing.length} 个已选模型缺少 Codex 元数据，不会写入 Codex 模型选择器；其他客户端仍会导入。`;
+      $('#codex-missing').innerHTML = stats.missing.map(model =>
+        `<span class="codex-missing-chip">${escapeHtml(model.display)}</span>`
+      ).join('');
+    }
 
     $('#group-chips').innerHTML = [
       { id: 'oc', label: 'OC', count: SOURCES.opencode.models.filter(model => model.status === 'available').length },
@@ -969,6 +1004,7 @@
     const lines = [];
     const groups = activeGroups();
     const checkedClients = CLIENTS.filter(client => state.clients.get(client.id));
+    const codex = codexStats();
     if (checkedClients.length === 0) {
       lines.push({ type: 'dim', text: '# 请选择至少一个客户端' });
     } else if (!groups.oc && !groups.wb && !groups.wbi && !groups.nv) {
@@ -993,7 +1029,9 @@
           lines.push({ type: 'add', text: '+ [model_providers.ai-bobby]' });
           lines.push({ type: 'add', text: '+ base_url = "http://127.0.0.1:46890/v1"' });
           lines.push({ type: 'add', text: '+ wire_api = "responses"' });
-          lines.push({ type: 'add', text: '+ experimental_bearer_token = "sk-…f3a2"' });
+          lines.push({ type: 'add', text: '+ experimental_bearer_token = "sk-…f3a2"' })
+      lines.push({ type: 'add', text: `+ catalog: ${codex.covered} models` })
+      if (codex.missing.length > 0) lines.push({ type: 'dim', text: `- skipped: ${codex.missing.length} (no Codex metadata)` });
         } else if (client.id === 'claude') {
           lines.push({ type: 'add', text: 'Claude Code  ~/.claude/settings.json' });
           lines.push({ type: 'add', text: '+ "ANTHROPIC_BASE_URL": "http://127.0.0.1:46890"' });
