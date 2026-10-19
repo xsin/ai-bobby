@@ -15,7 +15,7 @@
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
 - 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
-- 当前 HEAD：最新提交见 `git log -1`；工作区 clean（未 push、未 tag）
+- 当前 HEAD：最新提交见 `git log -1`；`main` 已 push，`v0.2.2` 已 tag + release
 - 工具链：Node v26.3.0、pnpm 10.15.1
 
 ---
@@ -561,3 +561,12 @@ WorkBuddy 上游
   点“刷新”后页面 reload、新 SW 接管、toast 消失。
 - 限制：更新 toast 依赖旧页面还能运行；若旧包已白屏（无 React 树）则无法显示，只能等关闭全部标签后新 SW 激活，
   或清站点数据。新构建的静态首屏 + ErrorBoundary 可避免再次进入这种状态。
+
+
+### 2026-10-19 Round 16：v0.2.2 发布
+
+- `main` push → Website workflow 成功：gh-pages 更新为 v0.2.2，含移动端静态首屏兜底；
+  实测线上移动端正常、禁用 JS 也能看到内容。
+- `v0.2.2` tag → Release workflow 成功（arm64 + x64，ad-hoc 签名）：
+  GitHub Release `v0.2.2` 含 zip/checksums/latest.json/install.sh；`releases/latest/latest.json` 已指向 0.2.2。
+- 发布前本地验证：69 项测试、typecheck、arm64 打包；`Info.plist` 0.2.2、名称 AI Bobby、自定义 icon.icns。
