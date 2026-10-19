@@ -1,6 +1,6 @@
 # AI Bobby 落地页技术方案（tech-landing）
 
-- 当前版本：v0.2.1
+- 当前版本：v0.2.2
 - 日期：2026-10-18
 - 状态：**已确认并实现（`apps/website`）**
 - 关联：[prd-landing.md](./prd-landing.md)、[README.md](../README.md)、[handsoff.md](../handsoff.md)

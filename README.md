@@ -4,17 +4,17 @@
 收敛成一个 `127.0.0.1:46890` 端点、一把 API Key、一个桌面控制面板，
 并支持一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness。
 
-> **状态（2026-10-18）**：`v0.2.1` 已发布；`main` 的 **v0.2.2 界面改版已实现并完成本地验证**，等待你本机验收，尚未发版。
+> **状态（2026-10-19）**：`v0.2.2` 已发布。包含网关 abort 修复、备份基线 + 最近 5 份与按版本恢复、
+> 按钮/hover 收拢、恢复弹窗 tab 化；落地页补齐移动端兜底。
 > 46890 网关（Chat / Responses / Messages）、OpenCode 免费模型、WorkBuddy 双版本 provider、
 > 四个 importer、自动更新与 curl 安装链路均已落地。
 > v0.2.2 改版包含：可收起左侧栏 + 多页导航（新增概览页）、主题只在设置页、导入历史与备份合并表格、
 > 关于 ZEO 与音乐、可拖动应用 LOGO 头像、全局可拖动音乐播放器、更新条/设置 UI；
 > 设置页开关已做浅色对比度修复；关于页歌曲优先唤起网易云音乐 App，失败回退网页播放器；
 > 导入抽屉实时预览、模型清单显示计费。
-> **发布需要你本机验收后确认；在此之前不创建 tag/release。**
 > 真实 Codex 0.154、Claude Code 2.1、OpenCode `oc/space-bunny-free` 已在本机跑通；
 > **WorkBuddy 真实账号登录仍需要你本人扫码验证**。
-> 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒，
+> 落地页 `apps/website` 已实现：WebGL + 中英文切换 + PWA 更新提醒 + 移动端静态兜底，
 > 部署在 <https://xsin.github.io/ai-bobby/>。
 
 ![OpenCode 页](docs/screenshots/01-opencode-dark.png)
@@ -43,7 +43,7 @@ less install.sh && bash install.sh
 ```
 
 - 默认安装到 `~/Applications/AI Bobby.app`；`--system` 可装到 `/Applications`。
-- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.1>
+- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
 - 二进制托管在 **GitHub Release**；gh-pages 只放安装脚本、版本号、校验和与更新清单。
 - 首版未做 Apple 公证。首次打开若被 Gatekeeper 阻止：
 
@@ -313,9 +313,9 @@ python3 -m http.server 8766 --bind 127.0.0.1 -d out/renderer
 发布（本地）：
 
 ```sh
-bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.1
-bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.1
-node scripts/release/validate.mjs release-site/releases/0.2.1
+bash scripts/release/build-mac.sh --arch arm64 --out-dir release-site/releases/0.2.2
+bash scripts/release/build-mac.sh --arch x64   --out-dir release-site/releases/0.2.2
+node scripts/release/validate.mjs release-site/releases/0.2.2
 ```
 
 CI：推送 `v*` tag 触发 [.github/workflows/release.yml](./.github/workflows/release.yml)，

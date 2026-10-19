@@ -45,7 +45,7 @@ jobs:
       - name: Build and package arm64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: "AI Bobby 公测更新：OpenCode 免费模型、WorkBuddy 双版本 provider、Codex/Claude Code 兼容；WorkBuddy 登录需本人扫码。"
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.2：修复 WorkBuddy / WorkBuddy AI 的 deepseek 模型 502 abort；导入备份改为基线 + 最近 5 份并支持按版本恢复；统一按钮与 ghost hover；移动端落地页白屏修复。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch arm64 \
@@ -54,7 +54,7 @@ jobs:
       - name: Build and package x64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: "AI Bobby 公测更新：OpenCode 免费模型、WorkBuddy 双版本 provider、Codex/Claude Code 兼容；WorkBuddy 登录需本人扫码。"
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.2：修复 WorkBuddy / WorkBuddy AI 的 deepseek 模型 502 abort；导入备份改为基线 + 最近 5 份并支持按版本恢复；统一按钮与 ghost hover；移动端落地页白屏修复。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch x64 \

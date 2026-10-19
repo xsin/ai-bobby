@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/opencode",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "private": true,
   "type": "module",
   "description": "OpenCode 隔离运行时、免费模型发现、能力检测与转发适配",

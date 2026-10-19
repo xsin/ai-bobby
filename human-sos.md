@@ -14,7 +14,7 @@ Agent 已实现并单测覆盖官方登录、账号库、目录、聊天、额�
 
 请按以下步骤验证：
 
-- [ ] 安装 v0.2.1：`curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash`
+- [ ] 安装 v0.2.2：`curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash`
 - [ ] 启动后切到 **WorkBuddy** tab → **添加账号** → 在官方窗口完成扫码/授权
 - [ ] 确认模型列表和账号额度出现
 - [ ] 发一条消息，确认流式回复正常
@@ -38,14 +38,14 @@ Agent 已用 Codex 0.154、Claude Code 2.1、OpenCode 免费模型在本机跑�
 - [ ] 复制 API Key，用 README 的 curl 示例完成一次 Chat 请求
 - [ ] 从 **导入** 抽屉导入到 Codex / Claude Code（先看 diff，再写入），重启客户端后能选到模型
 - [ ] 如果使用 DSH，导入后按 README 说明在 DSH 侧配置 `AI_BOBBY_API_KEY`
-- [ ] 设置页“检查更新”能返回 v0.2.1 或更高版本
+- [ ] 设置页“检查更新”能返回 v0.2.2 或更高版本
 - [ ] 验收通过后明确回复“可以发版”；在此之前不要创建新的 release/tag
 
 ---
 
 ## 3. 发布闸门（必须）
 
-当前处于 **v0.2.1 真实验收阶段**，问题记录在 [`issues.md`](./issues.md)。
+当前处于 **v0.2.2 真实验收阶段**，问题记录在 [`issues.md`](./issues.md)。
 
 - 未经你本机验收通过，不创建新 tag、不发布 GitHub Release、不更新安装通道。
 - 验收通过后，你明确回复“可以发版”，再走 release workflow。

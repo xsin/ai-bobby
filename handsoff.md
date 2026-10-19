@@ -6,16 +6,15 @@
 > 落地页见 [docs/prd-landing.md](./docs/prd-landing.md) / [docs/tech-landing.md](./docs/tech-landing.md)；
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
-- 最后更新：2026-10-18
-- 当前阶段：**v0.2.1 已发布；v0.2.2 界面改版 + 第二轮体验反馈修复已实现并本地验证
-  （开关对比度、关于页 App 播放与边框、额度接口、登录弹窗、DSH 凭据、计费列、全局手型）。
-  issues 里 #1–#4、#7–#10 已处理；#5/#6（历史页合并表格）等用户更新设计稿后再开工。
-  未经用户确认不创建新 tag/release。**
+- 最后更新：2026-10-19
+- 当前阶段：**v0.2.2 已发布（2026-10-19）**：网关 abort 修复、备份基线 + 最近 5 份与按版本恢复、
+  按钮/hover 收拢、恢复弹窗 tab 化、落地页移动端兜底。第五轮与恢复弹窗 issues 已全部关闭；
+  发版由 `v0.2.2` tag 触发（ad-hoc 签名，未经 Apple 公证）。
   落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。
 - 工作目录：`/Volumes/Pluto/dev/proj/ai-bobby`
 - 仓库：<https://github.com/xsin/ai-bobby>（public）
 - 安装通道：<https://xsin.github.io/ai-bobby/releases/latest/install.sh>
-- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.1>
+- 当前 release：<https://github.com/xsin/ai-bobby/releases/tag/v0.2.2>
 - 当前 HEAD：最新提交见 `git log -1`；工作区 clean（未 push、未 tag）
 - 工具链：Node v26.3.0、pnpm 10.15.1
 
@@ -31,7 +30,7 @@ WorkBuddy 国内版、WorkBuddy AI 国际版收敛成 `127.0.0.1:46890` 一个�
 **当前状态**
 
 - 46890 网关、WorkBuddy 双版本 provider、OpenCode provider、四个 importer、桌面真实状态、
-  自动更新与 curl 安装均已实现并发布 `v0.2.1`。
+  自动更新与 curl 安装均已实现并发布 `v0.2.2`。
 - **v0.2.2 界面改版已在 main 实现并本地验证**：可收起左侧栏 + 多页导航、主题移到设置页、
   导入历史/备份/恢复、关于 ZEO + 音乐 + 全局可拖动播放器、可拖动应用 LOGO 头像、
   更新条与设置更新 UI；设置页开关已补边框/内边距与标签间距；关于页歌曲行边框与可点击元素手型已修。
@@ -162,7 +161,7 @@ Headroom 式前缀缓存/压缩后置到 P8。
 | P4 三协议网关 | 完成 | Chat/Responses/Messages + count_tokens；真实 Codex/Claude 各跑通 |
 | P5 四个 importer | 基本完成 | 四个目标写入/备份/回滚测试；Codex/Claude 已真机回环；WorkBuddy/DSH 待账号/客户端验证 |
 | P6 控制面板 | 完成（v0.2.2 改版） | 左侧栏多页、历史/备份恢复、关于/音乐、浮动头像/播放器、更新条；关于页优先唤起网易云 App，失败回退 iframe；真实状态、登录窗口、导入 IPC |
-| P7 打包/分发/更新 | 完成（macOS） | v0.2.1 已发布；v0.2.2 待用户验收后发布；**发版需用户本机确认**；curl/更新链路已验证；Windows 未做 |
+| P7 打包/分发/更新 | 完成（macOS） | v0.2.2 已发布；curl/更新链路已验证；Windows 未做 |
 | P8 硬化/可选 | 未完成 | OpenCode 沙箱/图片、检测缓存、safeStorage、Headroom 压缩 |
 | Website | 已实现 | `apps/website`（React/Vite/Three/PWA/i18n）+ `prototype/website` 视觉母版；已部署根路径 |
 | Lucia | 独立项目 | 同级 `ai-lucia/`；等 AI Bobby 完结后再启动，不在本仓库实现 |

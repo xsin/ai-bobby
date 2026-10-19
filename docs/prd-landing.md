@@ -1,6 +1,6 @@
 # AI Bobby 落地页 PRD（prd-landing）
 
-- 当前版本：v0.2.1
+- 当前版本：v0.2.2
 - 日期：2026-10-18
 - 状态：**已实现并部署到 gh-pages 根路径**
 - 关联：[README.md](../README.md)、[handsoff.md](../handsoff.md)、[tech-landing.md](./tech-landing.md)
@@ -68,7 +68,7 @@ Nav
 └── Install
 
 Hero
-├── eyebrow: LOCAL AI GATEWAY / v0.2.1
+├── eyebrow: LOCAL AI GATEWAY / v0.2.2
 ├── H1: All your models. One endpoint.
 ├── 说明 + 安装命令 + See the flow
 ├── 来源轨道（SVG + WebGL + 标签）
