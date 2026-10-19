@@ -57,6 +57,8 @@ export interface ModelSnapshot {
   contextWindow?: number
   maxOutputTokens?: number
   accounts?: number
+  latencyMs?: number
+  checkedAtMs?: number
   billing?: { credits?: string; badges?: readonly string[]; free: boolean; rateUnknown?: boolean }
 }
 

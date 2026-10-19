@@ -5,8 +5,16 @@ export type ProxyMode = 'off' | 'system' | 'custom'
 export type ProxySource = 'nvidia' | 'workbuddy' | 'workbuddy-ai'
 export type LocaleChoice = 'system' | 'zh' | 'en'
 
+export interface NvidiaProbeSnapshot {
+  status: 'available' | 'unavailable' | 'pending'
+  latencyMs?: number
+  checkedAtMs?: number
+  error?: string
+}
+
 export interface AppSettings {
   nvidiaApiKey: string
+  nvidiaProbes: Record<string, NvidiaProbeSnapshot>
   proxy: {
     mode: ProxyMode
     url: string
@@ -18,6 +26,7 @@ export interface AppSettings {
 export function defaultSettings(): AppSettings {
   return {
     nvidiaApiKey: '',
+    nvidiaProbes: {},
     proxy: {
       mode: 'custom',
       url: 'http://127.0.0.1:10080',
@@ -34,6 +43,7 @@ function normalize(value: unknown): AppSettings {
   const proxy = (input.proxy ?? {}) as Partial<AppSettings['proxy']>
   return {
     nvidiaApiKey: typeof input.nvidiaApiKey === 'string' ? input.nvidiaApiKey : base.nvidiaApiKey,
+    nvidiaProbes: typeof input.nvidiaProbes === 'object' && input.nvidiaProbes !== null ? input.nvidiaProbes : base.nvidiaProbes,
     proxy: {
       mode: proxy.mode === 'off' || proxy.mode === 'system' || proxy.mode === 'custom' ? proxy.mode : base.proxy.mode,
       url: typeof proxy.url === 'string' && proxy.url !== '' ? proxy.url : base.proxy.url,

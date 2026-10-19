@@ -644,3 +644,10 @@ WorkBuddy 上游
 - Services 注册 NVIDIA adapter，启动/刷新读取目录；IPC/preload 暴露 Key、探测、代理、语言。
 - UI：侧栏 NVIDIA、来源页、API Key 弹窗、模型表、概览 4 卡、导入 NV 分组。
 - 仍待：代理真正作用于 fetch、设置页（Key/代理/语言）、i18n、本地 0.2.3 包。
+
+### 2026-10-19 Round 25：0.2.3 本地体验包
+
+- NVIDIA 探测结果持久化到 settings.json（status/latency/checkedAt），重启后仍显示延迟。
+- ModelSnapshot 暴露 latencyMs/checkedAtMs，UI 显示真实探测耗时。
+- 本地 0.2.3 包安装到 /Applications/AIMatrix，安装脚本默认路径/清理再次验证。
+- Codex 裸模型 ID 自动迁移 + 网关提示已上线。

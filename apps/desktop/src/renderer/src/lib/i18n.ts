@@ -210,6 +210,7 @@ const en: Record<string, string> = {
   "支付宝": "Alipay",
   "微信": "WeChat",
   "更多方式": "More ways",
+  "文本": "Text",
 }
 
 export function resolveLocale(choice: 'system' | Locale): Locale {

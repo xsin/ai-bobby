@@ -104,6 +104,32 @@ export class NvidiaProvider implements ProviderAdapter {
   }
 
   /** Real one-token chat request per model; returns latency and updates status. */
+  snapshot(): Record<string, { status: 'available' | 'unavailable' | 'pending'; latencyMs?: number; checkedAtMs?: number; error?: string }> {
+    return Object.fromEntries(
+      this.descriptors.map(model => [
+        model.upstreamId,
+        {
+          status: model.status === 'unavailable' || model.status === 'available' ? model.status : 'pending',
+          ...(model.latencyMs === undefined ? {} : { latencyMs: model.latencyMs }),
+          ...(model.checkedAtMs === undefined ? {} : { checkedAtMs: model.checkedAtMs }),
+          ...(model.error === undefined ? {} : { error: model.error }),
+        },
+      ]),
+    )
+  }
+
+  applyProbes(snapshot: Record<string, { status: 'available' | 'unavailable' | 'pending'; latencyMs?: number; checkedAtMs?: number; error?: string }>): void {
+    for (const model of this.descriptors) {
+      const probe = snapshot[model.upstreamId]
+      if (probe === undefined) continue
+      model.status = probe.status
+      if (probe.latencyMs !== undefined) model.latencyMs = probe.latencyMs
+      if (probe.checkedAtMs !== undefined) model.checkedAtMs = probe.checkedAtMs
+      if (probe.error === undefined) delete model.error
+      else model.error = probe.error
+    }
+  }
+
   async probeAll(concurrency = 4, signal?: AbortSignal): Promise<NvidiaProbeResult[]> {
     const queue = [...this.descriptors]
     const results: NvidiaProbeResult[] = []

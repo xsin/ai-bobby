@@ -176,6 +176,7 @@ export class Services {
         if (this.settings.nvidiaApiKey === '') return
         try {
           const models = await this.nvidia.refreshModels()
+          this.nvidia.applyProbes(this.settings.nvidiaProbes)
           this.registry.replace('nvidia', models)
         } catch (error) {
           logger.warn('nvidia catalog refresh failed', { error: String(error) })
@@ -198,6 +199,8 @@ export class Services {
       ...(model.contextWindow === undefined ? {} : { contextWindow: model.contextWindow }),
       ...(model.maxOutputTokens === undefined ? {} : { maxOutputTokens: model.maxOutputTokens }),
       ...(model.accounts === undefined ? {} : { accounts: model.accounts }),
+      ...(model.latencyMs === undefined ? {} : { latencyMs: model.latencyMs }),
+      ...(model.checkedAtMs === undefined ? {} : { checkedAtMs: model.checkedAtMs }),
       ...(model.billing === undefined ? {} : { billing: model.billing }),
     }))
     return {
@@ -215,12 +218,13 @@ export class Services {
   }
 
   async setNvidiaKey(apiKey: string): Promise<GatewayStatus> {
-    this.settings = { ...this.settings, nvidiaApiKey: apiKey.trim() }
+    this.settings = { ...this.settings, nvidiaApiKey: apiKey.trim(), nvidiaProbes: {} }
     await this.settingsStore.save(this.settings)
     this.nvidia.setApiKey(this.settings.nvidiaApiKey)
     try {
       if (this.settings.nvidiaApiKey !== '') {
         const models = await this.nvidia.refreshModels()
+        this.nvidia.applyProbes(this.settings.nvidiaProbes)
         this.registry.replace('nvidia', models)
       } else {
         this.registry.remove('nvidia')
@@ -235,6 +239,8 @@ export class Services {
 
   async probeNvidia(): Promise<GatewayStatus> {
     await this.nvidia.probeAll(4)
+    this.settings = { ...this.settings, nvidiaProbes: this.nvidia.snapshot() }
+    await this.settingsStore.save(this.settings)
     this.registry.replace('nvidia', this.nvidia.listModels())
     this.refreshedAtMs = Date.now()
     return this.snapshot()

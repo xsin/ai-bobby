@@ -114,7 +114,10 @@ function toDemoModel(model: ModelSnapshot): DemoModel {
     upstream: model.id.split('/').slice(1).join('/'),
     caps: caps.length > 0 ? caps : ['文本'],
     status: model.status as DemoModel['status'],
-    latency: model.accounts ? `${model.accounts} 账号` : '—',
+    latency: model.latencyMs !== undefined
+      ? `${(model.latencyMs / 1000).toFixed(1)} 秒`
+      : model.accounts ? `${model.accounts} 账号` : '—',
+    latencyMs: model.latencyMs,
     accounts: model.accounts,
     ...(model.billing === undefined ? {} : { billing: model.billing }),
     context: model.contextWindow?.toLocaleString('en-US') ?? '—',
