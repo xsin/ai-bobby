@@ -519,3 +519,12 @@ WorkBuddy 上游
 - 基线快照保留源文件 mtime（升级时从最旧滚动备份播种也能显示真实时间）。
 - 文档：PRD FR-UI-9、tech §8.4/§?、ui-guideline §5.6 + 约束 #15、README 截图与历史说明。
 - 验证：全量 69 项测试通过；截图 01/07/13 刷新；应用已重启（dev、46890）。
+
+### 2026-10-19 Round 12：恢复弹窗基线补齐 + tab 贯通设计
+
+- 基线缺失：只有 WorkBuddy 因手动播种有基线，Codex/Claude/DSH/WBI 没有。新增 `ensureBaseline()`，
+  启动时与打开恢复弹窗前为每个已探测客户端播种（优先最旧滚动备份，保留源文件 mtime）。
+- hover：tab hover 同时改变背景与文字颜色；选中 tab hover 保持面板底色。
+- 设计稿（待确认）：tabmenu 与 tabpanel 去掉分隔线，tabmenu 去掉内留白，选中 tab 与面板同底色 + 左侧主色条；
+  更新 `prototype/desktop/screenshot-restore.png`。
+- 生产代码未应用 borderless tab，等确认。

@@ -13,4 +13,8 @@ NOTE: 此文档由人类反馈应用产品的 BUG 或 FR (Feature Requests),由 
 3. 历史记录页面：查看差异、打开目录、恢复，三个ghost button，字号不对，hover样式不对。结合2收拢项目的按钮样式。另外review下css，对全局选择器，保障同一个选择器的样式集中一起定义，避免分散在不同地方。 **已完成（d977de3）：三个 ghost 统一 11px/30px 与 hover；全局 font reset 移入 @layer base。**
 4. 导入备份功能迭代：**每目标 1 基线 + 最近 5 份 = 最多 6 份** **已完成（5e05b67 + d977de3）：后端基线保留 + UI 文案/基线标记。**
 5. 历史记录页面：恢复功能增强：恢复弹窗面板，列出所有备份，默认选中基线版本（正常就是没有 AI Bobby配置的版本），用户可以选择其他历史版本。选择版本时，该版本的明细跟着变化。 **已完成（d977de3）：垂直 tabmenu + tabpanel，默认基线，tab 仅相对时间 + 日期。**
-6. 网关的BUG：在使用AI Bobby的deepseek-v4.1-flash模型时，WB和WBI的都报错：502: {"message":"This operation was aborted","type":"upstream","code":"upstream"}，OC的正常 **已完成（b42c0c8）：网关在请求体读完时误 abort 上游信号；已用 WB/WBI 实测流式恢复。**
+
+## 2026-10-19 恢复弹窗反馈
+
+1. 恢复弹窗看不到置顶的基线菜单；菜单 hover 未按设计稿。 **已完成（e4d3769）：启动/打开弹窗时为每个客户端补齐基线；hover 同时变背景与文字颜色。**
+2. tabmenu 与 tabpanel 不用 border 分隔，选中菜单与右侧面板贯通融合，tabmenu 去掉内留白。 **设计稿已更新（d087312），待确认后改代码。**
