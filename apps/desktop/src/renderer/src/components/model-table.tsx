@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { STATUS_META, isUsable, type DemoModel, type DemoSource } from '@/lib/demo-data'
+import { t } from '@/lib/i18n'
 
 interface ModelTableProps {
   source: DemoSource
@@ -230,11 +231,11 @@ function Detail({ label, value, mono }: { label: string; value: string; mono?: b
 function BillingCell({ billing }: { billing?: DemoModel['billing'] }) {
   if (billing === undefined) return <span className="text-[11px] text-faint">—</span>
   if (billing.free) {
-    return <span className="rounded border border-success/30 bg-success-soft px-1.5 py-px text-[10px] leading-[15px] text-success">免费</span>
+    return <span className="rounded border border-success/30 bg-success-soft px-1.5 py-px text-[10px] leading-[15px] text-success">{t("免费")}</span>
   }
   if (billing.credits !== undefined) {
     return <span className="font-mono text-[11px] text-muted-foreground">{billing.credits}</span>
   }
-  if (billing.rateUnknown) return <span className="text-[11px] text-faint">未知</span>
+  if (billing.rateUnknown) return <span className="text-[11px] text-faint">{t("未知")}</span>
   return <span className="text-[11px] text-faint">—</span>
 }

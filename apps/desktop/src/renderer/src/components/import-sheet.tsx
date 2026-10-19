@@ -37,6 +37,7 @@ import {
   type ProviderId,
 } from '@/lib/demo-data'
 import type { ImportPlanSnapshot, ImportTargetName } from '@shared/api'
+import { t } from '@/lib/i18n'
 
 interface ImportSheetProps {
   open: boolean
@@ -242,7 +243,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex w-full flex-col gap-0 border-line bg-surface p-0 sm:max-w-[480px]">
         <SheetHeader className="border-b border-line bg-toolbar px-5 py-4 text-left">
-          <SheetTitle className="text-[15px] font-semibold text-text">导入到客户端</SheetTitle>
+          <SheetTitle className="text-[15px] font-semibold text-text">{t("导入到客户端")}</SheetTitle>
           <SheetDescription className="text-[11px] text-muted-foreground">
             变更自动预览，确认后写入；只改 AI Bobby 自己的条目。
           </SheetDescription>
@@ -251,7 +252,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
         <ScrollArea className="min-h-0 flex-1">
           <div className="space-y-5 px-5 py-4">
             <section>
-              <SectionTitle title="客户端" hint={`${checkedClients.length} 个已选择`} />
+              <SectionTitle title={t("客户端")} hint={`${checkedClients.length} 个已选择`} />
               <div className="space-y-1.5">
                 {IMPORT_CLIENTS.map(client => {
                   const Icon = CLIENT_ICONS[client.id]
@@ -292,9 +293,9 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                 <div className="min-w-0">
                   <span className="flex items-center gap-1.5 text-[11px] font-semibold text-text">
                     Cursor
-                    <span className="rounded bg-warning-soft px-1 py-px text-[9px] font-normal text-warning">仅引导</span>
+                    <span className="rounded bg-warning-soft px-1 py-px text-[9px] font-normal text-warning">{t("仅引导")}</span>
                   </span>
-                  <p className="mt-0.5 text-[9px] text-faint">不写数据库 · 手动粘贴</p>
+                  <p className="mt-0.5 text-[9px] text-faint">{t("不写数据库 · 手动粘贴")}</p>
                 </div>
                 <Button type="button" variant="outline" size="sm" onClick={() => setCursorGuideOpen(true)}>
                   查看接入步骤
@@ -303,7 +304,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             </section>
 
             <section>
-              <SectionTitle title="分组" hint="WorkBuddy 目标自动排除自身分组" />
+              <SectionTitle title={t("分组")} hint="WorkBuddy 目标自动排除自身分组" />
               <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(groups) as GroupId[]).map(group => {
                   const checked = groups[group]
@@ -333,10 +334,10 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
             </section>
 
             <section>
-              <SectionTitle title="默认模型" hint="用于 Codex / Claude Code" />
+              <SectionTitle title={t("默认模型")} hint="用于 Codex / Claude Code" />
               <Select value={defaultModel} onValueChange={setDefaultModel}>
                 <SelectTrigger className="h-8 w-full border-line bg-surface text-[11px]">
-                  <SelectValue placeholder="选择默认模型" />
+                  <SelectValue placeholder={t("选择默认模型")} />
                 </SelectTrigger>
                 <SelectContent className="border-line bg-popover">
                   {modelOptions.map(option => (
@@ -358,7 +359,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
 
             <section>
               <SectionTitle
-                title="变更预览"
+                title={t("变更预览")}
                 hint={previewing ? '更新中…' : window.aiBobby ? '自动更新 · 只读，不会写入' : '原型预览'}
               />
               <p className="mb-2 text-[10px] leading-relaxed text-faint">
@@ -399,7 +400,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
     <Dialog open={cursorGuideOpen} onOpenChange={setCursorGuideOpen}>
       <DialogContent className="max-w-[560px] gap-0 border-line bg-surface p-0">
         <DialogHeader className="border-b border-line px-5 py-4 text-left">
-          <DialogTitle className="text-[15px] font-semibold text-text">在 Cursor 中接入 AI Bobby</DialogTitle>
+          <DialogTitle className="text-[15px] font-semibold text-text">{t("在 Cursor 中接入 AI Bobby")}</DialogTitle>
           <DialogDescription className="text-[11px] text-muted-foreground">
             Cursor 的设置存在 SQLite 与钥匙串里，AI Bobby 不写它的数据库，按下面步骤手动粘贴即可。
           </DialogDescription>
@@ -424,7 +425,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
           只影响 Chat / Agent；开启 override 后 Cursor 托管模型也会走该地址，切回时记得关闭。
         </div>
         <DialogFooter className="border-t border-line px-5 py-3">
-          <Button type="button" variant="outline" size="sm" onClick={() => setCursorGuideOpen(false)}>关闭</Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setCursorGuideOpen(false)}>{t("关闭")}</Button>
           <Button
             type="button"
             variant="outline"

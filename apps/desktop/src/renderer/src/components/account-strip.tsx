@@ -2,6 +2,7 @@ import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { DemoAccount, DemoSource } from '@/lib/demo-data'
+import { t } from '@/lib/i18n'
 
 interface AccountStripProps {
   source: DemoSource
@@ -15,7 +16,7 @@ export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
   return (
     <section className="mt-3 flex items-center gap-2.5 overflow-x-auto rounded-lg border border-line bg-surface px-2.5 py-2">
       <div className="flex min-w-[58px] shrink-0 flex-col gap-px border-r border-line-soft pr-2.5">
-        <span className="text-[11px] font-semibold text-text">账号</span>
+        <span className="text-[11px] font-semibold text-text">{t("账号")}</span>
         <span className="whitespace-nowrap text-[10px] text-faint">
           {accounts.length > 1 ? 'round-robin · 失败切换' : '单账号 · 可继续添加'}
         </span>

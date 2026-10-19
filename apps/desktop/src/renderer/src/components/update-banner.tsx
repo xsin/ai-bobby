@@ -2,6 +2,7 @@ import { Download, RotateCw, Sparkles, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { formatBytes } from '@/lib/format'
 import type { UpdateInfo, UpdateProgress } from '@shared/api'
+import { t } from '@/lib/i18n'
 
 interface UpdateBannerProps {
   info: UpdateInfo
@@ -100,7 +101,7 @@ export function UpdateBanner({
           type="button"
           variant="ghost"
           size="icon"
-          aria-label="关闭更新提示"
+          aria-label={t("关闭更新提示")}
           className="size-7 text-muted-foreground"
           onClick={onDismiss}
         >

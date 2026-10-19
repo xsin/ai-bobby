@@ -13,6 +13,7 @@ import { formatBytes } from '@/lib/format'
 import { relativeTime } from '@/lib/relative-time'
 import { cn } from '@/lib/utils'
 import type { BackupVersion, ImportHistoryEntry, ImportHistorySnapshot } from '@shared/api'
+import { t } from '@/lib/i18n'
 
 interface HistoryPageProps {
   history: ImportHistorySnapshot | null
@@ -155,7 +156,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-4">
         <div>
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">OTHER · HISTORY</div>
-          <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">导入历史</h1>
+          <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">{t("导入历史")}</h1>
           <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">
             每次写入都会先备份；在这里查看差异、打开配置目录或恢复备份。
           </p>
@@ -169,19 +170,19 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
 
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">最近写入</span>
+          <span className="text-[10px] text-faint">{t("最近写入")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{latest ? formatTime(latest.createdAtMs) : '—'}</strong>
           <small className="mt-0.5 block text-[10px] text-muted-foreground">{latest ? `${TARGET_LABEL[latest.target]} · ${latest.modelCount} 个模型` : '还没有导入记录'}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">可恢复备份</span>
+          <span className="text-[10px] text-faint">{t("可恢复备份")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{backups.length}</strong>
-          <small className="mt-0.5 block text-[10px] text-muted-foreground">基线 1 份 + 最近 5 份</small>
+          <small className="mt-0.5 block text-[10px] text-muted-foreground">{t("基线 1 份 + 最近 5 份")}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">备份占用</span>
+          <span className="text-[10px] text-faint">{t("备份占用")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{totalBackupSize > 0 ? formatBytes(totalBackupSize) : '—'}</strong>
-          <small className="mt-0.5 block text-[10px] text-muted-foreground">只存本机，不上传</small>
+          <small className="mt-0.5 block text-[10px] text-muted-foreground">{t("只存本机，不上传")}</small>
         </div>
       </div>
 
@@ -206,8 +207,8 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           <input
             value={query}
             onChange={event => setQuery(event.target.value)}
-            placeholder="搜索备份 / 模型 / 客户端"
-            aria-label="搜索导入历史"
+            placeholder={t("搜索备份 / 模型 / 客户端")}
+            aria-label={t("搜索导入历史")}
             className="min-w-0 flex-1 border-0 bg-transparent text-[11px] text-text outline-none placeholder:text-faint"
           />
         </label>
@@ -215,11 +216,11 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
 
       <section className="mt-3 overflow-hidden rounded-lg border border-line-soft bg-surface" aria-labelledby="history-heading">
         <div className="flex items-center justify-between border-b border-line-soft px-3.5 py-2.5">
-          <h2 id="history-heading" className="text-[12px] font-semibold text-text">导入记录与备份</h2>
-          <span className="text-[10px] text-faint">基线 1 份 + 最近 5 份（最多 6 份）</span>
+          <h2 id="history-heading" className="text-[12px] font-semibold text-text">{t("导入记录与备份")}</h2>
+          <span className="text-[10px] text-faint">{t("基线 1 份 + 最近 5 份（最多 6 份）")}</span>
         </div>
         {visibleEntries.length === 0 ? (
-          <div className="px-4 py-10 text-center text-[11px] text-faint">没有匹配的导入记录或备份。</div>
+          <div className="px-4 py-10 text-center text-[11px] text-faint">{t("没有匹配的导入记录或备份。")}</div>
         ) : (
           <table className="w-full border-collapse">
             <colgroup>
@@ -229,9 +230,9 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
             </colgroup>
             <thead>
               <tr className="text-left text-[10px] font-medium text-faint">
-                <th scope="col" className="px-3.5 py-2"><span className="sr-only">客户端</span></th>
-                <th scope="col" className="px-3.5 py-2">写入记录</th>
-                <th scope="col" className="px-3.5 py-2 text-right">操作</th>
+                <th scope="col" className="px-3.5 py-2"><span className="sr-only">{t("客户端")}</span></th>
+                <th scope="col" className="px-3.5 py-2">{t("写入记录")}</th>
+                <th scope="col" className="px-3.5 py-2 text-right">{t("操作")}</th>
               </tr>
             </thead>
             <tbody>
@@ -259,31 +260,31 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                         </span>
                       </div>
                       <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[10px]">
-                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">配置</span>
+                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">{t("配置")}</span>
                         <code className="min-w-0 truncate font-mono text-[9px] text-text" title={entry.path}>{entry.path}</code>
                       </div>
                       <div className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[10px]">
-                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">备份</span>
+                        <span className="shrink-0 text-[9px] tracking-[0.04em] text-faint">{t("备份")}</span>
                         {entry.backupPath ? (
                           <>
                             <code className="min-w-0 truncate font-mono text-[9px] text-text" title={entry.backupPath}>{backupName(entry.backupPath)}</code>
                             <span className="shrink-0 text-[9px] text-faint">{backup?.size !== undefined ? formatBytes(backup.size) : ''}</span>
                             {baselineIds.has(entry.id) ? (
-                              <span className="shrink-0 rounded bg-warning-soft px-1 py-px text-[8px] font-semibold text-warning">基线</span>
+                              <span className="shrink-0 rounded bg-warning-soft px-1 py-px text-[8px] font-semibold text-warning">{t("基线")}</span>
                             ) : null}
                           </>
                         ) : (
-                          <span className="text-[9px] text-faint">没有可用的备份文件</span>
+                          <span className="text-[9px] text-faint">{t("没有可用的备份文件")}</span>
                         )}
                       </div>
                     </td>
                     <td className="whitespace-nowrap px-3.5 py-2.5 text-right align-top">
                       {entry.diff ? (
-                        <Button type="button" variant="ghost" size="sm" title="只读查看这次写入改了什么" onClick={() => setViewing(entry)}>
+                        <Button type="button" variant="ghost" size="sm" title={t("只读查看这次写入改了什么")} onClick={() => setViewing(entry)}>
                           查看差异
                         </Button>
                       ) : null}
-                      <Button type="button" variant="ghost" size="sm" title="在 Finder 中打开配置所在目录" onClick={() => onOpenDirectory(entry.path)}>
+                      <Button type="button" variant="ghost" size="sm" title={t("在 Finder 中打开配置所在目录")} onClick={() => onOpenDirectory(entry.path)}>
                         打开目录
                       </Button>
                       {entry.backupPath ? (
@@ -320,11 +321,11 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
           </DialogHeader>
 
           <div className="mx-[18px] my-3.5 grid grid-cols-[196px_minmax(0,1fr)] overflow-hidden rounded-lg border border-line-soft">
-            <div role="tablist" aria-orientation="vertical" aria-label="备份版本" className="flex max-h-[300px] flex-col overflow-auto bg-surface-2">
+            <div role="tablist" aria-orientation="vertical" aria-label={t("备份版本")} className="flex max-h-[300px] flex-col overflow-auto bg-surface-2">
               {versionsLoading ? (
-                <div className="px-2 py-3 text-[10px] text-faint">读取备份…</div>
+                <div className="px-2 py-3 text-[10px] text-faint">{t("读取备份…")}</div>
               ) : versions.length === 0 ? (
-                <div className="px-2 py-3 text-[10px] text-faint">没有可用的备份。</div>
+                <div className="px-2 py-3 text-[10px] text-faint">{t("没有可用的备份。")}</div>
               ) : versions.map(version => {
                 const active = version.id === selectedVersion
                 return (
@@ -363,16 +364,16 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
                 <p className="text-[10px] text-danger">{versionsError}</p>
               ) : selected ? (
                 <div className="flex flex-col gap-1">
-                  <span className="text-[9px] tracking-[0.06em] text-faint">将恢复到</span>
+                  <span className="text-[9px] tracking-[0.06em] text-faint">{t("将恢复到")}</span>
                   <strong className="text-[15px] font-semibold tracking-[-0.01em] text-text">{selectedTitle}</strong>
                   <span className="text-[10px] text-muted-foreground">{formatDateTime(selected.createdAtMs)}</span>
                   <dl className="mt-2">
                     <div className="flex justify-between gap-3.5 border-t border-line-soft py-1.5">
-                      <dt className="shrink-0 text-[9px] text-faint">备份文件</dt>
+                      <dt className="shrink-0 text-[9px] text-faint">{t("备份文件")}</dt>
                       <dd className="min-w-0 break-words text-right font-mono text-[10px] text-text">{backupName(selected.backupPath)}</dd>
                     </div>
                     <div className="flex justify-between gap-3.5 border-t border-line-soft py-1.5">
-                      <dt className="shrink-0 text-[9px] text-faint">目标文件</dt>
+                      <dt className="shrink-0 text-[9px] text-faint">{t("目标文件")}</dt>
                       <dd className="min-w-0 break-words text-right font-mono text-[10px] text-text">{selected.path}</dd>
                     </div>
                   </dl>
@@ -390,7 +391,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
             恢复前会先备份当前文件；恢复只写入这个客户端，不影响其他客户端。
           </div>
           <DialogFooter className="border-t border-line px-5 py-3">
-            <Button type="button" variant="outline" size="sm" onClick={() => setPending(null)}>取消</Button>
+            <Button type="button" variant="outline" size="sm" onClick={() => setPending(null)}>{t("取消")}</Button>
             <Button
               type="button"
               size="sm"
@@ -410,7 +411,7 @@ export function HistoryPage({ history, loading, restoringId, onRefresh, onRestor
       <Dialog open={viewing !== null} onOpenChange={open => { if (!open) setViewing(null) }}>
         <DialogContent className="max-w-[620px] gap-0 border-line bg-surface p-0">
           <DialogHeader className="border-b border-line px-5 py-4 text-left">
-            <DialogTitle className="text-[15px] font-semibold text-text">查看差异</DialogTitle>
+            <DialogTitle className="text-[15px] font-semibold text-text">{t("查看差异")}</DialogTitle>
             <DialogDescription className="text-[11px] text-muted-foreground">
               {viewing ? `${TARGET_LABEL[viewing.target]} · ${formatTime(viewing.createdAtMs)} · ${viewing.path}` : ''}
             </DialogDescription>

@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { BrandMark } from '@/components/brand-mark'
+import { t } from '@/lib/i18n'
 
 interface FloatingAvatarProps {
   onOpenAbout: () => void
@@ -100,8 +101,8 @@ export function FloatingAvatar({ onOpenAbout }: FloatingAvatarProps) {
       ref={ref}
       type="button"
       className="floating-avatar fixed bottom-[54px] right-[24px] z-[15] grid size-[62px] touch-none place-items-center rounded-2xl border-0 bg-transparent p-0"
-      aria-label="关于"
-      title="关于"
+      aria-label={t("关于")}
+      title={t("关于")}
     >
       <span className="floating-avatar-halo" aria-hidden="true" />
       <BrandMark className="floating-avatar-logo relative z-10 size-[58px] rounded-[14px]" />

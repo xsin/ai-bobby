@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import type { DemoSource } from '@/lib/demo-data'
+import { t } from '@/lib/i18n'
 
 interface LoginDialogProps {
   open: boolean
@@ -46,14 +47,14 @@ export function LoginDialog({ open, onOpenChange, source, busy, error, onStart }
               <QrCode className="size-5" />
             </span>
             <div>
-              <div className="text-[12px] font-semibold text-text">在官方登录窗口扫码</div>
+              <div className="text-[12px] font-semibold text-text">{t("在官方登录窗口扫码")}</div>
               <div className="font-mono text-[10px] text-faint">{host.host}</div>
             </div>
           </div>
           <ol className="mt-3 space-y-1.5 pl-4 text-[11px] leading-relaxed text-muted-foreground">
-            <li className="list-decimal">点击「打开官方登录页」，会弹出一个官方登录窗口。</li>
+            <li className="list-decimal">{t("点击「打开官方登录页」，会弹出一个官方登录窗口。")}</li>
             <li className="list-decimal">用{host.scan}完成登录，二维码由官方页面实时生成。</li>
-            <li className="list-decimal">登录成功后窗口自动关闭，账号自动入库并刷新目录与额度。</li>
+            <li className="list-decimal">{t("登录成功后窗口自动关闭，账号自动入库并刷新目录与额度。")}</li>
           </ol>
           {error ? (
             <p className="mt-3 rounded-md border border-danger/30 bg-danger-soft px-2.5 py-2 text-[10px] text-danger">{error}</p>

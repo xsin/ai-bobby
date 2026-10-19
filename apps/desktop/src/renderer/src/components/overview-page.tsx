@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import type { DemoSource, ProviderId } from '@/lib/demo-data'
 import type { ImportHistorySnapshot, GatewayStatus } from '@shared/api'
 import type { NavPage } from '@/components/sidebar'
+import { t } from '@/lib/i18n'
 
 interface OverviewPageProps {
   sources: Record<ProviderId, DemoSource>
@@ -73,7 +74,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-line pb-4">
         <div>
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">OVERVIEW</div>
-          <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">概览</h1>
+          <h1 className="mt-1 text-[25px] font-semibold leading-tight tracking-[-0.035em] text-text">{t("概览")}</h1>
           <p className="mt-1.5 max-w-[620px] text-[12px] text-muted-foreground">
             当前网关、模型源与最近导入的一览；点卡片进入对应页面。
           </p>
@@ -88,7 +89,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
 
       <div className="mt-4 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">网关</span>
+          <span className="text-[10px] text-faint">{t("网关")}</span>
           <strong className={cn('mt-0.5 block text-[20px] font-semibold tracking-[-0.025em]', gatewayReady ? 'text-text' : 'text-warning')}>
             {gatewayReady ? '运行中' : status?.gateway.state === 'starting' ? '启动中' : '未就绪'}
           </strong>
@@ -97,17 +98,17 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
           </small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">模型源</span>
+          <span className="text-[10px] text-faint">{t("模型源")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{allSources.length}</strong>
           <small className="mt-0.5 block text-[10px] text-muted-foreground">可用 {availableModels} / 待检测 {pendingModels}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">积分</span>
+          <span className="text-[10px] text-faint">{t("积分")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">{credits.value}</strong>
           <small className="mt-0.5 block text-[10px] text-muted-foreground">{credits.note}</small>
         </div>
         <div className="rounded-lg border border-line-soft bg-gradient-to-br from-surface to-surface-2 px-3.5 py-3">
-          <span className="text-[10px] text-faint">最近导入</span>
+          <span className="text-[10px] text-faint">{t("最近导入")}</span>
           <strong className="mt-0.5 block text-[20px] font-semibold tracking-[-0.025em] text-text">
             {latest ? formatTime(latest.createdAtMs) : '—'}
           </strong>
@@ -117,7 +118,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
         </div>
       </div>
 
-      <section className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4" aria-label="模型源">
+      <section className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-2 xl:grid-cols-4" aria-label={t("模型源")}>
         {SOURCE_META.map(meta => {
           const source = sources[meta.id]
           const Icon = meta.icon
@@ -140,7 +141,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
               </span>
               <span className="text-[27px] font-light leading-none tracking-[-0.03em] text-text tabular-nums">
                 {source.models.length}{' '}
-                <small className="ml-1 text-[11px] font-normal tracking-normal text-muted-foreground">个模型</small>
+                <small className="ml-1 text-[11px] font-normal tracking-normal text-muted-foreground">{t("个模型")}</small>
               </span>
               <span className="text-[10px] text-muted-foreground">可用 {available} · {detail}</span>
               <span className="mt-0.5 flex items-center gap-0.5 text-[10px] text-primary">
@@ -153,9 +154,9 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
 
       <section className="mt-2.5 overflow-hidden rounded-lg border border-line-soft bg-surface" aria-labelledby="overview-recent-heading">
         <div className="flex items-center justify-between border-b border-line-soft px-3.5 py-2.5">
-          <h2 id="overview-recent-heading" className="text-[12px] font-semibold text-text">最近导入</h2>
+          <h2 id="overview-recent-heading" className="text-[12px] font-semibold text-text">{t("最近导入")}</h2>
           <div className="flex items-center gap-2.5">
-            <span className="text-[10px] text-faint">最近 3 次</span>
+            <span className="text-[10px] text-faint">{t("最近 3 次")}</span>
             <button
               type="button"
               className="border-0 bg-transparent p-0 text-[10px] text-primary hover:underline"
@@ -166,7 +167,7 @@ export function OverviewPage({ sources, status, history, onNavigate, onRefresh }
           </div>
         </div>
         {recent.length === 0 ? (
-          <div className="px-4 py-8 text-center text-[11px] text-faint">还没有导入记录。</div>
+          <div className="px-4 py-8 text-center text-[11px] text-faint">{t("还没有导入记录。")}</div>
         ) : (
           <div className="flex flex-col">
             {recent.map(entry => (

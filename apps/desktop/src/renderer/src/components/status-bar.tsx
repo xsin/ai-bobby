@@ -2,6 +2,7 @@ import { Copy } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { DemoSource } from '@/lib/demo-data'
 import type { AppInfo } from '@shared/api'
+import { t } from '@/lib/i18n'
 
 interface StatusBarProps {
   source: DemoSource
@@ -25,7 +26,7 @@ export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusB
 
       <div className="flex min-w-0 items-center gap-2.5">
         <span className="flex items-center gap-1.5 whitespace-nowrap">
-          <span className="text-faint">转发口</span>
+          <span className="text-faint">{t("转发口")}</span>
           <code className="font-mono text-[10px] text-muted-foreground">http://127.0.0.1:{port}/v1</code>
         </span>
         <Button
@@ -34,7 +35,7 @@ export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusB
           size="sm"
           className="gap-1 text-muted-foreground"
           onClick={onCopyKey}
-          title="复制 API Key"
+          title={t("复制 API Key")}
         >
           <span className="text-faint">Key</span>
           <code className="font-mono text-[10px]">{keyMask}</code>

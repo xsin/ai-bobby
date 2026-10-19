@@ -2,6 +2,7 @@ import { Activity, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { metricsFor, type DemoSource, type SourceAction } from '@/lib/demo-data'
+import { t } from '@/lib/i18n'
 
 interface SourceHeadProps {
   source: DemoSource
@@ -59,7 +60,7 @@ export function SourceHead({ source, selectedCount, probing, onAction }: SourceH
           )
         })}
         <div className="text-right">
-          <dt className="text-[11px] text-muted-foreground">已选</dt>
+          <dt className="text-[11px] text-muted-foreground">{t("已选")}</dt>
           <dd className="mt-px text-[27px] font-light leading-none tracking-[-0.03em] tabular-nums text-primary">
             {selectedCount}
           </dd>

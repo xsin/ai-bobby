@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { X } from 'lucide-react'
 import type { MusicTrack } from '@/lib/music'
+import { t } from '@/lib/i18n'
 
 interface FloatingMusicPlayerProps {
   track: MusicTrack | null
@@ -105,7 +106,7 @@ export function FloatingMusicPlayer({ track, onClose }: FloatingMusicPlayerProps
         <button
           type="button"
           className="ml-auto grid size-[18px] place-items-center rounded border-0 bg-transparent p-0 text-[14px] leading-none text-faint hover:bg-hover hover:text-text"
-          aria-label="关闭播放器"
+          aria-label={t("关闭播放器")}
           onClick={onClose}
         >
           <X className="size-3" />
