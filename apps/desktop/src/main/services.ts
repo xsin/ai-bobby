@@ -49,6 +49,10 @@ import {
 
 const logger = createLogger('info')
 
+// WorkBuddy AI is temporarily unavailable while the official channel is
+// verified. Keep the source disabled instead of surfacing models that fail 11-128.
+const WBI_TEMPORARILY_DISABLED = true
+
 export class Services {
   private readonly registry = new ModelRegistry()
   private readonly providers = new Map<'workbuddy' | 'workbuddy-ai', WorkBuddyProvider>()
@@ -90,6 +94,7 @@ export class Services {
     }
     for (const variant of WORKBUDDY_VARIANTS) {
       if (variant.id === 'opencode') continue
+      if (variant.id === 'workbuddy-ai' && WBI_TEMPORARILY_DISABLED) continue
       const provider = new WorkBuddyProvider({
         variant,
         store: this.store,
@@ -268,6 +273,9 @@ export class Services {
   }
 
   async login(providerId: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot> {
+    if (providerId === 'workbuddy-ai' && WBI_TEMPORARILY_DISABLED) {
+      throw new Error('WorkBuddy AI 正在适配官方渠道，暂不可用')
+    }
     const variant = variantFor(providerId)
     if (variant === undefined) throw new Error('不支持的账号类型')
     const start = await startLogin(variant)

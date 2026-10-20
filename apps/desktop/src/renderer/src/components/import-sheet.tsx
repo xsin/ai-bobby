@@ -33,6 +33,7 @@ import {
   IMPORT_CLIENTS,
   SOURCES,
   isUsable,
+  WBI_TEMPORARILY_DISABLED,
   type ImportClient,
   type ProviderId,
 } from '@/lib/demo-data'
@@ -89,23 +90,25 @@ const TARGET_LABEL: Record<string, string> = {
 
 export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply, codexModels }: ImportSheetProps) {
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
-    Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, true])) as Record<ClientId, boolean>,
+    Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, !(WBI_TEMPORARILY_DISABLED && client.id === 'wbi')])) as Record<ClientId, boolean>,
   )
-  const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: true, nv: true })
-  const [defaultModel, setDefaultModel] = useState('oc/big-pickle')
+  const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: !WBI_TEMPORARILY_DISABLED, nv: true })
+  const [defaultModel, setDefaultModel] = useState('')
   const [cursorGuideOpen, setCursorGuideOpen] = useState(false)
   const [setAsDefault, setSetAsDefault] = useState(false)
 
-  const modelOptions = useMemo(
-    () =>
-      (Object.keys(SOURCES) as ProviderId[]).flatMap(provider => {
-        if (!groups[groupOf(provider)]) return []
-        return SOURCES[provider].models
-          .filter(isUsable)
-          .map(model => ({ value: model.id, label: model.display }))
+  const modelOptions = useMemo(() => {
+    const providers = (Object.keys(SOURCES) as ProviderId[]).filter(provider => {
+      if (!groups[groupOf(provider)]) return false
+      return !(WBI_TEMPORARILY_DISABLED && provider === 'wbi')
+    })
+    return providers.flatMap(provider =>
+      selectedIdsByGroup[provider].flatMap(id => {
+        const model = SOURCES[provider].models.find(item => item.id === id)
+        return model === undefined ? [] : [{ value: model.id, label: model.display }]
       }),
-    [groups],
-  )
+    )
+  }, [groups, selectedIdsByGroup])
 
   useEffect(() => {
     if (!modelOptions.some(option => option.value === defaultModel)) {
@@ -116,7 +119,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   const checkedClients = IMPORT_CLIENTS.filter(client => clients[client.id])
   const clientKey = checkedClients.map(client => client.id).join(',')
   const activeGroups = useMemo(
-    () => (Object.keys(groups) as GroupId[]).filter(group => groups[group]).map(providerOf),
+    () => (Object.keys(groups) as GroupId[]).filter(group => groups[group] && !(WBI_TEMPORARILY_DISABLED && group === 'wbi')).map(providerOf),
     [groups],
   )
   const modelIds = useMemo(
@@ -209,10 +212,12 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
   )
 
   function toggleClient(id: ClientId, checked: boolean) {
+    if (WBI_TEMPORARILY_DISABLED && id === 'wbi') return
     setClients(current => ({ ...current, [id]: checked }))
   }
 
   function toggleGroup(id: GroupId, checked: boolean) {
+    if (WBI_TEMPORARILY_DISABLED && id === 'wbi') return
     setGroups(current => ({ ...current, [id]: checked }))
   }
 
@@ -225,7 +230,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
       toast.error('请至少勾选一个模型')
       return
     }
-    const activeGroups = (Object.keys(groups) as GroupId[]).filter(group => groups[group]).map(providerOf)
+    const activeGroups = (Object.keys(groups) as GroupId[]).filter(group => groups[group] && !(WBI_TEMPORARILY_DISABLED && group === 'wbi')).map(providerOf)
     const modelIds = activeGroups.flatMap(group => selectedIdsByGroup[group])
     if (onApply) {
       try {
@@ -266,11 +271,13 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                 {IMPORT_CLIENTS.map(client => {
                   const Icon = CLIENT_ICONS[client.id]
                   const checked = clients[client.id]
+                  const disabled = WBI_TEMPORARILY_DISABLED && client.id === 'wbi'
                   return (
                     <label
                       key={client.id}
                       className={cn(
-                        'flex min-w-0 cursor-pointer items-center gap-2.5 rounded-md border px-2.5 py-2 transition-colors',
+                        'flex min-w-0 items-center gap-2.5 rounded-md border px-2.5 py-2 transition-colors',
+                        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                         checked
                           ? 'border-primary/35 bg-accent-soft'
                           : 'border-line-soft bg-surface-2 hover:border-line hover:bg-hover',
@@ -278,6 +285,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                     >
                       <Checkbox
                         checked={checked}
+                        disabled={disabled}
                         onCheckedChange={value => toggleClient(client.id, value === true)}
                         aria-label={`导入到 ${client.name}`}
                       />
@@ -291,8 +299,8 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                         </span>
                         <span className="block truncate font-mono text-[9px] text-faint">{client.path}</span>
                       </span>
-                      <span className="shrink-0 rounded bg-success-soft px-1 py-px text-[9px] text-success">
-                        {client.status}
+                      <span className={cn('shrink-0 rounded px-1 py-px text-[9px]', disabled ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')}>
+                        {disabled ? t('维护中') : client.status}
                       </span>
                     </label>
                   )
@@ -337,12 +345,14 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
               <div className="flex flex-wrap gap-1.5">
                 {(Object.keys(groups) as GroupId[]).map(group => {
                   const checked = groups[group]
+                  const disabled = WBI_TEMPORARILY_DISABLED && group === 'wbi'
                   const available = SOURCES[providerOf(group)].models.filter(isUsable).length
                   return (
                     <label
                       key={group}
                       className={cn(
-                        'flex cursor-pointer items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px]',
+                        'flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[11px]',
+                        disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
                         checked
                           ? 'border-primary/35 bg-accent-soft text-text'
                           : 'border-line bg-surface-2 text-muted-foreground',
@@ -350,10 +360,11 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                     >
                       <Checkbox
                         checked={checked}
+                        disabled={disabled}
                         onCheckedChange={value => toggleGroup(group, value === true)}
                         aria-label={`导入 ${GROUP_LABELS[group]} 分组`}
                       />
-                      {GROUP_LABELS[group]}
+                      {GROUP_LABELS[group]}{disabled ? ` · ${t('维护中')}` : ''}
                       <strong className="text-[10px] text-text">{selectedByGroup[providerOf(group)]}</strong>
                       <span className="text-[9px] text-faint">/{available}</span>
                     </label>

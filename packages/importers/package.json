@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/importers",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "type": "module",
   "description": "一键导入 WorkBuddy / Codex / Claude Code / DeepSeek Harness 的配置写入与回滚",

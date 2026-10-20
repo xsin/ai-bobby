@@ -1,6 +1,6 @@
 appId: work.xsin.aibobby
 productName: AI Bobby
-copyright: Copyright © 2026 xsin
+copyright: Copyright © 2026 XSIN
 
 directories:
   output: release
@@ -35,7 +35,7 @@ mac:
   minimumSystemVersion: "13.0"
   artifactName: AI-Bobby-${version}-${arch}.${ext}
   extendInfo:
-    NSHumanReadableCopyright: Copyright © 2026 xsin
+    NSHumanReadableCopyright: Copyright © 2026 XSIN
 
 win:
   icon: build/icon.png

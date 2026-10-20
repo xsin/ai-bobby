@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { BrandMark } from '@/components/brand-mark'
 import { cn } from '@/lib/utils'
-import type { ProviderId } from '@/lib/demo-data'
+import { WBI_TEMPORARILY_DISABLED, type ProviderId } from '@/lib/demo-data'
 import { t } from '@/lib/i18n'
 
 export type NavPage = ProviderId | 'overview' | 'history' | 'about' | 'settings'
@@ -109,13 +109,15 @@ export function Sidebar({
         {SOURCE_ITEMS.map(item => {
           const Icon = item.icon
           const active = page === item.id
+          const disabled = WBI_TEMPORARILY_DISABLED && item.id === 'wbi'
           return (
             <button
               key={item.id}
               type="button"
-              className={cn(itemClass(active), 'mb-0.5')}
+              className={cn(itemClass(active), 'mb-0.5', disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent')}
               onClick={() => onNavigate(item.id)}
-              title={item.label}
+              disabled={disabled}
+              title={disabled ? `${item.label} · 维护中` : item.label}
               aria-current={active ? 'page' : undefined}
             >
               <Icon className={cn('size-[17px] shrink-0', active ? 'text-primary' : 'text-faint group-hover:text-muted-foreground')} />
@@ -123,7 +125,7 @@ export function Sidebar({
                 <>
                   <span className="min-w-0 flex-1 truncate">{item.label}</span>
                   <span className={cn('min-w-[34px] rounded bg-surface-2 px-1.5 text-center font-mono text-[9px] leading-4 tabular-nums text-faint', active && 'bg-surface text-primary')}>
-                    {counts[item.id]}
+                    {disabled ? t('维护中') : counts[item.id]}
                   </span>
                 </>
               ) : null}

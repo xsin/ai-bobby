@@ -25,6 +25,7 @@ import { ThemeProvider } from '@/lib/theme'
 import { resolveLocale, setRuntimeLocale, t } from '@/lib/i18n'
 import {
   SOURCES,
+  WBI_TEMPORARILY_DISABLED,
   isUsable,
   type DemoAccount,
   type DemoModel,
@@ -105,18 +106,18 @@ function installedSelection(
 
 function toDemoModel(model: ModelSnapshot): DemoModel {
   const caps: string[] = []
-  if (model.capabilities.reasoning) caps.push('推理')
-  if (model.capabilities.images) caps.push('图片')
-  if (model.capabilities.tools) caps.push('工具')
+  if (model.capabilities.reasoning) caps.push(t('推理'))
+  if (model.capabilities.images) caps.push(t('图片'))
+  if (model.capabilities.tools) caps.push(t('工具'))
   return {
     id: model.id,
     display: model.name,
     upstream: model.id.split('/').slice(1).join('/'),
-    caps: caps.length > 0 ? caps : ['文本'],
+    caps: caps.length > 0 ? caps : [t('文本')],
     status: model.status as DemoModel['status'],
     latency: model.latencyMs !== undefined
-      ? `${(model.latencyMs / 1000).toFixed(1)} 秒`
-      : model.accounts ? `${model.accounts} 账号` : '—',
+      ? t('{n} 秒', { n: (model.latencyMs / 1000).toFixed(1) })
+      : model.accounts ? t('{n} 个账号', { n: model.accounts }) : '—',
     latencyMs: model.latencyMs,
     accounts: model.accounts,
     ...(model.billing === undefined ? {} : { billing: model.billing }),
@@ -126,16 +127,29 @@ function toDemoModel(model: ModelSnapshot): DemoModel {
   }
 }
 
+const STATUS_ORDER: Record<DemoModel['status'], number> = {
+  available: 0,
+  chat_only: 1,
+  pending: 2,
+  rate_limited: 3,
+  no_account: 4,
+  unavailable: 5,
+}
+
+function sortModels(models: DemoModel[]): DemoModel[] {
+  return [...models].sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status])
+}
+
 function toDemoAccount(account: AccountSnapshot): DemoAccount {
   const credits = account.unlimited
-    ? '不限量'
+    ? t('不限量')
     : account.credits === undefined
-      ? '额度未知'
-      : `${account.credits.toLocaleString('en-US')} 积分`
+      ? t('额度未知')
+      : t('{n} 积分', { n: account.credits.toLocaleString('en-US') })
   return {
     initials: (account.nickname || account.uid).slice(0, 1).toUpperCase(),
     name: account.nickname || account.uid.slice(0, 8),
-    sub: `${credits} · ${account.enabled ? '启用' : '禁用'}`,
+    sub: t('{credits} · {state}', { credits, state: account.enabled ? t('启用') : t('禁用') }),
     status: account.enabled ? 'success' : 'error',
   }
 }
@@ -388,14 +402,14 @@ function AppInner() {
       const next = structuredClone(current)
       next.opencode = {
         ...next.opencode,
-        models: groups.opencode.map(toDemoModel),
+        models: sortModels(groups.opencode.map(toDemoModel)),
         statusText: status.gateway.state === 'ready' ? `运行中 · ${status.models.length} 个模型` : '网关未就绪',
-        serviceSub: status.gateway.state === 'ready' ? t('网关 {port}', { port: status.gateway.port }) : status.gateway.error || '网关未就绪',
+        serviceSub: status.gateway.state === 'ready' ? t('网关 {port}', { port: status.gateway.port }) : status.gateway.error || t('网关未就绪'),
         feedback: groups.opencode.length > 0 ? t('目录已刷新：{n} 个 OpenCode 模型。', { n: groups.opencode.length }) : next.opencode.feedback,
       }
       next.workbuddy = {
         ...next.workbuddy,
-        models: groups.workbuddy.map(toDemoModel),
+        models: sortModels(groups.workbuddy.map(toDemoModel)),
         accounts: cn.map(toDemoAccount),
         credits: creditSummary(cn),
         feedback: cn.length === 0 ? t('还没有 WorkBuddy 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.workbuddy.length, accounts: cn.length }),
@@ -403,15 +417,22 @@ function AppInner() {
       }
       next.wbi = {
         ...next.wbi,
-        models: groups.wbi.map(toDemoModel),
+        models: sortModels(groups.wbi.map(toDemoModel)),
         accounts: intl.map(toDemoAccount),
         credits: creditSummary(intl),
         feedback: intl.length === 0 ? t('还没有 WorkBuddy AI 账号；点击“添加账号”开始。') : t('目录已刷新：{n} 个模型，{accounts} 个账号可用。', { n: groups.wbi.length, accounts: intl.length }),
         statusText: intl.length === 0 ? t('未登录') : t('运行中 · {n} 个账号', { n: intl.length }),
       }
+      if (WBI_TEMPORARILY_DISABLED) {
+        next.wbi.models = []
+        next.wbi.accounts = []
+        next.wbi.credits = '—'
+        next.wbi.statusText = t('维护中')
+        next.wbi.feedback = t('正在适配官方渠道，暂不可用')
+      }
       next.nvidia = {
         ...next.nvidia,
-        models: groups.nvidia.map(toDemoModel),
+        models: sortModels(groups.nvidia.map(toDemoModel)),
         statusText: groups.nvidia.length === 0 ? t('未配置 API Key') : t('运行中 · {n} 个模型', { n: groups.nvidia.length }),
         listMeta: groups.nvidia.length === 0 ? next.nvidia.listMeta : t('刚刚刷新'),
         feedback: groups.nvidia.length === 0 ? t('填写 NVIDIA API Key 后读取模型。') : t('已读取 {n} 个模型。', { n: groups.nvidia.length }),
@@ -774,7 +795,7 @@ function AppInner() {
       <div className="app-drag relative flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-titlebar px-4">
         <div className="w-[68px]" aria-hidden="true" />
         <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-semibold text-muted-foreground">AI Bobby</div>
-        <span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">本地网关</span>
+        <span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">{t('本地网关')}</span>
       </div>
 
       <div className="app-no-drag flex min-h-0 flex-1">

@@ -214,12 +214,14 @@ describe('backup retention', () => {
     const plan = await importer.plan({ groups: ['opencode'], modelIds: ['oc/space-bunny-free'] }, context)
     expect(plan.changed).toBe(true)
     await importer.apply({ groups: ['opencode'], modelIds: ['oc/space-bunny-free'] }, context)
-    const saved = JSON.parse(await readFile(config, 'utf8')) as Array<{ name: string; vendor: string; url?: string; apiKey?: string }>
+    const saved = JSON.parse(await readFile(config, 'utf8')) as Array<{ name: string; vendor: string; apiKey?: string; models?: Array<{ id?: string; url?: string }> }>
     expect(saved).toHaveLength(2)
     expect(saved[0]?.name).toBe('Other')
     const aiBobby = saved.find(entry => entry.name === 'AI Bobby')
-    expect(aiBobby?.url).toBe('http://127.0.0.1:46890/v1')
     expect(aiBobby?.apiKey).toBe('sk-test')
+    expect(aiBobby?.models).toHaveLength(1)
+    expect(aiBobby?.models?.[0]?.id).toBe('oc/space-bunny-free')
+    expect(aiBobby?.models?.[0]?.url).toBe('http://127.0.0.1:46890/v1/chat/completions')
   })
 
   it('generates an AI Bobby Codex catalog with prefixed slugs', async () => {

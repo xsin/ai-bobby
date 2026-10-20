@@ -226,6 +226,17 @@ const en: Record<string, string> = {
   "显示 Key": "Show key",
   "NVIDIA API Key 已复制": "NVIDIA API key copied",
   "复制失败": "Copy failed",
+  "{n} 秒": "{n}s",
+  "{n} 积分": "{n} credits",
+  "{credits} · {state}": "{credits} · {state}",
+  "不限量": "Unlimited",
+  "额度未知": "Credits unknown",
+  "启用": "enabled",
+  "禁用": "disabled",
+  "账号 / 耗时": "Accounts / Latency",
+  "{n} 个账号": "{n} accounts",
+  "维护中": "Maintenance",
+  "WorkBuddy AI 正在适配官方渠道，暂不可用": "WorkBuddy AI is being adapted to the official channel and is temporarily unavailable.",
 }
 
 export function resolveLocale(choice: 'system' | Locale): Locale {

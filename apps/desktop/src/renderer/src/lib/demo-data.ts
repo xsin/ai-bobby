@@ -45,8 +45,12 @@ export interface MetricDefinition {
   tone?: 'accent' | 'warning'
 }
 
+export const WBI_TEMPORARILY_DISABLED = true
+
 export interface DemoSource {
   id: ProviderId
+  disabled?: boolean
+  disabledNote?: string
   label: string
   eyebrow: string
   title: string
@@ -138,6 +142,8 @@ export const SOURCES: Record<ProviderId, DemoSource> = {
   },
   wbi: {
     id: 'wbi',
+    disabled: WBI_TEMPORARILY_DISABLED,
+    disabledNote: '正在适配官方渠道，暂不可用',
     label: 'WorkBuddy AI',
     eyebrow: 'WORKBUDDY AI · 国际版',
     title: 'WorkBuddy AI 国际版',
@@ -224,6 +230,14 @@ export const IMPORT_CLIENTS: ImportClient[] = [
   { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', note: 'llm-pi-ai', status: '已探测', defaultGroup: 'opencode' },
   { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', note: 'Custom Endpoint', status: '可自动写入', defaultGroup: 'opencode' },
 ]
+
+if (WBI_TEMPORARILY_DISABLED) {
+  SOURCES.wbi.models = []
+  SOURCES.wbi.accounts = []
+  SOURCES.wbi.credits = '—'
+  SOURCES.wbi.feedback = '正在适配官方渠道，暂不可用'
+  SOURCES.wbi.statusText = '维护中'
+}
 
 export function metricsFor(source: DemoSource) {
   if (source.id === 'opencode' || source.id === 'nvidia') {
