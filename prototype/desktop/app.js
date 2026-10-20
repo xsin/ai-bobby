@@ -160,6 +160,39 @@
     ],
   };
 
+  SOURCES.magpie = {
+    label: 'Magpie',
+    eyebrow: 'EXTERNAL · MAGPIE',
+    title: 'Magpie',
+    subtitle: '外部本地网关 · 由 Magpie 提供 · 模型只在本机转发',
+    external: true,
+    trust: 'community',
+    actions: [
+      { id: 'refresh', label: '重新连接', icon: 'refresh' },
+      { id: 'probe', label: '检测全部', icon: 'activity' },
+    ],
+    metricDefs: [
+      { key: 'found', label: '已发现' },
+      { key: 'available', label: '可用', tone: 'accent' },
+      { key: 'pending', label: '待检测' },
+    ],
+    feedback: '检测到 Magpie · 127.0.0.1:3425 · 8 个模型 · 健康。外部来源失败只影响它自己。',
+    statusText: '运行中 · 8 个外部模型',
+    serviceSub: 'External · Magpie · 127.0.0.1:3425',
+    listMeta: '最近刷新 1 分钟前',
+    lastHeader: '耗时',
+    models: [
+      { id: 'mg/claude-5-sonnet', display: 'MG. Claude 5 Sonnet', upstream: 'claude-5-sonnet', caps: ['推理', '图片'], status: 'available', latency: '3.2 秒', context: '400,000', maxOutput: '64,000', checked: '1 分钟前' },
+      { id: 'mg/gpt-6', display: 'MG. GPT-6', upstream: 'gpt-6', caps: ['推理', '图片'], status: 'available', latency: '4.1 秒', context: '1,000,000', maxOutput: '128,000', checked: '1 分钟前' },
+      { id: 'mg/gemini-3-pro', display: 'MG. Gemini 3 Pro', upstream: 'gemini-3-pro', caps: ['推理', '图片'], status: 'available', latency: '2.8 秒', context: '1,000,000', maxOutput: '64,000', checked: '1 分钟前' },
+      { id: 'mg/deepseek-v4.1', display: 'MG. DeepSeek V4.1', upstream: 'deepseek-v4.1', caps: ['推理'], status: 'available', latency: '5.6 秒', context: '256,000', maxOutput: '64,000', checked: '1 分钟前' },
+      { id: 'mg/qwen3.5-max', display: 'MG. Qwen 3.5 Max', upstream: 'qwen3.5-max', caps: ['推理', '图片'], status: 'available', latency: '4.9 秒', context: '262,144', maxOutput: '32,000', checked: '1 分钟前' },
+      { id: 'mg/kimi-k3', display: 'MG. Kimi K3', upstream: 'kimi-k3', caps: ['推理'], status: 'available', latency: '6.1 秒', context: '1,000,000', maxOutput: '32,000', checked: '1 分钟前' },
+      { id: 'mg/glm-5.3', display: 'MG. GLM-5.3', upstream: 'glm-5.3', caps: ['推理'], status: 'available', latency: '7.3 秒', context: '200,000', maxOutput: '32,000', checked: '1 分钟前' },
+      { id: 'mg/local-llama', display: 'MG. Local Llama', upstream: 'local-llama', caps: ['推理'], status: 'unavailable', latency: '超时 30 秒', context: '128,000', maxOutput: '8,192', checked: '12 分钟前' },
+    ],
+  };
+
   // Models with Codex-specific metadata (slug/capabilities/instructions).
   // Other models stay usable via the gateway but are skipped for Codex.
   const CODEX_META = new Set([
@@ -176,6 +209,7 @@
     { id: 'codex', name: 'Codex', path: '~/.codex/config.toml', status: '已探测', checked: true, note: 'responses' },
     { id: 'claude', name: 'Claude Code', path: '~/.claude/settings.json', status: '已探测', checked: true, note: 'messages' },
     { id: 'dsh', name: 'DeepSeek Harness', path: '~/.dsh/profiles/desktop/cordis.patch.yml', status: '已探测', checked: true, note: 'llm-pi-ai' },
+    { id: 'codebuddy', name: 'CodeBuddy Code', path: '~/.codebuddy/models.json', status: '可自动写入', checked: true, note: 'models.json · 官方 CLI' },
     { id: 'vscode', name: 'VS Code', path: '~/Library/Application Support/Code/User/chatLanguageModels.json', status: '可自动写入', checked: true, note: 'Custom Endpoint · Key 入钥匙串' },
     { id: 'cursor', name: 'Cursor', path: 'Cursor Settings → Models', status: '仅引导', checked: false, mode: 'guide', note: '不写数据库 · 手动粘贴' },
   ];
@@ -277,6 +311,7 @@
       workbuddy: new Set(),
       wbi: new Set(),
       nvidia: new Set(),
+      magpie: new Set(),
     },
     expanded: new Set(),
     clients: new Map(CLIENTS.filter(client => client.mode !== 'guide').map(client => [client.id, client.checked])),
@@ -361,7 +396,7 @@
         pending: models.filter(model => model.status === 'pending').length,
       };
     }
-    if (tabKey === 'opencode') {
+    if (tabKey === 'opencode' || tabKey === 'magpie') {
       return {
         found: models.length,
         available: models.filter(model => model.status === 'available').length,
@@ -380,6 +415,10 @@
   // ---------------------------------------------------------------------------
 
   function renderAll() {
+    const wbi = state.tab === 'wbi'
+    $('#wbi-unlock').hidden = !wbi
+    const modelSection = document.querySelector('#page-models .model-section')
+    if (modelSection) modelSection.hidden = wbi
     renderSourceHead();
     renderAccountStrip();
     renderTable();
@@ -392,6 +431,23 @@
   function renderSourceHead() {
     const src = source();
     $('#source-title').textContent = DEV ? `Dev.${src.title}` : src.title;
+    const health = $('#source-health')
+    if (health) health.hidden = !src.external
+    const badge = $('#source-badge')
+    if (badge) {
+      badge.hidden = !src.external
+      badge.textContent = src.external ? `EXTERNAL · ${(src.trust || 'community').toUpperCase()}` : ''
+    }
+    if (state.tab === 'wbi') {
+      $('#source-title').textContent = 'WorkBuddy AI · 维护中'
+      $('#source-subtitle').textContent = '官方渠道校验未通过；内置 WBI 暂不可用。可选用外部 Hub 解锁。'
+      $('#metrics').innerHTML = ''
+      $('#source-actions').innerHTML = ''
+      $('#feedback').hidden = true
+      $('#service-text').textContent = '维护中'
+      $('#service-sub').textContent = 'WorkBuddy AI 内置来源已暂停'
+      return
+    }
     $('#source-subtitle').textContent = src.subtitle;
     $('#list-meta-text').textContent = src.listMeta;
     $('#feedback-text').textContent = state.probingTab === state.tab
@@ -814,11 +870,12 @@
       return;
     }
     $('#credential-strip').hidden = true;
-    if (state.tab === 'opencode') {
+    if (state.tab === 'opencode' || state.tab === 'magpie') {
       $('#account-strip').hidden = true;
       return;
     }
-    $('#account-strip').hidden = false;
+    $('#account-strip').hidden = state.tab === 'wbi';
+    if (state.tab === 'wbi') return
     $('#account-list').innerHTML = (src.accounts || []).map((account, index) => `
       <div class="account-chip${account.preferred ? ' preferred' : ''}${account.status === 'cooling' ? ' cooling' : ''}" draggable="true" data-account-index="${index}">
         <span class="account-grip" aria-hidden="true">⋮⋮</span>
@@ -1059,6 +1116,11 @@
           lines.push({ type: 'add', text: '+ url = http://127.0.0.1:46890/v1' });
           lines.push({ type: 'dim', text: '  apiKey = ${input:aiBobbyApiKey} · 首次使用时粘贴 Key' });
           lines.push({ type: 'dim', text: '  自动发现模型；重启 VS Code 后出现在模型选择器' });
+        } else if (client.id === 'codebuddy') {
+          lines.push({ type: 'add', text: 'CodeBuddy Code  ~/.codebuddy/models.json' })
+          lines.push({ type: 'add', text: '+ provider "AI Bobby" · vendor = "customendpoint"' })
+          lines.push({ type: 'dim', text: '  url = http://127.0.0.1:46890/v1/chat/completions' })
+          lines.push({ type: 'dim', text: '  只增删 AI Bobby 自己的模型条目；保留手写模型' })
         } else if (client.id === 'cursor') {
           lines.push({ type: 'dim', text: '# Cursor 仅引导，不写 SQLite / Keychain' });
           lines.push({ type: 'dim', text: '# Settings → Models → 开启 Override OpenAI Base URL' });
@@ -1233,7 +1295,7 @@
       runProbe();
       return;
     }
-    if (state.tab === 'opencode') {
+    if (state.tab === 'opencode' || state.tab === 'magpie') {
       showToast('已读取 10 个模型；目录与判定缓存已更新');
       return;
     }
@@ -1717,8 +1779,7 @@
   try { savedTheme = localStorage.getItem('ai-bobby-theme') || 'dark'; } catch {}
   const wbiItem = document.querySelector('.side-item[data-page="wbi"]')
   if (wbiItem) {
-    wbiItem.disabled = true
-    wbiItem.classList.add('disabled')
+    wbiItem.classList.add('maintenance')
     const count = wbiItem.querySelector('.side-count')
     if (count) count.textContent = '维护中'
   }
@@ -1752,7 +1813,128 @@
     showToast('已调整账号优先级；第一位优先')
   })
 
+  // v0.3 external source: detected vs install/connect, with an explicit consent gate.
+  const SOURCE_CHOICES = [
+    { id: 'magpie', name: 'Magpie', sub: '本地网关 · 已被检测到', status: 'detected', risk: 'medium' },
+    { id: 'ccx', name: 'CCX', sub: '本地网关 · 未安装', status: 'install', risk: 'medium' },
+    { id: 'hub', name: 'WorkBuddy2API Hub', sub: '外部解锁 · 高风险', status: 'install', risk: 'high' },
+    { id: 'custom', name: '自定义 OpenAI 兼容', sub: '任意本地/远程上游', status: 'custom', risk: 'medium' },
+    { id: 'codebuddy', name: 'CodeBuddy CLI', sub: '官方客户端桥 · 0.3.1', status: 'install', risk: 'medium' },
+  ]
+  let sourceChoice = 'magpie'
+  let sourceConfirming = false
+  let hubDetected = false
+
+  function renderSourceModal() {
+    $('#source-choice-list').innerHTML = SOURCE_CHOICES.map(item => {
+      const detected = item.id === 'hub' && hubDetected
+      return `
+      <button type="button" class="source-choice${item.id === sourceChoice ? ' active' : ''}" data-source-choice="${item.id}">
+        <span class="source-choice-main"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.sub)}</span></span>
+        <span class="source-choice-badge ${detected || item.status === 'detected' ? 'detected' : item.risk === 'high' ? 'risk' : ''}">${detected || item.status === 'detected' ? '已检测' : item.risk === 'high' ? '高风险' : '外部'}</span>
+      </button>
+    `}).join('')
+    const item = SOURCE_CHOICES.find(choice => choice.id === sourceChoice) || SOURCE_CHOICES[0]
+    const details = {
+      magpie: `<h3>Magpie</h3>
+        <p>检测到已运行的 Magpie。AI Bobby 只连接本机 HTTP，不安装、不托管它的账号。</p>
+        <div class="source-meta"><span>127.0.0.1:3425</span><span>8 个模型</span><span>健康</span><span>MIT</span></div>
+        <div class="source-risk">来源：第三方本地网关。模型质量、限流和可用性由 Magpie 负责；失败不会影响内置来源。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我已了解该来源为第三方工具，并自行承担使用风险。</label>`,
+      ccx: `<h3>CCX</h3>
+        <p>未检测到 CCX。可从官方 Release 下载，AI Bobby 会先校验再展示安装命令。</p>
+        <div class="source-meta"><span>127.0.0.1:3688</span><span>MIT</span><span>未安装</span></div>
+        <div class="source-risk">安装过程可能需要管理员权限；若需要，AI Bobby 会在执行前提示并请求系统授权，取消即中止。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我同意下载/安装 CCX，并理解它不在 AI Bobby 安装包内。</label>`,
+      hub: hubDetected ? `<h3>检测到 WorkBuddy2API Hub</h3>
+        <p>Hub 已在 127.0.0.1:8788 运行。连接后模型会以 <code>hub/</code> 前缀出现，不会伪装成官方 WBI。</p>
+        <div class="source-meta"><span>127.0.0.1:8788</span><span>12 个模型</span><span>健康</span><span>外部</span></div>
+        <div class="source-risk"><strong>高风险：</strong>第三方工具可能违反上游条款或导致账号受限；AI Bobby 不打包、不自动更新，风险由你承担。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我已了解该来源为第三方工具，并自行承担使用风险。</label>` : `<h3>WorkBuddy2API Hub</h3>
+        <p>未检测到 Hub，但它可以解锁 WorkBuddy AI。安装前会展示来源、校验、完整命令和风险。</p>
+        <div class="source-meta"><span>127.0.0.1:8788</span><span>未安装</span><span>管理员权限先提示</span></div>
+        <div class="source-risk"><strong>高风险：</strong>第三方代码可能违反上游条款、触发风控或导致账号受限；可能访问账号凭据/进程。AI Bobby 不打包、不自动更新，风险由你承担。<br><br><strong>管理员权限：</strong>若安装需要管理员权限，AI Bobby 会在安装前提示并自动请求系统授权；取消授权会立即中止，不执行提权。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我已了解高风险，并授权 AI Bobby 协助安装/连接。</label>`,
+      custom: `<h3>自定义 OpenAI 兼容上游</h3>
+        <p>连接任意兼容 Chat Completions 的本地或远程端点。远程地址必须 HTTPS。</p>
+        <div class="source-fields"><input id="custom-url" value="http://127.0.0.1:8080/v1" aria-label="Base URL"><input id="custom-key" type="password" placeholder="API Key（可选）" aria-label="API Key"></div>
+        <div class="source-risk">自定义来源的能力/模型由该端点决定；未知能力默认保守处理。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我已了解该端点由第三方提供，并自行承担风险。</label>`,
+      codebuddy: `<h3>CodeBuddy CLI</h3>
+        <p>使用官方 CodeBuddy CLI 作为来源。AI Bobby 只检测登录状态，不读取/复制 token。</p>
+        <div class="source-meta"><span>官方 CLI</span><span>未检测登录</span><span>0.3.1</span></div>
+        <div class="source-risk">需要先安装官方 CLI 并完成登录；请求由官方 CLI 发出，工具默认禁用。</div>
+        <label class="consent"><input type="checkbox" id="source-consent"> 我了解这是官方客户端桥，并同意检测本机安装/登录状态。</label>`,
+    }
+    $('#source-detail').innerHTML = details[item.id]
+    const detected = item.id === 'hub' && hubDetected
+    $('#source-confirm').textContent = detected || item.status === 'detected' ? '连接' : item.id === 'custom' ? '连接' : '安装并连接'
+    $('#source-confirm').disabled = true
+    $('#source-confirm').dataset.choice = item.id
+    $('#source-consent').addEventListener('change', event => {
+      $('#source-confirm').disabled = !event.target.checked
+    })
+  }
+
+  function openSourceModal(choice = 'magpie') {
+    sourceChoice = choice
+    sourceConfirming = false
+    $('#source-modal').hidden = false
+    $('#source-modal').classList.add('open')
+    $('#scrim').hidden = false
+    renderSourceModal()
+  }
+
+  function closeSourceModal() {
+    $('#source-modal').hidden = true
+    $('#source-modal').classList.remove('open')
+    $('#scrim').hidden = true
+  }
+
+  $('#add-source').addEventListener('click', () => openSourceModal('magpie'))
+  $('#settings-add-source')?.addEventListener('click', () => openSourceModal('magpie'))
+  $('#view-source-logs')?.addEventListener('click', () => showToast('请求日志：最近 200 条 · 不含 prompt/Key'))
+  $('#source-diagnostics')?.addEventListener('click', () => showToast('诊断：端口可达 · 健康检查正常 · 模型发现正常'))
+  $('#close-source').addEventListener('click', closeSourceModal)
+  $('#cancel-source').addEventListener('click', closeSourceModal)
+  $('#source-choice-list').addEventListener('click', event => {
+    const button = event.target.closest('[data-source-choice]')
+    if (!button) return
+    sourceChoice = button.dataset.sourceChoice
+    renderSourceModal()
+  })
+  $('#source-confirm').addEventListener('click', () => {
+    if ($('#source-confirm').disabled) return
+    const choice = $('#source-confirm').dataset.choice
+    if (choice === 'hub' && hubDetected) {
+      closeSourceModal()
+      showToast('已连接 WorkBuddy2API Hub · 模型将以 hub/ 前缀出现')
+      return
+    }
+    if (choice === 'magpie') {
+      closeSourceModal()
+      navigateTo('magpie')
+      showToast('已连接 Magpie · 外部来源不会影响内置来源')
+      return
+    }
+    sourceConfirming = true
+    $('#source-detail').innerHTML = `<h3>${choice === 'hub' ? '安装 WorkBuddy2API Hub' : '准备安装'}</h3>
+      <p>正在下载并校验安装包。安装前会再次展示完整命令；需要管理员权限时会请求系统授权。</p>
+      <div class="source-meta"><span>下载中</span><span>校验 SHA256</span><span>等待授权</span></div>
+      <div class="source-risk">取消系统授权会立即中止安装，不执行提权操作、不留下半安装。</div>`
+    $('#source-confirm').disabled = true
+    $('#source-confirm').textContent = '安装中…'
+  })
+  $('#wbi-install-hub').addEventListener('click', () => openSourceModal('hub'))
+  $('#wbi-connect-existing').addEventListener('click', () => openSourceModal('hub'))
+  $('#scrim').addEventListener('click', () => {
+    if (!$('#source-modal').hidden) closeSourceModal()
+  })
+
   const params = new URLSearchParams(location.search);
+  hubDetected = params.get('detected') === '1'
+  const sourceParam = params.get('source')
+  if (sourceParam) openSourceModal(sourceParam)
   if (DEV) {
     document.body.dataset.dev = '1'
     $('#dev-badge').hidden = false

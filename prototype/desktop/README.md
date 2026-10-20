@@ -144,3 +144,30 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - i18n：状态栏英文为 `Running · 10 models` / `Running · 2 accounts`，与模型数/账号数解耦；不再出现中文混排。
 
 - 多账号：账号条支持拖动排序，第一位即 `preferred`；拖动后顺序立即写入优先级，失败切换仍按 `round-robin + 冷却` 执行。
+
+## v0.3.0 外部来源设计
+
+设计目标：外部工具不打包，但用户授权后可以完成**检测 → 安装 → 连接 → 诊断**，而不是只给说明。
+
+覆盖状态：
+
+- 已运行：`检测到 Magpie / WorkBuddy2API Hub`，直接连接；
+- 已安装未运行：启动并连接；
+- 未安装：展示来源/License/风险，用户勾选确认后进入安装；
+- 安装需要管理员权限：先说明，随后自动请求系统授权；取消即中止；
+- 外部来源失败只影响自身，内置来源不受影响；
+- WBI 内置仍维护中；Hub 连接后模型以 `hub/` 前缀出现，不伪装成官方 `wbi/`。
+
+截图：
+
+| 文件 | 内容 |
+|---|---|
+| `screenshot-external-source.png` | 外部来源页：EXTERNAL 徽标、健康/成功率/p95/最近错误、请求日志入口 |
+| `screenshot-source-detected.png` | 添加来源：检测到 Magpie，风险确认后连接 |
+| `screenshot-source-install.png` | 添加来源：未安装 Hub，高风险 + 管理员权限前置说明 |
+| `screenshot-source-hub-detected.png` | 已运行 Hub：直接提示连接 |
+| `screenshot-wbi-unlock.png` | WBI 维护页：可选 WorkBuddy2API Hub 解锁 |
+| `screenshot-settings-connectors.png` | 设置 → 连接器：已连接/未安装/高风险 |
+| `screenshot-import-v03.png` | 导入抽屉新增 CodeBuddy Code |
+
+深链接：`?source=magpie`、`?source=hub`、`?source=hub&detected=1`、`?page=wbi`。
