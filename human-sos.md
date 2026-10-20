@@ -22,7 +22,7 @@
 - [x] 授权 push `main`；已 push 并触发 Actions。
 - [x] 部署网站/Gitalk 到 gh-pages；Website workflow 通过。
 - [ ] 确认 GitHub 仓库继续 public（安装通道与 Pages 依赖）。
-- [ ] 在生产页面实际发一条 Gitalk 评论（OAuth/评论写入仍需人工确认）。
+- [x] 生产页面 Gitalk 评论写入已通过（2026-10-20）。
 
 ## 3. WorkBuddy AI（国际版）渠道校验（产品决策）
 
@@ -68,7 +68,7 @@ Agent 已实测默认路径 `/Applications/AIMatrix` 与自定义 `--install-dir
 - [x] v0.2.3 release notes 已发布。
 - [x] x64 + arm64 包均已由 release workflow 构建并上传。
 - [x] README（en/zh-CN/zh-TW）已更新到 v0.2.3 / AIMatrix。
-- [ ] 生产页面确认 Gitalk 默认折叠、移动端全屏行为。
+- [x] 评论区已移到右下角；中文绑定 Discussion #1，English 绑定 #2；移动端仍全屏。
 
 ## 8. 已知限制确认（发版边界）
 
