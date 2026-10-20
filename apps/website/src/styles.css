@@ -1921,12 +1921,12 @@ a:focus-visible {
     radial-gradient(ellipse 30% 35% at 70% 50%, rgba(143, 247, 255, 0.1), transparent 70%);
 }
 
-/* Gitalk comments: collapsed bottom-left, expanded panel bottom-left,
+/* Gitalk comments: collapsed bottom-right, expanded panel bottom-right,
    full-screen on mobile. */
 .comments-fab {
   position: fixed;
   z-index: 90;
-  left: 20px;
+  right: 20px;
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   display: inline-flex;
   align-items: center;
@@ -1949,7 +1949,7 @@ a:focus-visible {
 .comments-panel {
   position: fixed;
   z-index: 95;
-  left: 20px;
+  right: 20px;
   bottom: calc(20px + env(safe-area-inset-bottom, 0px));
   display: flex;
   width: min(400px, calc(100vw - 40px));

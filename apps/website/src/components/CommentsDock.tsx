@@ -11,14 +11,13 @@ const GITALK_OPTIONS = {
   admin: ['aispin'],
   proxy: 'https://gitalk-proxy.aispin-abf.workers.dev',
   backend: 'discussions' as const,
-  number: 1,
   minimizable: false,
   perPage: 20,
 }
 
 /**
- * GitHub Discussions comments via Gitalk 2, parked bottom-left.
- * Collapsed by default; the panel is fixed bottom-left on desktop and
+ * GitHub Discussions comments via Gitalk 2, parked bottom-right.
+ * Collapsed by default; the panel is fixed bottom-right on desktop and
  * full-screen on mobile.
  */
 export function CommentsDock() {
@@ -78,7 +77,7 @@ export function CommentsDock() {
           </button>
         </header>
         <div className="comments-body">
-          {mounted ? <Gitalk options={GITALK_OPTIONS} /> : null}
+          {mounted ? <Gitalk key={locale} options={{ ...GITALK_OPTIONS, number: zh ? 1 : 2 }} /> : null}
         </div>
       </section>
     </div>
