@@ -1,17 +1,17 @@
 {
-  "version": "0.2.3",
-  "notes": "AI Bobby 0.2.3：新增 NVIDIA NIM 来源（Key、探测、延迟持久化）、VS Code 导入与 Cursor 引导、分源代理、中英文界面、/Applications/AIMatrix 安装布局；Codex 模型 ID/catalog 修复。",
-  "pub_date": "2026-10-19T17:58:44.445Z",
+  "version": "0.2.5",
+  "notes": "AI Bobby 0.2.5：开发版与线上版隔离（46891 / AI Bobby Dev / dev 导入命名空间）、WorkBuddy 账号拖动排序、托盘图标裁剪、About 文案与 i18n 收尾。",
+  "pub_date": "2026-10-20T08:00:07.298Z",
   "platforms": {
     "darwin-aarch64": {
-      "url": "https://github.com/xsin/ai-bobby/releases/download/v0.2.3/AI-Bobby-0.2.3-arm64.zip",
-      "sha256": "28744d9846e83021bbe5a52a046e2c5f8c7943e9d04408c3b21a64f2371a2f31",
-      "size": 129174331
+      "url": "https://github.com/xsin/ai-bobby/releases/download/v0.2.5/AI-Bobby-0.2.5-arm64.zip",
+      "sha256": "1d6b2d64c4cffe3b2f831236c718e9e1050a06f4ec2514691cc1375aee88bf54",
+      "size": 129178177
     },
     "darwin-x86_64": {
-      "url": "https://github.com/xsin/ai-bobby/releases/download/v0.2.3/AI-Bobby-0.2.3-x64.zip",
-      "sha256": "0ef4470555a2b559026cc2594b72ee8b45534513cc09124b8b625f8d09bca1a3",
-      "size": 135987091
+      "url": "https://github.com/xsin/ai-bobby/releases/download/v0.2.5/AI-Bobby-0.2.5-x64.zip",
+      "sha256": "b288f2639c7cc0b2fcc5bf2a10daddbcc46ff212f64258994b43ae91eee23301",
+      "size": 135990934
     }
   }
 }
