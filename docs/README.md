@@ -16,6 +16,7 @@
 |---|---|
 | [research-v0.2.3.md](./research-v0.2.3.md) | v0.2.3 选型与来源调研 |
 | [research-codex-metadata.md](./research-codex-metadata.md) | Codex 模型目录元数据与验证策略 |
+| [research-codebuddy-code.md](./research-codebuddy-code.md) | CodeBuddy Code 官方 CLI 的双向集成评估 |
 
 ## 维护规则
 
