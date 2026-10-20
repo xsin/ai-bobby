@@ -1,11 +1,11 @@
 # AI Bobby 产品需求文档（PRD）
 
-- 当前版本：v0.2.2（已发布）
-- 日期：2026-10-18
-- 状态：产品设计保持完整目标态；当前实现与验收状态见 [handsoff.md](../handsoff.md)
+- 当前版本：v0.2.3（已发布，2026-10-20）
+- 日期：2026-10-20
+- 状态：v0.2.3 已实现并对齐本文；更早的目标态描述保留，差异以本版“已实现”段落为准
 - 关联：[handsoff.md](../handsoff.md)（实施计划 / 决策 / 进度）、[tech.md](./tech.md)（技术方案）
 - 用户侧安装/使用/接入说明：[README.md](../README.md)
-- 一句话：**把 OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版三个来源，收敛成一个本机端点、一把 Key、一个控制面板，并一键导入四个客户端。**
+- 一句话：**把 OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版、NVIDIA NIM 四个来源，收敛成一个本机端点、一把 Key、一个控制面板，并一键导入五个客户端（含 VS Code；Cursor 引导）。**
 
 ---
 
@@ -17,16 +17,17 @@
 
 - **OpenCode** 有免费模型池，但它不是标准 OpenAI 端点，带 `free` 字样的模型也不一定真免费；
 - **WorkBuddy（国内版）** 和 **WorkBuddy AI（国际版）** 各自有桌面端登录、模型目录和积分，但没有公开的 OpenAI 端点；
-- **Codex** 要 Responses API，**Claude Code** 要 Anthropic Messages API，**WorkBuddy / DSH** 用 Chat Completions；
+- **NVIDIA NIM** 提供 OpenAI 兼容的免费试用目录，但模型权限、额度和延迟差异很大；
+- **Codex** 要 Responses API，**Claude Code** 要 Anthropic Messages API，**WorkBuddy / DSH / VS Code** 用 Chat Completions 或 Custom Endpoint；
 - 用户现在往往给每个客户端各配一个 8787/8788 代理，账号、模型、Key 各管一套，容易冲突。
 
 ### 1.2 产品定位
 
 AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
-- 上游：OpenCode 免费模型 + WorkBuddy 双版本账号（可多账号）；
+- 上游：OpenCode 免费模型 + WorkBuddy 双版本账号（可多账号）+ NVIDIA NIM；
 - 下游：一个 `127.0.0.1:46890` 端点，同时说 Chat Completions / Responses / Anthropic Messages 三种方言；
-- 管理：左侧栏多页导航（三个来源、历史记录、关于、设置）、模型清单、检测、账号、额度、一键导入四个客户端；
+- 管理：左侧栏多页导航（四个来源、历史记录、关于、设置）、模型清单、检测、账号、额度、一键导入五个客户端；
 - 边界：所有数据留在本机，不云托管、不多用户、不转售。
 
 ### 1.3 目标用户
@@ -34,15 +35,15 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 1. **本地 AI 工具玩家**：同时用 Codex、Claude Code、DSH，希望只维护一个端点和一把 Key。
 2. **WorkBuddy 用户**：想把 WorkBuddy 的模型接给别的客户端，或把 OpenCode 免费模型接进 WorkBuddy。
 3. **多账号用户**：有多个 WorkBuddy 账号，希望按额度/可用性自动切换，而不是手动改配置。
-4. **不想折腾配置的开发者**：希望点几下就完成四个客户端的接入。
+4. **不想折腾配置的开发者**：希望点几下就完成五个客户端（含 VS Code）的接入。
 
 ### 1.4 价值主张
 
 - **一个端点**：46890 同时服务 OpenAI / Codex / Claude Code / DSH / WorkBuddy。
-- **一份清单**：三个来源统一命名、统一状态、统一检测。
+- **一份清单**：四个来源统一命名、统一状态、统一检测。
 - **一个凭据持有者**：WorkBuddy 账号只在 AI Bobby 里登录和刷新，客户端不再各自直连上游。
-- **一键接入**：WorkBuddy / Codex / Claude Code / DSH 四个客户端，预览后写入、可回滚。
-- **本机优先**：127.0.0.1、API Key、Origin 围栏、token 加密落盘。
+- **一键接入**：WorkBuddy / Codex / Claude Code / DSH / VS Code 五个客户端（Cursor 引导），预览后写入、可回滚。
+- **本机优先**：127.0.0.1、API Key、Origin 围栏；账号库当前为 `0600` 明文，safeStorage 列为后续硬化项。
 
 ### 1.5 与参考产品的关系
 
@@ -56,16 +57,17 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 ### 2.1 产品目标（v1）
 
-1. 启动后可用：用户打开应用，能看到三个来源；OpenCode 自动读取/检测，WorkBuddy 引导登录。
-2. 三个来源都能列出可用模型，并合并进 `/v1/models`。
+1. 启动后可用：用户打开应用，能看到四个来源；OpenCode 自动读取/检测，WorkBuddy 引导登录，NVIDIA 填 Key 后自动探测。
+2. 四个来源都能列出可用模型，并合并进 `/v1/models`。
 3. 46890 同时通过 Chat Completions、Responses、Anthropic Messages 三种协议完成流式对话与工具调用。
 4. WorkBuddy 双版本支持**内嵌官方登录页**添加账号，同一版本可存多个账号。
 5. 多账号按 `round-robin + 失败切换` 调度；每个账号展示剩余额度。
-6. 一键导入 WorkBuddy（国内/国际两个 models.json）、Codex、Claude Code、DSH；写入前可预览 diff，写入可回滚。
+6. 一键导入 WorkBuddy（国内/国际两个 models.json）、Codex、Claude Code、DSH、VS Code；Cursor 提供引导；写入前可预览 diff，写入可回滚。
 7. API Key 可查看/复制/轮换；轮换后能更新已导入客户端。
 8. **版本探测与自动更新**：启动后台检查、设置页手动检查、非模态更新条、下载/校验/替换/重启。
-9. **curl 一键安装**：ad-hoc 自签名、zip 分发、SHA256 校验，`curl -fsSL .../install.sh | bash` 可用。
-10. macOS 可用；Windows 在正式发版前补齐。
+9. **curl 一键安装**：ad-hoc 自签名、zip 分发、SHA256 校验，默认 `/Applications/AIMatrix`，标准用户回退 `~/Applications/AIMatrix`。
+10. **分源代理与中英文**：NVIDIA / WorkBuddy / WorkBuddy AI 可独立代理；界面中英文跟随系统。
+11. macOS 可用；Windows 在正式发版前补齐。
 
 ### 2.2 非目标（v1 不做）
 
@@ -86,11 +88,11 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 |---|---|
 | 首次启动到看到 OpenCode 模型清单 | ≤ 60 秒（检测可后台继续） |
 | 登录完成到 WorkBuddy 模型可对话 | ≤ 30 秒 |
-| 四个客户端全部导入 | ≤ 2 分钟 |
+| 五个客户端全部导入 | ≤ 2 分钟 |
 | 网关自身附加延迟（p95，不含上游） | ≤ 50ms |
 | 首字延迟附加（p95） | ≤ 100ms |
 | 日志/状态中明文 token / API Key | 0 |
-| 四个客户端各完成一次对话 + 一次工具调用 | 100% 通过 |
+| 五个客户端各完成一次对话 + 一次工具调用 | 100% 通过 |
 | 崩溃率（crash-free sessions） | ≥ 99% |
 
 ---
@@ -99,10 +101,10 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 | 术语 | 含义 |
 |---|---|
-| 来源 / 分组 | `OpenCode`、`WorkBuddy`、`WorkBuddy AI` 三组 |
+| 来源 / 分组 | `OpenCode`、`WorkBuddy`、`WorkBuddy AI`、`NVIDIA NIM` 四组 |
 | 模型 | 某个来源下的一个可调用模型 |
 | 账号 | 某个 WorkBuddy 版本下的一次登录会话 |
-| 客户端 | WorkBuddy、Codex、Claude Code、DeepSeek Harness |
+| 客户端 | WorkBuddy、Codex、Claude Code、DeepSeek Harness、VS Code（Cursor 引导） |
 | 网关 | 监听 46890 的本机 HTTP 服务 |
 | API Key | 网关鉴权用的本机随机密钥 |
 
@@ -113,6 +115,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 | OpenCode | `oc/` | `oc/big-pickle` | `OC. Big Pickle` |
 | WorkBuddy 国内版 | `wb/` | `wb/hy3` | `WB. Hy3` |
 | WorkBuddy AI 国际版 | `wbi/` | `wbi/hy3` | `WBI. Hy3` |
+| NVIDIA NIM | `nv/` | `nv/meta/llama-3.3-70b-instruct` | `NV. meta/llama-3.3-70b-instruct` |
 
 规则：
 
@@ -140,7 +143,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 2. 网关在 46890 启动；生成/读取 API Key；状态条显示“运行中”。
 3. OpenCode 页默认选中；应用自动准备隔离运行时、读取免费模型、开始并发检测。
 4. WorkBuddy / WBI 页显示“未登录”；点击“添加账号”进入登录。
-5. 首次使用引导提示：三个来源分别是什么、如何导入客户端、Key 在哪里。
+5. 首次使用引导提示：四个来源分别是什么、如何导入客户端、Key 在哪里。
 
 ### 4.2 添加 WorkBuddy 账号
 
@@ -166,13 +169,22 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 3. 点“检测全部”并发检测；行内显示耗时与状态；可展开详情“只重测这一个”。
 4. 判定缓存跨重启复用；不可用模型不进入网关清单。
 
+### 4.4a 读取 / 检测 NVIDIA
+
+1. 在 NVIDIA 页的凭据区填 `nvapi-…` Key；只保存在本机 `0600` 设置文件。
+2. 保存后自动读取 `/v1/models`，并立即对全部模型做一次 1-token 对话探测。
+3. 状态列显示可用/不可用与延迟；探测结果持久化，重启后仍保留。
+4. 重新保存 Key 会清空旧探测并重新探测；目录读取失败时不触发探测。
+5. 探测会消耗少量免费额度，UI 标注“免费试用 · 上游限速”。
+
 ### 4.5 一键导入客户端
 
 1. 在任意来源页勾选要导入的模型；全局“导入”按钮打开抽屉。
-2. 抽屉列出四个客户端、探测到的路径、当前状态。
-3. 选择分组/模型/默认模型；点“预览变更”看 diff。
+2. 抽屉列出 WorkBuddy、WorkBuddy AI、Codex、Claude Code、DSH、VS Code，以及 Cursor 引导入口。
+3. 选择分组/模型/默认模型；分组包含 `OC / WB / WBI / NV`；点“预览变更”看 diff。
+   勾选 Codex 时显示元数据覆盖（covered/total）与缺失模型，缺失模型只跳过 Codex。
 4. 点“写入”；写前备份，写后返回结果；失败可回滚。
-5. 提示重启对应客户端（Codex/Claude/DSH 需要重启或重开会话）。
+5. 提示重启对应客户端（Codex/Claude/DSH/VS Code 需要重启或重开会话）。
 6. 实际变更可在“历史记录”查看 diff、备份与恢复入口。
 
 ### 4.6 日常使用
@@ -245,7 +257,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 **FR-GW-8 健康检查**
 
 - `GET /health` 不需要 Key，只返回 `status` / `version` / `port`。
-- 详细状态（三个来源、账号摘要、检测进度）只通过主进程 IPC 提供给面板，不放在公开 HTTP 面。
+- 详细状态（四个来源、账号摘要、检测进度）只通过主进程 IPC 提供给面板，不放在公开 HTTP 面。
 - 不返回 token、Key、内部路径细节。
 
 ### 5.2 OpenCode 来源（FR-OC）
@@ -317,7 +329,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 **FR-WB-8 安全**
 
-- token 加密落盘：桌面端 safeStorage（macOS Keychain / Windows DPAPI）；CLI `0600` + 警告。
+- token 当前为 `0600` 明文落盘（safeStorage 因启动阻塞 Keychain 暂未默认启用）；CLI 同样 `0600` + 警告。
 - 不写日志、不进 `status.json`、不出现在 URL；错误信息只给尾号/指纹。
 - 首次添加账号展示“非官方接口、可能违反条款、自担风险”。
 
@@ -368,7 +380,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 **FR-UI-2 多页导航**
 
-- 页面：`概览` / `OpenCode` / `WorkBuddy` / `WorkBuddy AI` / `历史记录` / `关于` / `设置`。
+- 页面：`概览` / `OpenCode` / `WorkBuddy` / `WorkBuddy AI` / `NVIDIA NIM` / `历史记录` / `关于` / `设置`。
 - 模型来源放在“模型来源”分组；概览单独放在“总览”；历史记录、关于放在“其他”；设置固定在底部。
 - 默认选中 OpenCode；来源项显示已选/模型总数，历史项显示记录数；底部显示网关运行状态与端口。
 - 每个来源页保留自己的滚动位置、筛选、选中状态。
@@ -376,9 +388,10 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 
 **FR-UI-3 命令区**
 
-- 左：来源标题 + 一句说明 + `读取模型` / `检测全部`（WorkBuddy 为 `刷新目录` / `刷新额度`）。
+- 左：来源标题 + 一句说明 + `读取模型` / `检测全部`（WorkBuddy 为 `刷新目录` / `刷新额度`；NVIDIA 为 `读取模型` / `检测全部`）。
 - 右：当前来源的统计（已发现/可用/待检测/账号数/已选），`已选` 与其它指标同排、用主色显示 `已选/总数`。
 - WorkBuddy / WBI：账号条（昵称、额度、启用、添加账号）。
+- NVIDIA：凭据条（掩码 Key、显示/隐藏、复制、更新、获取 Key），并说明保存后自动探测。
 
 **FR-UI-4 模型表格**
 
@@ -390,11 +403,12 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 **FR-UI-5 全局导入抽屉**
 
 - 顶部“导入”按钮常驻；抽屉从右侧滑出。
-- 列出客户端：WorkBuddy（国内）、WorkBuddy AI（国际）、Codex、Claude Code、DSH。
+- 列出客户端：WorkBuddy（国内）、WorkBuddy AI（国际）、Codex、Claude Code、DSH、VS Code；Cursor 为仅引导卡片。
 - 每行：探测路径、状态、可写性、默认分组。
-- 分组选择：`OC` / `WB` / `WBI`；WorkBuddy 目标自动排除自身分组。
+- 分组选择：`OC` / `WB` / `WBI` / `NV`；WorkBuddy 目标自动排除自身分组。
 - 模型选择：打开应用时默认不勾选任何模型；启动后读取各客户端配置，按实际已写入的 AI Bobby 模型回勾（失效模型忽略）；可只导入当前选择。
 - 底部：变更预览随选择实时更新（只读，不需要按钮触发），确认后点“写入”；展示 diff 与警告。
+- Codex 目标只写有元数据的模型；覆盖数与缺失模型在写入前展示，缺失模型只跳过 Codex。
 - 写入中禁用按钮；完成后显示路径与“需要重启客户端”提示，并把实际变更记入导入历史。
 - DSH 目标在写入配置的同时把网关 Key 写入 `~/.dsh/.credentials.yaml` 的 `refs.AI_BOBBY_API_KEY`，
   用户不需要再为 DSH 设置环境变量。
@@ -414,6 +428,9 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 **FR-UI-8 设置**
 
 - 外观：系统 / 浅色 / 深色；这是主题的唯一入口。
+- 语言：跟随系统 / 简体中文 / English；立即生效，只影响本应用。
+- 网络代理：关闭 / 跟随系统 / 自定义；自定义默认 `http://127.0.0.1:10080`，按 NVIDIA、WorkBuddy、WorkBuddy AI 分源开关。
+- NVIDIA NIM：掩码 Key、更新、获取 Key；保存后自动探测。
 - 自动检查开关使用可见轨道边框和内边距，保证浅色下白色滑块可辨识；开关与文字间距为 8px。
 - 本地网关：展示并复制 `http://127.0.0.1:46890/v1`。
 - API Key：展示掩码并复制。
@@ -453,7 +470,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 **FR-UI-12 概览**
 
 - 首屏给出四张指标卡：网关状态与端口、模型源数与可用/待检测数、账号积分合计、最近一次导入。
-- 三个来源卡片：模型总数、可用数、账号数/说明；点击进入对应来源页。
+- 四个来源卡片：模型总数、可用数、账号数/说明；点击进入对应来源页。
 - 最近 3 次导入：客户端、时间、模型数、状态；可跳转历史记录。
 - 只读汇总，不放导入入口；数据来自真实网关状态与导入历史。
 
@@ -537,6 +554,9 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 ### 5.8 设置（FR-SET）
 
 - 外观：系统 / 浅色 / 深色；这是主题的唯一入口，选择存 `localStorage`。
+- 语言：跟随系统 / 简体中文 / English，持久化到 `settings.json`。
+- 网络代理：关闭 / 跟随系统 / 自定义；默认 `http://127.0.0.1:10080`，分源开关。
+- NVIDIA NIM：掩码 Key、更新 Key、获取 Key。
 - 本地网关：展示并复制 `http://127.0.0.1:<port>/v1`。
 - API Key：展示掩码并复制。
 - **版本与更新**：当前版本、自动检查开关（默认开，存 `localStorage`）、手动检查、
@@ -601,8 +621,11 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 **FR-DIST-3 curl 安装**
 
 - 稳定地址：`https://xsin.github.io/ai-bobby/releases/latest/install.sh`。
-- 默认安装到 `~/Applications/AI Bobby.app`（无需 sudo）；`--system` 安装到 `/Applications`。
+- 默认安装到 `/Applications/AIMatrix/AI Bobby.app`；`/Applications` 不可写时回退 `~/Applications/AIMatrix`（打印原因）。
+- `--system` 强制 `/Applications/AIMatrix` 并请求管理员授权；成功后把目录所有权交还安装者。
+- `--install-dir` 使用精确自定义路径，不回退。
 - 参数：`--version`、`--install-dir`、`--no-launch`、`--system`。
+- 成功后清理两个受管旧路径 `~/Applications/AI Bobby.app` 与 `/Applications/AI Bobby.app`；不清理自定义安装。
 - 支持 arm64 / x86_64；优先 universal，缺省回退单架构。
 - SHA256 校验失败立即退出；未找到校验文件时需显式 `--skip-verify`（或环境变量）才继续。
 - 安装前退出旧进程；覆盖安装保留用户数据；清理 quarantine；默认启动。
@@ -623,7 +646,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 ```
 主窗口
 ├── 左侧栏（可收起）
-│   ├── 模型来源：OpenCode（默认）/ WorkBuddy / WorkBuddy AI
+│   ├── 模型来源：OpenCode（默认）/ WorkBuddy / WorkBuddy AI / NVIDIA NIM
 │   ├── 其他：历史记录 / 关于
 │   └── 底部：设置 + 网关状态 + 端口
 ├── 右侧内容区（页面标题 + 网关状态 + 设置快捷入口 + 导入）
@@ -655,7 +678,7 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 │ ● 运行中 46890│                                                     │
 ├──────────────┴─────────────────────────────────────────────────────┤
 │ ● 运行中 · 10 个模型  转发口 http://127.0.0.1:46890/v1  Key sk-…  │
-│                                                     AI Bobby 0.2.2 │
+│                                                     AI Bobby 0.2.3 │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -680,10 +703,13 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 │ ☑ WorkBuddy（国内）  ~/.workbuddy/models.json      [已探测] │
 │ ☑ WorkBuddy AI（国际）~/.workbuddy-ai/models.json  [已探测] │
 │ ☑ Codex              ~/.codex/config.toml          [已探测] │
+│ ☑ VS Code            .../chatLanguageModels.json   [可写入] │
+│ ○ Cursor             仅引导，不写数据库              [查看步骤] │
 │ ☑ Claude Code        ~/.claude/settings.json       [已探测] │
 │ ☑ DeepSeek Harness   ~/.dsh/profiles/desktop/...   [已探测] │
 │                                                            │
-│ 分组： [OC] [WB] [WBI]     模型：已选 7 个                  │
+│ 分组： [OC] [WB] [WBI] [NV]   模型：已选 7 个               │
+│ Codex 元数据：5/7（2 个缺失模型只跳过 Codex）              │
 │ 默认模型： [OC. Big Pickle ▾]                              │
 │                                                            │
 │ [预览变更]  [写入]  [回滚最近一次]                          │
@@ -714,8 +740,8 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 │ [ZEO 头像]  ABOUT THE MAKER                                        │
 │   ZEO      独立开发者 / 独立音乐人 / AI 驭龙师                     │
 │             “如果说 AI 是巨龙，我就是那个驭龙者。”                │
-│             PROJECT AI Bobby   VERSION 0.2.2   MODE Local-first    │
-│ THE PROJECT   把三个来源，收进一个本机端点。                       │
+│             PROJECT AI Bobby   VERSION 0.2.3   MODE Local-first    │
+│ THE PROJECT   把四个来源，收进一个本机端点。                       │
 │ SUPPORT MY MUSIC   两张最新专辑 + [最新歌曲][最热歌曲] + 播放器     │
 │ SUPPORT THE WORK   支付宝 / 微信 / 更多方式收款码                   │
 └────────────────────────────────────────────────────────────────────┘
@@ -755,7 +781,8 @@ AI Bobby 是一个**只监听本机的 AI 服务网关桌面应用**：
 api-key              0600  网关 Key
 status.json                运行状态（原子写）
 import-history.json  0600  导入/恢复历史与备份索引（最多 200 条）
-accounts/                  WorkBuddy 账号（token 加密）
+settings.json        0600  语言、代理、NVIDIA Key、探测快照
+accounts/                  WorkBuddy 账号（token 当前 0600 明文，safeStorage 待硬化）
   cn.json / intl.json
 catalog-cache.json         模型目录快照
 probe-cache.json           OpenCode 判定缓存
@@ -793,7 +820,8 @@ runtime/                   OpenCode 运行时
 
 - 只监听 loopback；拒绝浏览器 Origin；Host 校验。
 - API Key 随机、`0600`、可轮换。
-- 账号 token 加密落盘；密钥不落盘（safeStorage）。
+- 账号 token 目前 `0600` 明文落盘；safeStorage 加密列为后续硬化项。
+- NVIDIA Key 存在 `settings.json`，只显示掩码。
 - 导入器防路径穿越；只写白名单路径；写前备份。
 - 不执行上游返回的任意命令；OpenCode 审批围栏保留。
 
@@ -801,7 +829,7 @@ runtime/                   OpenCode 运行时
 
 - macOS 13+（Apple Silicon / Intel）；Windows 10+（发版前验证）。
 - Node ≥ 22.19（Electron 内置 Node）。
-- OpenAI Chat/Responses 客户端、Anthropic SDK、Codex CLI、Claude Code、DSH 0.2.x、WorkBuddy 5.5+。
+- OpenAI Chat/Responses 客户端、Anthropic SDK、Codex CLI、Claude Code、DSH 0.2.x、WorkBuddy 5.5+、VS Code Custom Endpoint。
 - 端口默认 46890；客户端配置使用 `127.0.0.1`，不依赖 `localhost` 解析。
 
 ### 8.5 可维护性
@@ -809,6 +837,8 @@ runtime/                   OpenCode 运行时
 - pnpm workspace；TypeScript strict；协议翻译有 fixture 测试。
 - 参考实现复制需注明来源与 MIT 许可。
 - 上游变化集中在 provider 包，UI/导入器不感知协议细节。
+- 文案走 `i18n.ts` 字典；新增 UI 文案必须同时补中英文 key。
+- 代理通过 `createProxyFetch` 注入 provider，不修改全局 `fetch`。
 
 ---
 
@@ -839,7 +869,7 @@ runtime/                   OpenCode 运行时
 
 ### AC-5 导入
 
-- 四个客户端各导入一次后，能在各自模型选择器看到 `OC.` / `WB.` / `WBI.` 模型并完成对话。
+- 五个客户端各导入一次后，能在各自模型选择器看到 `OC.` / `WB.` / `WBI.` / `NV.` 模型并完成对话；Cursor 引导可完成配置。
 - 重复导入返回 `changed:false`；用户手写条目不变；备份存在；回滚可恢复。
 - WorkBuddy 导入自动排除自身分组。
 - 每次实际写入后，历史页出现记录与备份；恢复后目标文件回到备份内容，当前文件已再次备份。
@@ -868,6 +898,18 @@ runtime/                   OpenCode 运行时
 - 下载显示进度；完成后显示“更新已就绪”和“立即重启”；“稍后”后本次会话不再自动弹出。
 - 设置页可切换自动检查、手动检查并展示失败原因。
 
+### AC-10 NVIDIA 与导入覆盖
+
+- 保存 NVIDIA Key 后自动读取目录并探测全部模型；再次保存会清空旧探测。
+- 探测结果重启后保留；延迟列显示秒数。
+- 导入抽屉显示 Codex 元数据 covered/total；缺失模型只跳过 Codex，其他客户端照常写入。
+
+### AC-11 语言与代理
+
+- 设置切 English 后，主要页面/设置/导入的静态文案立即变为英文；重启后保持。
+- 代理切换为自定义 `http://127.0.0.1:10080` 后，NVIDIA / WorkBuddy AI 的请求走代理；关闭后直连。
+- 代理只影响 AI Bobby 上游请求，不影响 OpenCode 子进程。
+
 ---
 
 ## 10. 发布计划
@@ -879,7 +921,7 @@ runtime/                   OpenCode 运行时
 | M2 WorkBuddy | 登录、多账号、目录、聊天、额度、调度 | 双版本各两账号，流式对话 |
 | M3 OpenCode | 运行时、免费筛选、检测、缓存、会话 | 自动准备运行时，检测可用 |
 | M4 三协议 | Chat / Responses / Messages + 工具调用 | 三客户端真机通过 |
-| M5 导入 | 四个 importer + dry-run + 回滚 | 四客户端各完成对话 |
+| M5 导入 | 五个 importer + Cursor 引导 + dry-run + 回滚 | 五客户端各完成对话 |
 | M6 UI | 左侧栏多页、历史记录、关于/音乐、浮动头像、更新提示 | 截图风格与交互验收 |
 | M7 打包 | macOS `.app` + zip；Windows NSIS；ad-hoc 签名 | 安装即用，签名校验通过 |
 | M8 分发与更新 | install.sh、gh-pages、GitHub Release、latest.json、应用内更新 | curl 安装成功；旧版发现新版并完成更新重启 |
@@ -893,7 +935,7 @@ runtime/                   OpenCode 运行时
 1. **登录页 webview 限制**：微信/Google 可能拦截内嵌登录；已准备系统浏览器回退，但需 P2 真机验证。
 2. **上游私有协议变化**：登录、目录、聊天、billing 都可能变；集中在 provider 层，便于修。
 3. **多账号风控**：轮询/多账号请求可能触发限流或封禁；不做绕过，错误透明，支持冷却。
-4. **token 安全**：多账号 token 更敏感；safeStorage + 不落日志；CLI 模式明确警告。
+4. **token 安全**：多账号 token 当前为 `0600` 明文；不落日志，safeStorage 加密列为后续硬化项。
 5. **DSH 配置写入**：profile 由 App 管理，schema 可能变；先 dry-run，失败给手动指引。
 6. **Codex/Claude 配置格式变化**：导入器保留未知字段；失败不改原文件。
 7. **OpenCode 免费池 churn**：缓存 + 降级；不可用不影响其他来源。
@@ -901,6 +943,9 @@ runtime/                   OpenCode 运行时
 9. **Gatekeeper / 公证**：ad-hoc 签名没有 Developer ID；首次打开可能被拦，需文档引导。
 10. **自动更新替换失败**：备份 + 回滚；失败保留旧版本并提示手动重跑安装脚本。
 11. **更新清单与产物同源**：SHA256 不能抵御同时篡改清单与产物；用 Ed25519 清单签名增强。
+12. **NVIDIA 模型权限差异**：免费账号仅部分模型可用；探测会消耗少量额度。
+13. **WBI 渠道校验**：`11-128` 属上游风控，不做绕过；需产品决策。
+14. **Codex 元数据语义**：无法从上游模型列表推导；未覆盖模型不进 picker。
 
 ### 11.2 已确定的实现约定
 
@@ -908,12 +953,14 @@ runtime/                   OpenCode 运行时
 - WorkBuddy 导入由用户选择分组；目标 App 自动排除自身分组，避免自环。
 - `preferred` 在 provider 调度中生效；当前 UI 还未暴露“钉住此账号”的开关。
 - 未内置 oc-ferry 旧条目清理；需要时由用户手动处理。
+- Codex 只写 `CODEX_METADATA` 已覆盖的模型；导入抽屉会展示 covered/total 与缺失模型。
+- NVIDIA Key 保存后自动探测全部模型；再次保存会清空旧探测。
 
 ---
 
 ## 12. 附录
 
-### 12.0 安装命令
+### 12.0 安装命令（v0.2.3+ 默认 `/Applications/AIMatrix`）
 
 ```bash
 curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh | bash

@@ -1,8 +1,8 @@
 # AI Bobby 技术方案（tech.md）
 
-- 当前版本：v0.2.2（已发布）
-- 日期：2026-10-18
-- 状态：设计保持完整目标态；当前实现与验收状态见 [handsoff.md](../handsoff.md)
+- 当前版本：v0.2.3（已发布，2026-10-20）
+- 日期：2026-10-20
+- 状态：已按 v0.2.3 实际实现对齐；早期目标态与现状的差异在对应段落标注
 - 关联：[prd.md](./prd.md)、[handsoff.md](../handsoff.md)
 - 用户侧安装/使用/接入说明：[README.md](../README.md)
 - 目标：把 PRD 落成可实现的模块边界、协议、数据结构与测试策略。
@@ -19,25 +19,27 @@
 │   ├─ BrowserWindow ──preload──> React 控制面板                                       │
 │   ├─ Tray                                                                           │
 │   ├─ LoginWindow（WorkBuddy 官方登录页，独立 session partition）                      │
-│   ├─ AccountStore（safeStorage 加密；token 只在主进程解密）                           │
+│   ├─ AccountStore（当前 0600 明文；safeStorage 待硬化）                              │
 │   ├─ Importer 调度（dry-run / apply / rollback）                                      │
-│   └─ fork(ELECTRON_RUN_AS_NODE) ──> 网关子进程 (packages/gateway)                     │
+│   └─ gateway (packages/gateway，当前在主进程内启动)                                  │
 │          ├─ 127.0.0.1:46890                                                         │
 │          ├─ API Key / Origin 围栏 / 限流 / SSE                                       │
 │          ├─ CanonicalEvent 总线 + 三种协议 codec                                     │
 │          ├─ WorkBuddy provider ──> copilot.tencent.com / www.workbuddy.ai            │
-│          └─ OpenCode provider ──> 隔离 opencode serve（随机端口 + Basic 口令）        │
+│          ├─ OpenCode provider ──> 隔离 opencode serve（随机端口 + Basic 口令）        │
+│          ├─ NVIDIA provider ──> integrate.api.nvidia.com（可走分源代理）             │
+│          └─ 分源代理：undici ProxyAgent（NVIDIA/WB/WBI 独立开关）                     │
 └─────────────────────────────────────────────────────────────────────────────────────┘
         ▲                         ▲                          ▲
    WorkBuddy (Chat)          Codex (Responses)         Claude Code (Messages)
-                             DSH (Chat)                任意 OpenAI 客户端
+   DSH / VS Code (Chat)      任意 OpenAI 客户端
 ```
 
-**为什么网关是子进程**：
+**为什么网关独立成包**：
 
-- 与 UI 生命周期解耦，窗口关闭/重载不影响服务；
-- 崩溃隔离，主进程可重启；
-- `apps/cli` 可以不带 Electron 单跑，便于调试与测试。
+- 网关不依赖 Electron，`apps/cli` 可以不带 UI 单跑，便于调试与测试；
+- 与 UI 生命周期解耦，窗口关闭/重载不影响 46890 监听；
+- 当前在主进程内启动；后续硬化时可拆为子进程以获得崩溃隔离。
 
 **为什么登录在主进程**：
 
@@ -45,7 +47,7 @@
 - token 只在主进程解密，网关通过 IPC 拿到运行时快照；
 - 账号库由主进程唯一写入，避免多个进程竞争。
 
-> **实现状态（2026-10-18）**：当前网关在主进程内直接启动，未 fork 子进程；UI 通过 IPC
+> **实现状态（2026-10-20）**：当前网关在主进程内直接启动，未 fork 子进程；UI 通过 IPC
 > 读主进程快照，不读 `status.json`。账号库为 `0600` 明文，`safeStorage` 因启动时阻塞
 > Keychain 暂未默认启用。图中的子进程/safeStorage 是设计目标，后续硬化时再拆。
 
@@ -56,9 +58,10 @@
       → main 轮询 auth/token → AccountStore 加密入库
       → main 推送 account snapshot → gateway 更新账号池
       → gateway 拉目录/额度 → status.json → UI
+NVIDIA：UI 保存 Key → main 持久化 settings → provider 拉目录 → 自动 probeAll → 快照回写
 
 请求：客户端 → gateway:46890 → 鉴权/路由 → provider adapter
-      → WorkBuddy 上游 / OpenCode 会话 → CanonicalEvent
+      → WorkBuddy / OpenCode / NVIDIA 上游（可经代理）→ CanonicalEvent
       → 协议 codec → 客户端 SSE / JSON
 
 导入：UI → main.importPreview(target, selection) → importer dry-run → diff
@@ -124,7 +127,7 @@ ai-bobby/
 │   │   │   ├── index.ts
 │   │   │   ├── window.ts
 │   │   │   ├── tray.ts
-│   │   │   ├── service.ts     # fork/重启网关
+│   │   │   ├── service.ts     # 服务编排/状态快照
 │   │   │   ├── login-window.ts
 │   │   │   ├── account-store.ts
 │   │   │   ├── ipc.ts
@@ -145,12 +148,15 @@ ai-bobby/
 │   ├── core/                  # 领域模型、注册表、设置、日志、状态
 │   ├── workbuddy/             # 双 realm 登录/账号/目录/聊天/额度/调度
 │   ├── opencode/              # 运行时/免费筛选/检测/会话
+│   ├── nvidia/                # NVIDIA NIM 目录/探测/SSE
 │   ├── gateway/               # HTTP + CanonicalEvent + 三协议 codec
-│   └── importers/             # 四个客户端
+│   └── importers/             # WorkBuddy/Codex/Claude/DSH/VS Code + Cursor 引导
 ├── scripts/release/
 │   ├── version.mjs            # 版本单一来源
 │   ├── build-mac.sh           # 构建/签名/zip/checksums/latest.json
-│   └── install.sh             # 同步到 releases/latest/
+│   ├── install.sh             # 同步到 releases/latest/
+│   ├── validate-codex-*.mts   # Codex catalog/contract/request 校验
+│   └── smoke-codex-models.mts # L3 上游 smoke
 ├── releases/latest/install.sh # 可审计安装脚本（入库）
 ├── .github/workflows/release.yml
 └── refs/                      # 只读参考（.gitignore）
@@ -306,10 +312,10 @@ components/
 ### 3.1 标识
 
 ```ts
-export type ProviderId = 'opencode' | 'workbuddy' | 'workbuddy-ai'
+export type ProviderId = 'opencode' | 'workbuddy' | 'workbuddy-ai' | 'nvidia'
 export type Realm = 'cn' | 'intl'
 
-export type ModelId = `${'oc' | 'wb' | 'wbi'}/${string}`
+export type ModelId = `${'oc' | 'wb' | 'wbi' | 'nv'}/${string}`
 
 export interface ModelRef {
   provider: ProviderId
@@ -338,7 +344,7 @@ export type ModelStatus =
   | 'no_account'
 
 export interface ModelDescriptor extends ModelRef {
-  groupName: string            // OpenCode / WorkBuddy / WorkBuddy AI
+  groupName: string            // OpenCode / WorkBuddy / WorkBuddy AI / NVIDIA NIM
   capabilities: ModelCapabilities
   contextWindow?: number
   maxOutputTokens?: number
@@ -816,7 +822,7 @@ Origin/Referer/UA 同上
 
 ---
 
-## 4.9 NVIDIA provider（`packages/nvidia`）
+## 4.11 NVIDIA provider（`packages/nvidia`）
 
 ```ts
 class NvidiaProvider {
@@ -1446,6 +1452,21 @@ AI Bobby 的策略：
   - 保留原有 `records` 与其他 `refs`；解析失败则跳过写入并提示在 DSH 设置中手动填入 Key，不覆盖文件。
 - 写入后提示重启 DSH；不修改 DSH 的 `package.json` / `node_modules`。
 
+### 7.5.1 VS Code 与 Cursor
+
+**VS Code（Custom Endpoint）**
+
+- 目标：`~/Library/Application Support/Code/User/chatLanguageModels.json`（macOS）。
+- 写入 `customendpoint` provider：`name = "AI Bobby"`、`url = http://127.0.0.1:46890/v1`、
+  `apiType = "openai-chat-completions"`、网关 Key；保留其他 provider。
+- 检测 Code / Insiders；写前备份、原子写、幂等；VS Code 会把明文 Key 迁移到 Keychain。
+- 不弹启动提示。
+
+**Cursor（仅引导）**
+
+- 不写 `state.vscdb`、不读 Keychain、不复制 Key。
+- 弹窗展示 Base URL / API Key / 模型选择步骤，用户手动完成。
+
 ### 7.6 回滚
 
 - 记录最近一次备份路径与写入 hash。
@@ -1461,17 +1482,17 @@ AI Bobby 的策略：
 职责：
 
 - 单实例锁；创建窗口/托盘；加载 renderer。
-- fork 网关子进程；健康检查；崩溃重启一次；退出时优雅停止。
-- LoginWindow 管理；AccountStore；safeStorage。
-- Importer 调用；设置读写；状态聚合。
+- **当前版本在主进程内直接启动网关**（未 fork 子进程）；窗口关闭/重载不影响监听。
+- LoginWindow 管理；AccountStore（当前 0600 明文，safeStorage 待硬化）。
+- Importer 调用；设置读写；状态聚合；NVIDIA 目录/探测调度。
 - IPC 白名单。
 
-### 8.2 网关子进程
+### 8.2 网关子进程（设计目标 / 当前未启用）
 
-- 启动参数：`--data-dir`、`--port`、`--api-key-file`、`--log-level`。
-- 主进程通过 `child.send` 发送账号快照；子进程通过 `process.send` 上报状态/账号更新。
+- 目标启动参数：`--data-dir`、`--port`、`--api-key-file`、`--log-level`。
+- 目标：主进程通过 `child.send` 发送账号快照；子进程通过 `process.send` 上报状态/账号更新。
 - 子进程退出码非 0 → 主进程重启一次；连续失败显示错误。
-- 子进程不直接读账号库；只持有内存快照。
+- 当前实际：网关由主进程直接持有；`apps/cli` 仍可单独运行网关用于调试。
 
 ### 8.3 状态
 
@@ -1481,11 +1502,12 @@ AI Bobby 的策略：
 {
   "pid": 12345,
   "startedAtMs": 1759990000000,
-  "gateway": { "state": "ready", "port": 46890, "version": "0.2.2" },
+  "gateway": { "state": "ready", "port": 46890, "version": "0.2.3" },
   "providers": {
     "opencode": { "state": "ready", "models": 10, "available": 7, "pending": 0 },
     "workbuddy": { "state": "ready", "accounts": 2, "models": 12 },
-    "workbuddy-ai": { "state": "no_account", "accounts": 0, "models": 0 }
+    "workbuddy-ai": { "state": "no_account", "accounts": 0, "models": 0 },
+    "nvidia": { "state": "ready", "models": 81, "available": 15, "pending": 0 }
   },
   "probes": { "running": false, "done": 10, "total": 10 },
   "accounts": [
@@ -1495,7 +1517,7 @@ AI Bobby 的策略：
 }
 ```
 
-- 主进程只在 `pid` 匹配当前子进程时接受。
+- 当前网关由主进程直接持有；`status.json` 仅用于 CLI/诊断，UI 走 IPC 快照。
 - 不含 token、完整 Key、prompt。
 
 ### 8.4 preload API
@@ -1504,6 +1526,12 @@ AI Bobby 的策略：
 interface AiBobbyApi {
   getAppInfo(): Promise<AppInfo>
   getStatus(): Promise<GatewayStatus>
+  getSettings(): Promise<DesktopSettings>
+  setLocale(locale: 'system' | 'zh' | 'en'): Promise<DesktopSettings>
+  setProxy(proxy: DesktopSettings['proxy']): Promise<DesktopSettings>
+  setNvidiaKey(key: string): Promise<GatewayStatus>
+  probeNvidia(): Promise<GatewayStatus>
+  getCodexMetadata(): Promise<string[]>
   copyApiKey(): Promise<void>
   refresh(): Promise<GatewayStatus>
   startLogin(provider: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot>
@@ -1541,16 +1569,16 @@ interface AiBobbyApi {
 App
 ├── TitleBar（macOS 红绿灯 + 应用名 + 本地网关）
 ├── Sidebar
-│   ├── 来源：OpenCode / WorkBuddy / WorkBuddy AI（计数）
+│   ├── 来源：OpenCode / WorkBuddy / WorkBuddy AI / NVIDIA NIM（计数）
 │   ├── 其他：历史记录 / 关于
 │   └── 设置 + 网关状态/端口
 ├── Header（页面标题、网关状态、设置、导入）
 ├── UpdateBanner（发现/下载/就绪）
 ├── Page
-│   ├── SourcePage（SourceHead + AccountStrip + ModelTable）
+│   ├── SourcePage（SourceHead + AccountStrip / NVIDIA 凭据条 + ModelTable）
 │   ├── HistoryPage（统计、筛选、记录、备份、恢复确认、diff）
 │   ├── AboutPage（ZEO、项目、音乐、赞助）
-│   └── SettingsPage（主题、网关、Key、版本与更新）
+│   └── SettingsPage（主题、语言、代理、NVIDIA Key、网关、版本与更新）
 ├── ImportDrawer
 ├── FloatingAvatar（可拖动，位置持久化）
 ├── FloatingMusicPlayer（全局单例 iframe）
@@ -1567,6 +1595,8 @@ App
   `restoreBackupVersion(id)` 只接受 `baseline:<target>` / `entry:<historyId>`，先备份当前文件再覆盖。
 - `musicTrack`：全局单曲状态；App 唤起成功时关闭，关闭 iframe 时卸载；失败时作为兜底播放。
 - 主题：`data-theme` + CSS 变量；只在设置页修改。
+- 语言：`i18n.ts` 字典 + `t()`；`locale` 来自 `settings.json`，默认跟随 `navigator.language`。
+- 代理/语言切换后无需重启；代理只作用于 provider fetch。
 
 样式：
 
@@ -1642,12 +1672,12 @@ src/shared/update.ts       # 主/渲染共享类型
 
 ```json
 {
-  "version": "0.2.2",
+  "version": "0.2.3",
   "notes": "本次更新要点",
   "pub_date": "2026-10-18T09:00:00Z",
   "platforms": {
     "darwin-aarch64": {
-      "url": "https://xsin.github.io/ai-bobby/releases/0.2.2/AI-Bobby-0.2.2-arm64.zip",
+      "url": "https://xsin.github.io/ai-bobby/releases/0.2.3/AI-Bobby-0.2.3-arm64.zip",
       "sha256": "<64 hex>",
       "size": 12345678
     },
@@ -1807,7 +1837,9 @@ release/<version>/
 - `scripts/release/install.sh` 为真源，同步到 `releases/latest/install.sh`（入库可审计）。
 - 兼容 macOS bash 3.2；不使用 mapfile/关联数组。
 - 参数：`--version` / `--install-dir` / `--no-launch` / `--system` / `--help`。
-- 默认 `~/Applications/AI Bobby.app`；`--system` → `/Applications`（sudo）。
+- 默认 `/Applications/AIMatrix/AI Bobby.app`；不可写时回退 `~/Applications/AIMatrix`（打印原因）。
+- `--system` 强制 `/Applications/AIMatrix`，需管理员授权；安装后把目录所有权交还安装者。
+- `--install-dir` 使用精确自定义路径，不回退；成功安装后只清理两个受管旧路径。
 - 架构检测 arm64/x86_64；优先 universal（如有），回退单架构。
 - 下载候选：gh-pages `<root>/<version>/<file>` 与 GitHub `<root>/download/<tag>/<file>`。
 - SHA256 优先 `checksums.txt`，回退 `<file>.sha256`；缺失时拒绝安装（需显式 skip）。
@@ -1829,6 +1861,7 @@ release/<version>/
 ```
 <dataDir>/
 ├── api-key                  0600
+├── settings.json            0600（语言/代理/NVIDIA Key/probe 快照）
 ├── status.json
 ├── import-history.json      0600，最多 200 条
 ├── accounts/
@@ -1948,7 +1981,7 @@ class GatewayError extends Error {
 ### 11.3 手动真机测试
 
 - macOS：登录 CN/INTL（微信/Google）、双账号、额度、流式、工具调用。
-- Codex / Claude Code / DSH / WorkBuddy 四个客户端各一次对话 + 工具调用。
+- Codex / Claude Code / DSH / WorkBuddy / VS Code 五个客户端各一次对话 + 工具调用；Cursor 引导完成配置。
 - 浅色/深色/系统主题；窄窗；键盘操作。
 - 端口占用、网关崩溃、账号过期、429/402。
 
@@ -1995,6 +2028,8 @@ pnpm --filter @ai-bobby/desktop package:mac
 - v1 不做自动更新；设置里“检查更新”打开 release 页。
 - 数据迁移：`version` 字段；账号库/设置升级函数；备份旧文件。
 - 端口/Key 保持；客户端配置无需重写（除非用户改端口/轮换 Key）。
+- 应用内更新已实现：启动后台检查、非模态更新条、下载/校验/替换/重启；清单在 gh-pages `releases/latest/latest.json`。
+- 安装路径默认 `/Applications/AIMatrix`；`--system` 提权，标准用户回退 `~/Applications/AIMatrix`。
 
 ---
 
@@ -2032,7 +2067,7 @@ pnpm --filter @ai-bobby/desktop package:mac
 | P2 | WorkBuddy 登录/多账号/目录/聊天/额度/调度 | 双 realm 各两账号；流式 + 切号 |
 | P3 | OpenCode 运行时/免费筛选/检测/会话 | 自动准备运行时；检测可用 |
 | P4 | 三协议 codec + 工具调用 | Codex/Claude/DSH/WorkBuddy 真机 |
-| P5 | 四个 importer + 备份/回滚/历史 | 四客户端导入 + 幂等 + 恢复 |
+| P5 | 五个 importer + Cursor 引导 + 备份/回滚/历史 | 五客户端导入 + 幂等 + 恢复 |
 | P6 | 左侧栏多页 UI + 历史 + 关于/音乐 + 更新条 | 截图风格与交互验收 |
 | P7 | 打包 macOS/Windows | 安装即用 |
 
@@ -2074,7 +2109,7 @@ curl -fsSL https://xsin.github.io/ai-bobby/releases/latest/install.sh -o install
 less install.sh && bash install.sh
 
 # 手动指定版本 / 目录
-bash install.sh --version 0.2.2 --install-dir ~/Applications
+bash install.sh --version 0.2.3 --install-dir /Applications/AIMatrix
 ```
 
 更新清单：
@@ -2129,3 +2164,27 @@ OpenCode
 - `refs/RuiC-oc-ferry`（MIT）：OpenCode 运行时、检测、导入、UI。
 - `refs/dsh-workbuddy-connect`（MIT）：WorkBuddy 上游协议、目录、错误分类。
 - `refs/iskill-headroom-workbuddy2api`（MIT）：登录 state/poll、多账号、三种协议面的参考。
+
+
+---
+
+## 17. v0.2.3 实现对齐记录
+
+| 项 | 设计文档早期描述 | v0.2.3 实际 |
+|---|---|---|
+| 来源 | OpenCode / WorkBuddy / WBI | 四个来源，新增 NVIDIA NIM（`nv/`） |
+| 客户端 | WorkBuddy / Codex / Claude / DSH | 新增 VS Code；Cursor 仅引导 |
+| 网关进程 | fork 子进程 | 主进程内直接启动；CLI 可单跑（子进程为后续硬化目标） |
+| 账号存储 | safeStorage 加密 | `0600` 明文；safeStorage 待硬化 |
+| 安装路径 | `~/Applications` / `--system` `/Applications` | 默认 `/Applications/AIMatrix`；回退 `~/Applications/AIMatrix`；`--system` 提权并交还所有权 |
+| 代理 | 未涉及 | 分源 `off/system/custom`，默认 `http://127.0.0.1:10080` |
+| 界面语言 | 仅中文 | 中/英，默认跟随系统，`settings.json` 持久化 |
+| Codex | 只写 provider | 生成带前缀 `models.ai-bobby.json`；仅写有元数据的模型；恢复时归一化 |
+| 更新 | 早期写“v1 不做自动更新” | 已实现后台检查/非模态更新条/下载/替换/重启 |
+| 测试 | 单元 + 手动 | 增加 `validate:codex` / `contract` / `request`、`smoke:codex` 与 validate CI |
+
+已知偏差（不阻塞 v0.2.3）：
+
+- Codex 元数据仅覆盖 `deepseek-v4.1-flash`、`glm-5.3-flash`；未覆盖模型不进 picker。
+- WorkBuddy AI 渠道校验 `11-128` 属上游风控，不做绕过。
+- Windows 打包未实现。
