@@ -176,3 +176,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 - “添加外部来源”弹窗直接复用历史记录“恢复”弹窗的 `restore-tabs` / `restore-tab` / `restore-tabpanel` 交互与视觉：左侧竖向 tab、无分隔线、选中项与右侧面板同底色、左侧主色条。
 - 后续遇到 tab panel、抽屉、弹窗、表格、空状态等交互，先检查 `prototype/desktop` 与生产组件是否已有实现；不要另起一套。
+
+
+## 新方向设计（Token 资产 / 客户端接线）
+
+见 [`../token-assets/`](../token-assets/)：首次引导、主套餐、客户端切换、WorkBuddy AI via Hub、使用量/省钱对比。
