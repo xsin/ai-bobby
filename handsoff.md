@@ -6,8 +6,9 @@
 > 落地页见 [docs/prd-landing.md](./docs/prd-landing.md) / [docs/tech-landing.md](./docs/tech-landing.md)；
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
-- 最后更新：2026-10-19
-- 当前阶段：**v0.2.2 已发布（2026-10-19）**：网关 abort 修复、备份基线 + 最近 5 份与按版本恢复、
+- 最后更新：2026-10-20
+- **发布闸门（永久）**：任何版本不得自动 tag、push release、部署安装通道或网站；必须先由人类本机验收，并明确给出“可以发版 / 请发版”指令。Agent 只做实现、测试、本地构建与本地安装。
+- 当前阶段：**v0.2.4 热修待验收；v0.2.3 已发布；v0.2.5 已记录 issues**：网关 abort 修复、备份基线 + 最近 5 份与按版本恢复、
   按钮/hover 收拢、恢复弹窗 tab 化、落地页移动端兜底。第五轮与恢复弹窗 issues 已全部关闭；
   发版由 `v0.2.2` tag 触发（ad-hoc 签名，未经 Apple 公证）。
   落地页已实现并上线根路径；Lucia 独立项目，等 AI Bobby 完结后启动；依赖已收归 pnpm catalog。
