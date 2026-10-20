@@ -233,7 +233,9 @@ function AppInner() {
 
   const source = sources[active]
   const accountRealm = active === 'workbuddy' ? 'workbuddy' : active === 'wbi' ? 'wbi' : undefined
-  const accountsForSource = accountRealm ? accounts[accountRealm] : []
+  const accountsForSource = accountRealm
+    ? [...accounts[accountRealm]].sort((a, b) => (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER))
+    : []
   const selectedSet = selected[active]
   const globalSelected = Object.values(selected).reduce((sum, set) => sum + set.size, 0)
 
