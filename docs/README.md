@@ -10,6 +10,13 @@
 | [prd-landing.md](./prd-landing.md) | 落地页当前需求 |
 | [tech-landing.md](./tech-landing.md) | 落地页当前技术实现 |
 
+## 研究资料（非规范）
+
+| 文档 | 内容 |
+|---|---|
+| [research-v0.2.3.md](./research-v0.2.3.md) | v0.2.3 选型与来源调研 |
+| [research-codex-metadata.md](./research-codex-metadata.md) | Codex 模型目录元数据与验证策略 |
+
 ## 维护规则
 
 - PRD / tech 是整体产品设计与技术方案，不是代码变更日志；代码迭代时只做局部修订/补充，不要重写成实现摘要。

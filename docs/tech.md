@@ -1906,6 +1906,10 @@ release/<version>/
 
 ### 10.1 网关错误
 
+> WBI `11-128` 当前由 `UpstreamError` 映射为 `invalid_request`/`upstream`，尚未单独分类。
+> 建议行为：把 11-128 视为 prompt/channel refusal，不冷却账号、不换号重试，并给用户
+> “改用官方客户端/切换来源”的提示；不仿冒官方客户端。
+
 ```ts
 class GatewayError extends Error {
   constructor(
