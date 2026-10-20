@@ -45,7 +45,7 @@ jobs:
       - name: Build and package arm64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.3：新增 NVIDIA NIM 来源（Key、探测、延迟持久化）、VS Code 导入与 Cursor 引导、分源代理、中英文界面、/Applications/AIMatrix 安装布局；Codex 模型 ID/catalog 修复。"
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.5：开发版与线上版隔离（46891 / AI Bobby Dev / dev 导入命名空间）、WorkBuddy 账号拖动排序、托盘图标裁剪、About 文案与 i18n 收尾。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch arm64 \
@@ -54,7 +54,7 @@ jobs:
       - name: Build and package x64
         env:
           SIGN_IDENTITY: "-"
-          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.3：新增 NVIDIA NIM 来源（Key、探测、延迟持久化）、VS Code 导入与 Cursor 引导、分源代理、中英文界面、/Applications/AIMatrix 安装布局；Codex 模型 ID/catalog 修复。"
+          AI_BOBBY_RELEASE_NOTES: "AI Bobby 0.2.5：开发版与线上版隔离（46891 / AI Bobby Dev / dev 导入命名空间）、WorkBuddy 账号拖动排序、托盘图标裁剪、About 文案与 i18n 收尾。"
         run: |
           bash scripts/release/build-mac.sh \
             --arch x64 \
