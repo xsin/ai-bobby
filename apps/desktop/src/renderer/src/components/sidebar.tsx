@@ -24,6 +24,7 @@ interface SidebarProps {
   collapsed: boolean
   gatewayRunning: boolean
   port: number
+  devMode?: boolean
   onToggle: () => void
   onNavigate: (page: NavPage) => void
 }
@@ -42,6 +43,7 @@ export function Sidebar({
   collapsed,
   gatewayRunning,
   port,
+  devMode = false,
   onToggle,
   onNavigate,
 }: SidebarProps) {
@@ -70,7 +72,7 @@ export function Sidebar({
           <BrandMark className={cn('shrink-0 text-primary', collapsed ? 'size-6' : 'size-7')} />
           {!collapsed ? (
             <span className="flex min-w-0 flex-col">
-              <span className="text-[14px] font-semibold leading-tight tracking-[-0.015em] text-text">AI Bobby</span>
+              <span className="text-[14px] font-semibold leading-tight tracking-[-0.015em] text-text">AI Bobby{devMode ? ' Dev' : ''}</span>
               <span className="font-mono text-[8px] leading-tight tracking-[0.1em] text-faint">LOCAL GATEWAY</span>
             </span>
           ) : null}
@@ -123,7 +125,7 @@ export function Sidebar({
               <Icon className={cn('size-[17px] shrink-0', active ? 'text-primary' : 'text-faint group-hover:text-muted-foreground')} />
               {!collapsed ? (
                 <>
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  <span className="min-w-0 flex-1 truncate">{devMode && !disabled ? `Dev.${item.label}` : item.label}</span>
                   <span className={cn('min-w-[34px] rounded bg-surface-2 px-1.5 text-center font-mono text-[9px] leading-4 tabular-nums text-faint', active && 'bg-surface text-primary')}>
                     {disabled ? t('维护中') : counts[item.id]}
                   </span>
@@ -175,7 +177,7 @@ export function Sidebar({
         {!collapsed ? (
           <div className="mt-1 flex items-center gap-1.5 px-2 pt-1 text-[10px] text-faint">
             <span className={cn('size-1.5 rounded-full', gatewayRunning ? 'bg-success' : 'bg-danger')} />
-            <span>{gatewayRunning ? '运行中' : '未就绪'}</span>
+            <span>{gatewayRunning ? t('运行中') : t('未就绪')}</span>
             <code className="ml-auto font-mono text-[9px]">{port}</code>
           </div>
         ) : null}

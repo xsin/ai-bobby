@@ -6,18 +6,19 @@ import { t } from '@/lib/i18n'
 
 interface SourceHeadProps {
   source: DemoSource
+  devMode?: boolean
   selectedCount: number
   probing: boolean
   onAction: (action: SourceAction['id']) => void
 }
 
-export function SourceHead({ source, selectedCount, probing, onAction }: SourceHeadProps) {
+export function SourceHead({ source, selectedCount, probing, onAction, devMode = false }: SourceHeadProps) {
   const metrics = metricsFor(source)
 
   return (
     <section className="flex items-start justify-between gap-6 border-b border-line pb-4">
       <div className="min-w-0">
-        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-text">{t(source.title)}</h2>
+        <h2 className="text-[19px] font-semibold tracking-[-0.02em] text-text">{devMode ? `Dev.${t(source.title)}` : t(source.title)}</h2>
         <p className="mt-1 text-[12px] text-muted-foreground">{t(source.subtitle)}</p>
         <div className="mt-3 flex items-center gap-2">
           {source.actions.map(action => (

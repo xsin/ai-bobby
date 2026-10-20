@@ -1,4 +1,5 @@
-import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { GripVertical, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import type { DemoAccount, DemoSource } from '@/lib/demo-data'
@@ -8,9 +9,11 @@ interface AccountStripProps {
   source: DemoSource
   accounts: DemoAccount[]
   onAdd: () => void
+  onReorder?: (uids: string[]) => void | Promise<void>
 }
 
-export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
+export function AccountStrip({ source, accounts, onAdd, onReorder }: AccountStripProps) {
+  const [dragging, setDragging] = useState<number | null>(null)
   if (source.id === 'opencode') return null
 
   return (
@@ -18,20 +21,37 @@ export function AccountStrip({ source, accounts, onAdd }: AccountStripProps) {
       <div className="flex min-w-[58px] shrink-0 flex-col gap-px border-r border-line-soft pr-2.5">
         <span className="text-[11px] font-semibold text-text">{t("账号")}</span>
         <span className="whitespace-nowrap text-[10px] text-faint">
-          {accounts.length > 1 ? t('round-robin · 失败切换') : t('单账号 · 可继续添加')}
+          {accounts.length > 1 ? t('拖动排序 · 第一位优先') : t('单账号 · 可继续添加')}
         </span>
       </div>
 
       <div className="flex min-w-0 items-center gap-2">
-        {accounts.map(account => (
+        {accounts.map((account, index) => (
           <div
-            key={account.name}
+            key={account.uid ?? account.name}
+            draggable={onReorder !== undefined && accounts.length > 1}
+            onDragStart={() => setDragging(index)}
+            onDragEnd={() => setDragging(null)}
+            onDragOver={event => { if (dragging !== null) event.preventDefault() }}
+            onDrop={() => {
+              if (dragging === null || dragging === index) return
+              const next = [...accounts]
+              const [moved] = next.splice(dragging, 1)
+              if (moved) next.splice(index, 0, moved)
+              setDragging(null)
+              const uids = next.map(item => item.uid).filter((uid): uid is string => uid !== undefined)
+              if (uids.length === next.length) void onReorder?.(uids)
+            }}
             className={cn(
               'flex items-center gap-1.5 whitespace-nowrap rounded-md border border-line-soft bg-surface-2 py-1 pl-1 pr-2',
               account.preferred && 'border-primary/40 bg-accent-soft',
               account.status === 'cooling' && 'opacity-80',
+              dragging === index && 'opacity-40',
             )}
           >
+            {onReorder !== undefined && accounts.length > 1 ? (
+              <GripVertical className="size-3 shrink-0 cursor-grab text-faint" aria-hidden="true" />
+            ) : null}
             <span className="grid size-[22px] place-items-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
               {account.initials}
             </span>

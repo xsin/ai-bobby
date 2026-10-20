@@ -95,6 +95,19 @@ export class WorkBuddyProvider implements ProviderAdapter {
     return this.descriptors
   }
 
+  /** Rebuild the runtime order after the user reorders accounts. */
+  async reloadAccounts(): Promise<void> {
+    const accounts = await this.options.store.list(this.options.variant.realm)
+    const next = new Map<string, AccountRuntime>()
+    for (const account of accounts) {
+      const runtime = this.runtimes.get(account.uid) ?? this.runtimeFor(account)
+      runtime.account = account
+      next.set(account.uid, runtime)
+    }
+    this.runtimes.clear()
+    for (const [uid, runtime] of next) this.runtimes.set(uid, runtime)
+  }
+
   /** Refresh credits for all accounts; failures are isolated. */
   async refreshCredits(): Promise<void> {
     const accounts = await this.options.store.list(this.options.variant.realm)
@@ -214,6 +227,9 @@ export class WorkBuddyProvider implements ProviderAdapter {
     })
     if (candidates.length === 0) return []
     const sorted = candidates.sort((a, b) => {
+      const orderA = a.account.order ?? Number.MAX_SAFE_INTEGER
+      const orderB = b.account.order ?? Number.MAX_SAFE_INTEGER
+      if (orderA !== orderB) return orderA - orderB
       const preferred = Number(Boolean(b.account.preferred)) - Number(Boolean(a.account.preferred))
       if (preferred !== 0) return preferred
       return (a.account.lastUsedAtMs ?? 0) - (b.account.lastUsedAtMs ?? 0)

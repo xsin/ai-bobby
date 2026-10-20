@@ -41,7 +41,7 @@ export function StatusBar({ source, appInfo, keyMask, port, onCopyKey }: StatusB
           <code className="font-mono text-[10px]">{keyMask}</code>
           <Copy className="size-3" />
         </Button>
-        <span className="whitespace-nowrap text-faint">AI Bobby {appInfo?.version ?? '0.2.1'}</span>
+        <span className="whitespace-nowrap text-faint">AI Bobby {appInfo?.version ?? '0.2.1'}{appInfo?.devMode ? '-dev' : ''}</span>
       </div>
     </footer>
   )

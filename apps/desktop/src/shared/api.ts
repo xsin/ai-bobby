@@ -5,6 +5,8 @@ export interface AppInfo {
   platform: string
   arch: string
   packaged: boolean
+  devMode: boolean
+  defaultPort: number
   updateSource: string
 }
 
@@ -68,6 +70,7 @@ export interface AccountSnapshot {
   realm: 'cn' | 'intl'
   enabled: boolean
   expiresAtMs: number
+  order?: number
   credits?: number
   unlimited?: boolean
 }
@@ -175,6 +178,7 @@ export interface AiBobbyApi {
   copyApiKey(): Promise<void>
   refresh(): Promise<GatewayStatus>
   startLogin(provider: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot>
+  reorderAccounts(provider: 'workbuddy' | 'workbuddy-ai', uids: string[]): Promise<GatewayStatus>
   importPreview(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot>
   importRollback(target: ImportTargetName): Promise<ImportPlanSnapshot>

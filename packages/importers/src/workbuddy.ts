@@ -14,16 +14,19 @@ import {
 } from './common'
 import type { ImportContext, ImportPlan, ImportSelection, ImportTarget, Importer } from './types'
 
-const OWNER = 'ai-bobby-v1'
+const PROD_OWNER = 'ai-bobby-v1'
+const DEV_OWNER = 'ai-bobby-dev-v1'
 
 export class WorkBuddyImporter implements Importer {
   readonly target: ImportTarget
   private readonly path: string
   private readonly excluded: ProviderId
+  private readonly owner: string
 
-  constructor(target: 'workbuddy' | 'workbuddy-ai', root = homedir()) {
+  constructor(target: 'workbuddy' | 'workbuddy-ai', root = homedir(), namespace: 'prod' | 'dev' = 'prod') {
     this.target = target
     this.excluded = target === 'workbuddy' ? 'workbuddy' : 'workbuddy-ai'
+    this.owner = namespace === 'dev' ? DEV_OWNER : PROD_OWNER
     this.path = join(root, target === 'workbuddy' ? '.workbuddy' : '.workbuddy-ai', 'models.json')
   }
 
@@ -40,13 +43,13 @@ export class WorkBuddyImporter implements Importer {
         ? parsed['models']
         : []
     return source.flatMap(entry =>
-      isObject(entry) && entry['aiBobbyOwner'] === OWNER && typeof entry['id'] === 'string' ? [entry['id']] : [],
+      isObject(entry) && entry['aiBobbyOwner'] === this.owner && typeof entry['id'] === 'string' ? [entry['id']] : [],
     )
   }
 
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const before = await readText(this.path)
-    const { array, warnings } = render(before, selection, context, this.excluded)
+    const { array, warnings } = render(before, selection, context, this.excluded, this.owner)
     const after = `${JSON.stringify(array, null, 2)}\n`
     return planFor(this.target, this.path, before !== undefined, before, after, warnings, true)
   }
@@ -54,7 +57,7 @@ export class WorkBuddyImporter implements Importer {
   async apply(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     return withLock(this.path, async () => {
       const before = await readText(this.path)
-      const { array, warnings } = render(before, selection, context, this.excluded)
+      const { array, warnings } = render(before, selection, context, this.excluded, this.owner)
       const after = `${JSON.stringify(array, null, 2)}\n`
       if (before === after) {
         return planFor(this.target, this.path, before !== undefined, before, after, warnings, true)
@@ -100,6 +103,7 @@ function render(
   selection: ImportSelection,
   context: ImportContext,
   excluded: ProviderId,
+  owner: string,
 ): { array: unknown[]; warnings: string[] } {
   const warnings: string[] = []
   const parsed = safeJsonParse(before, [])
@@ -108,7 +112,7 @@ function render(
     : isObject(parsed) && Array.isArray(parsed['models'])
       ? parsed['models']
       : []
-  const userEntries = source.filter(entry => !isOwned(entry))
+  const userEntries = source.filter(entry => !isOwned(entry, owner))
   const userIds = new Set(
     userEntries
       .map(entry => (isObject(entry) && typeof entry['id'] === 'string' ? entry['id'] : undefined))
@@ -128,13 +132,13 @@ function render(
       warnings.push(`跳过 ${model.id}：用户已有同名条目`)
       continue
     }
-    entries.push(toEntry(model, context))
+    entries.push(toEntry(model, context, owner))
   }
   if (entries.length === 0) warnings.push('没有可导入的模型（分组被排除或全部冲突）')
   return { array: [...userEntries, ...entries], warnings }
 }
 
-function toEntry(model: ModelDescriptor, context: ImportContext): Record<string, unknown> {
+function toEntry(model: ModelDescriptor, context: ImportContext, owner: string): Record<string, unknown> {
   const tools = model.capabilities.tools && model.status !== 'chat_only'
   return {
     id: model.id,
@@ -150,12 +154,12 @@ function toEntry(model: ModelDescriptor, context: ImportContext): Record<string,
       : {}),
     ...(model.contextWindow === undefined ? {} : { maxInputTokens: model.contextWindow }),
     ...(model.maxOutputTokens === undefined ? {} : { maxOutputTokens: model.maxOutputTokens }),
-    aiBobbyOwner: OWNER,
+    aiBobbyOwner: owner,
   }
 }
 
-function isOwned(value: unknown): boolean {
-  return isObject(value) && value['aiBobbyOwner'] === OWNER
+function isOwned(value: unknown, owner: string): boolean {
+  return isObject(value) && value['aiBobbyOwner'] === owner
 }
 
 function isObject(value: unknown): value is Record<string, unknown> {

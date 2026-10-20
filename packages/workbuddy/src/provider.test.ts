@@ -80,6 +80,20 @@ class FakeClient {
   }
 }
 
+describe('AccountStore order', () => {
+  it('persists drag order and marks the first account preferred', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-order-'))
+    const store = new AccountStore(join(dir, 'accounts.json'))
+    await store.upsert(account('u1'))
+    await store.upsert(account('u2'))
+    await store.reorder('cn', ['u2', 'u1'])
+    const accounts = await store.list('cn')
+    expect(accounts.map(item => item.uid)).toEqual(['u1', 'u2'])
+    expect(accounts.find(item => item.uid === 'u2')).toMatchObject({ order: 0, preferred: true })
+    expect(accounts.find(item => item.uid === 'u1')).toMatchObject({ order: 1, preferred: false })
+  })
+})
+
 describe('WorkBuddyProvider', () => {
   it('lists merged models and streams chat', async () => {
     dir = await mkdtemp(join(tmpdir(), 'ai-bobby-wb-'))

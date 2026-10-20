@@ -237,6 +237,13 @@ const en: Record<string, string> = {
   "{n} 个账号": "{n} accounts",
   "维护中": "Maintenance",
   "WorkBuddy AI 正在适配官方渠道，暂不可用": "WorkBuddy AI is being adapted to the official channel and is temporarily unavailable.",
+  "所有模型，一个本机端点。": "All your models. One local endpoint.",
+  "OpenCode、WorkBuddy 国内版、WorkBuddy AI 国际版、NVIDIA NIM，以及你已有的本地网关与官方 CLI；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。不限制来源数量，不托管你的账号。": "OpenCode, WorkBuddy (CN), WorkBuddy AI (INTL), NVIDIA NIM, plus your existing local gateways and official CLIs. Chat Completions, Responses and Anthropic Messages; one 127.0.0.1 endpoint and one key. No source-count limit, and we never host your accounts.",
+  "网关未就绪": "Gateway is not ready",
+  "拖动排序 · 第一位优先": "Drag to reorder · first is preferred",
+  "独立数据目录、API Key 与端口；导入使用 AI Bobby Dev，不覆盖线上配置。": "Separate data directory, API key and port; imports use AI Bobby Dev and never overwrite the production config.",
+  "Dev 不写入": "Dev: not written",
+  "不写入": "Not written",
 }
 
 export function resolveLocale(choice: 'system' | Locale): Locale {

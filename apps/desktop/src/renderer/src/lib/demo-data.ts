@@ -11,6 +11,8 @@ export type ModelStatus =
 export type AccountStatus = 'success' | 'cooling' | 'error'
 
 export interface DemoAccount {
+  uid?: string
+  order?: number
   initials: string
   name: string
   sub: string

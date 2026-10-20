@@ -3,7 +3,8 @@ import { join } from 'node:path'
 import type { ImportContext, ImportPlan, ImportSelection, Importer } from './types'
 import { atomicWrite, backup, exists, latestBackup, normalizeEndpoint, readText } from './common'
 
-const PROVIDER_NAME = 'AI Bobby'
+const PROD_PROVIDER = 'AI Bobby'
+const DEV_PROVIDER = 'AI Bobby Dev'
 
 function codePaths(home: string): string[] {
   return [
@@ -20,7 +21,7 @@ interface ProviderEntry {
   [key: string]: unknown
 }
 
-function providerEntry(selection: ImportSelection, context: ImportContext): ProviderEntry {
+function providerEntry(selection: ImportSelection, context: ImportContext, providerName: string): ProviderEntry {
   const base = normalizeEndpoint(context.endpoint).replace(/\/v1$/, '')
   const url = `${base}/v1/chat/completions`
   const selected = new Set(selection.modelIds)
@@ -36,7 +37,7 @@ function providerEntry(selection: ImportSelection, context: ImportContext): Prov
       ...(model.maxOutputTokens === undefined ? {} : { maxOutputTokens: model.maxOutputTokens }),
     }))
   return {
-    name: PROVIDER_NAME,
+    name: providerName,
     vendor: 'customendpoint',
     apiKey: context.apiKey,
     models,
@@ -50,9 +51,9 @@ function parseProviders(raw: string): ProviderEntry[] {
   return data as ProviderEntry[]
 }
 
-function mergeProvider(providers: ProviderEntry[], selection: ImportSelection, context: ImportContext): ProviderEntry[] {
-  const entry = providerEntry(selection, context)
-  const index = providers.findIndex(item => item.name === PROVIDER_NAME && item.vendor === 'customendpoint')
+function mergeProvider(providers: ProviderEntry[], selection: ImportSelection, context: ImportContext, providerName: string): ProviderEntry[] {
+  const entry = providerEntry(selection, context, providerName)
+  const index = providers.findIndex(item => item.name === providerName && item.vendor === 'customendpoint')
   if (index === -1) return [...providers, entry]
   const next = [...providers]
   next[index] = entry
@@ -63,13 +64,13 @@ function render(providers: ProviderEntry[]): string {
   return `${JSON.stringify(providers, null, 2)}\n`
 }
 
-function selectedModelCount(providers: ProviderEntry[]): string {
-  const provider = providers.find(item => item.name === PROVIDER_NAME && item.vendor === 'customendpoint')
+function selectedModelCount(providers: ProviderEntry[], providerName: string): string {
+  const provider = providers.find(item => item.name === providerName && item.vendor === 'customendpoint')
   return `${provider?.models?.length ?? 0} models`
 }
 
-function buildPlan(path: string, providers: ProviderEntry[], next: ProviderEntry[], changed: boolean, backupPath?: string): ImportPlan {
-  const lines = ['# VS Code · Custom Endpoint', `~ ${path}`, changed ? `+ provider "AI Bobby" (customendpoint) · ${selectedModelCount(next)}` : '= provider "AI Bobby" 已是最新']
+function buildPlan(path: string, providers: ProviderEntry[], next: ProviderEntry[], changed: boolean, providerName: string, backupPath?: string): ImportPlan {
+  const lines = ['# VS Code · Custom Endpoint', `~ ${path}`, changed ? `+ provider "${providerName}" (customendpoint) · ${selectedModelCount(next, providerName)}` : `= provider "${providerName}" 已是最新`]
   if (changed) {
     lines.push('+ models = AI Bobby 模型（每个模型带 /v1/chat/completions URL）')
     lines.push('+ apiKey 写入后由 VS Code 迁移到钥匙串')
@@ -90,9 +91,11 @@ function buildPlan(path: string, providers: ProviderEntry[], next: ProviderEntry
 export class VSCodeImporter implements Importer {
   readonly target = 'vscode' as const
   private readonly paths: string[]
+  private readonly providerName: string
 
-  constructor(home: string = homedir()) {
+  constructor(home: string = homedir(), namespace: 'prod' | 'dev' = 'prod') {
     this.paths = codePaths(home)
+    this.providerName = namespace === 'dev' ? DEV_PROVIDER : PROD_PROVIDER
   }
 
   async detect(): Promise<{ path: string; detected: boolean }> {
@@ -107,7 +110,7 @@ export class VSCodeImporter implements Importer {
     const raw = await readText(path)
     if (raw === undefined) return []
     try {
-      const provider = parseProviders(raw).find(item => item.name === PROVIDER_NAME && item.vendor === 'customendpoint')
+      const provider = parseProviders(raw).find(item => item.name === this.providerName && item.vendor === 'customendpoint')
       return provider?.models
         ?.map(model => (model as { id?: unknown }).id)
         .filter((id): id is string => typeof id === 'string') ?? []
@@ -120,21 +123,21 @@ export class VSCodeImporter implements Importer {
     const { path } = await this.detect()
     const raw = (await readText(path)) ?? '[]\n'
     const providers = parseProviders(raw)
-    const next = mergeProvider(providers, selection, context)
+    const next = mergeProvider(providers, selection, context, this.providerName)
     const changed = render(providers) !== render(next)
-    return buildPlan(path, providers, next, changed)
+    return buildPlan(path, providers, next, changed, this.providerName)
   }
 
   async apply(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const { path } = await this.detect()
     const raw = (await readText(path)) ?? '[]\n'
     const providers = parseProviders(raw)
-    const next = mergeProvider(providers, selection, context)
+    const next = mergeProvider(providers, selection, context, this.providerName)
     const changed = render(providers) !== render(next)
-    if (!changed) return buildPlan(path, providers, next, false)
+    if (!changed) return buildPlan(path, providers, next, false, this.providerName)
     const backupPath = await backup(path)
     await atomicWrite(path, render(next), 0o600)
-    return buildPlan(path, providers, next, true, backupPath)
+    return buildPlan(path, providers, next, true, this.providerName, backupPath)
   }
 
   async rollback(): Promise<ImportPlan> {

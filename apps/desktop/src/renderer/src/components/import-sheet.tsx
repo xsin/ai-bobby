@@ -49,6 +49,7 @@ interface ImportSheetProps {
   onApplied: () => void
   onApply?: (payload: { clients: ClientId[]; groups: ProviderId[]; modelIds: string[]; defaultModelId: string; setAsDefault: boolean }) => Promise<void> | void
   codexModels: string[]
+  devMode?: boolean
 }
 
 type ClientId = ImportClient['id']
@@ -88,14 +89,19 @@ const TARGET_LABEL: Record<string, string> = {
   vscode: 'VS Code',
 }
 
-export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply, codexModels }: ImportSheetProps) {
+export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsByGroup, selectedTotal, onApplied, onApply, codexModels, devMode = false }: ImportSheetProps) {
   const [clients, setClients] = useState<Record<ClientId, boolean>>(
-    Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, !(WBI_TEMPORARILY_DISABLED && client.id === 'wbi')])) as Record<ClientId, boolean>,
+    Object.fromEntries(IMPORT_CLIENTS.map(client => [client.id, !(WBI_TEMPORARILY_DISABLED && client.id === 'wbi') && !(devMode && client.id === 'claude')])) as Record<ClientId, boolean>,
   )
   const [groups, setGroups] = useState<Record<GroupId, boolean>>({ oc: true, wb: true, wbi: !WBI_TEMPORARILY_DISABLED, nv: true })
   const [defaultModel, setDefaultModel] = useState('')
   const [cursorGuideOpen, setCursorGuideOpen] = useState(false)
   const [setAsDefault, setSetAsDefault] = useState(false)
+
+  useEffect(() => {
+    if (!devMode) return
+    setClients(current => ({ ...current, claude: false, wbi: false }))
+  }, [devMode])
 
   const modelOptions = useMemo(() => {
     const providers = (Object.keys(SOURCES) as ProviderId[]).filter(provider => {
@@ -213,6 +219,7 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
 
   function toggleClient(id: ClientId, checked: boolean) {
     if (WBI_TEMPORARILY_DISABLED && id === 'wbi') return
+    if (devMode && id === 'claude') return
     setClients(current => ({ ...current, [id]: checked }))
   }
 
@@ -271,7 +278,8 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                 {IMPORT_CLIENTS.map(client => {
                   const Icon = CLIENT_ICONS[client.id]
                   const checked = clients[client.id]
-                  const disabled = WBI_TEMPORARILY_DISABLED && client.id === 'wbi'
+                  const disabled = (WBI_TEMPORARILY_DISABLED && client.id === 'wbi') || (devMode && client.id === 'claude')
+                  const note = devMode && client.id === 'claude' ? t('Dev 不写入') : disabled ? t('维护中') : client.note
                   return (
                     <label
                       key={client.id}
@@ -293,14 +301,17 @@ export function ImportSheet({ open, onOpenChange, selectedByGroup, selectedIdsBy
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-1.5 text-[11px] font-semibold text-text">
                           {client.name}
+                          {devMode && !disabled ? (
+                            <span className="rounded bg-warning-soft px-1 py-px text-[9px] font-normal text-warning">DEV</span>
+                          ) : null}
                           <span className="rounded bg-surface px-1 py-px text-[9px] font-normal text-faint">
-                            {client.note}
+                            {note}
                           </span>
                         </span>
                         <span className="block truncate font-mono text-[9px] text-faint">{client.path}</span>
                       </span>
                       <span className={cn('shrink-0 rounded px-1 py-px text-[9px]', disabled ? 'bg-warning-soft text-warning' : 'bg-success-soft text-success')}>
-                        {disabled ? t('维护中') : client.status}
+                        {disabled ? (devMode && client.id === 'claude' ? t('不写入') : t('维护中')) : client.status}
                       </span>
                     </label>
                   )

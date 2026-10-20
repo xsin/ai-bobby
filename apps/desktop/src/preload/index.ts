@@ -7,6 +7,7 @@ const api: AiBobbyApi = {
   copyApiKey: () => ipcRenderer.invoke('app:copy-api-key'),
   refresh: () => ipcRenderer.invoke('app:refresh'),
   startLogin: provider => ipcRenderer.invoke('account:login', provider),
+  reorderAccounts: (provider, uids) => ipcRenderer.invoke('account:reorder', provider, uids),
   importPreview: (target, selection) => ipcRenderer.invoke('import:preview', target, selection),
   importApply: (target, selection) => ipcRenderer.invoke('import:apply', target, selection),
   importRollback: target => ipcRenderer.invoke('import:rollback', target),

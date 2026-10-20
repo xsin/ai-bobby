@@ -1,4 +1,5 @@
 import { app, BrowserWindow, shell } from 'electron'
+import { homedir } from 'node:os'
 import { chmod, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { randomUUID } from 'node:crypto'
 import { join } from 'node:path'
@@ -72,7 +73,10 @@ export class Services {
 
   private readonly dataDir: string
 
-  constructor(private readonly mainWindow: () => BrowserWindow | undefined) {
+  constructor(
+    private readonly mainWindow: () => BrowserWindow | undefined,
+    private readonly devMode = false,
+  ) {
     this.dataDir = process.env.AI_BOBBY_DATA_DIR?.trim() || app.getPath('userData')
     this.historyFile = join(this.dataDir, 'import-history.json')
     this.settingsStore = new SettingsStore(this.dataDir)
@@ -85,12 +89,12 @@ export class Services {
     this.adapters.set('opencode', this.opencode)
     this.adapters.set('nvidia', this.nvidia)
     this.importers = {
-      workbuddy: new WorkBuddyImporter('workbuddy'),
-      'workbuddy-ai': new WorkBuddyImporter('workbuddy-ai'),
-      codex: new CodexImporter(),
+      workbuddy: new WorkBuddyImporter('workbuddy', homedir(), devMode ? 'dev' : 'prod'),
+      'workbuddy-ai': new WorkBuddyImporter('workbuddy-ai', homedir(), devMode ? 'dev' : 'prod'),
+      codex: new CodexImporter(homedir(), devMode ? 'dev' : 'prod'),
       claude: new ClaudeImporter(),
-      dsh: new DshImporter(),
-      vscode: new VSCodeImporter(),
+      dsh: new DshImporter(homedir(), devMode ? 'dev' : 'prod'),
+      vscode: new VSCodeImporter(homedir(), devMode ? 'dev' : 'prod'),
     }
     for (const variant of WORKBUDDY_VARIANTS) {
       if (variant.id === 'opencode') continue
@@ -109,12 +113,12 @@ export class Services {
     this.settings = await this.settingsStore.load()
     this.nvidia.setApiKey(this.settings.nvidiaApiKey)
     this.key = await ensureApiKey(this.dataDir)
-    const port = Number(process.env.AI_BOBBY_PORT || 46890)
+    const port = Number(process.env.AI_BOBBY_PORT || (this.devMode ? 46891 : 46890))
     const gateway = new GatewayService({
       registry: this.registry,
       adapters: this.adapters,
       apiKey: this.key,
-      port: Number.isFinite(port) ? port : 46890,
+      port: Number.isFinite(port) ? port : (this.devMode ? 46891 : 46890),
       version: appVersion(),
       logger,
     })
@@ -157,13 +161,24 @@ export class Services {
     this.gateway = undefined
   }
 
+  private registerModels(provider: 'opencode' | 'workbuddy' | 'workbuddy-ai' | 'nvidia', models: readonly import('@ai-bobby/core').ModelDescriptor[]): void {
+    if (!this.devMode) {
+      this.registry.replace(provider, models)
+      return
+    }
+    this.registry.replace(
+      provider,
+      models.map(model => ({ ...model, id: `dev-${model.id}`, displayName: `Dev.${model.displayName}` })),
+    )
+  }
+
   async refresh(): Promise<GatewayStatus> {
     await Promise.all([
       (async () => {
         for (const [realm, provider] of this.providers) {
           try {
             const models = await provider.refreshModels()
-            this.registry.replace(realm, models)
+            this.registerModels(realm, models)
           } catch (error) {
             logger.warn('workbuddy catalog refresh failed', { provider: realm, error: String(error) })
           }
@@ -174,7 +189,7 @@ export class Services {
         if (process.env.AI_BOBBY_DISABLE_OPENCODE === '1') return
         try {
           const models = await this.opencode.refreshModels()
-          this.registry.replace('opencode', models)
+          this.registerModels('opencode', models)
         } catch (error) {
           logger.warn('opencode catalog refresh failed', { error: String(error) })
         }
@@ -184,7 +199,7 @@ export class Services {
         try {
           const models = await this.nvidia.refreshModels()
           this.nvidia.applyProbes(this.settings.nvidiaProbes)
-          this.registry.replace('nvidia', models)
+          this.registerModels('nvidia', models)
         } catch (error) {
           logger.warn('nvidia catalog refresh failed', { error: String(error) })
         }
@@ -236,7 +251,7 @@ export class Services {
       if (this.settings.nvidiaApiKey !== '') {
         const models = await this.nvidia.refreshModels()
         this.nvidia.applyProbes(this.settings.nvidiaProbes)
-        this.registry.replace('nvidia', models)
+        this.registerModels('nvidia', models)
         this.refreshedAtMs = Date.now()
         // A fresh key invalidates all previous probe results; probe once so the
         // user immediately sees which models are usable with this key.
@@ -255,7 +270,7 @@ export class Services {
     await this.nvidia.probeAll(4)
     this.settings = { ...this.settings, nvidiaProbes: this.nvidia.snapshot() }
     await this.settingsStore.save(this.settings)
-    this.registry.replace('nvidia', this.nvidia.listModels())
+    this.registerModels('nvidia', this.nvidia.listModels())
     this.refreshedAtMs = Date.now()
     return this.snapshot()
   }
@@ -270,6 +285,14 @@ export class Services {
     this.settings = { ...this.settings, locale }
     await this.settingsStore.save(this.settings)
     return this.settings
+  }
+
+  async reorderAccounts(providerId: 'workbuddy' | 'workbuddy-ai', uids: readonly string[]): Promise<GatewayStatus> {
+    const realm = providerId === 'workbuddy' ? 'cn' : 'intl'
+    await this.store.reorder(realm, uids)
+    const provider = this.providers.get(providerId)
+    if (provider) await provider.reloadAccounts()
+    return this.snapshot()
   }
 
   async login(providerId: 'workbuddy' | 'workbuddy-ai'): Promise<AccountSnapshot> {
@@ -315,7 +338,7 @@ export class Services {
         const provider = this.providers.get(providerId)
         if (provider !== undefined) {
           const models = await provider.refreshModels()
-          this.registry.replace(providerId, models)
+          this.registerModels(providerId, models)
         }
         this.refreshedAtMs = Date.now()
         return accountSnapshot(result.account)
@@ -327,6 +350,7 @@ export class Services {
   }
 
   async importPreview(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot> {
+    if (this.devMode && target === 'claude') throw new Error('Dev 模式不写入 Claude Code：Claude Code 只支持单一端点，写入会覆盖线上配置')
     const importer = this.importers[target]
     const plan = await importer.plan(
       { groups: selection.groups as never, modelIds: selection.modelIds, ...(selection.defaultModelId === undefined ? {} : { defaultModelId: selection.defaultModelId }), ...(selection.setAsDefault === undefined ? {} : { setAsDefault: selection.setAsDefault }) },
@@ -336,6 +360,7 @@ export class Services {
   }
 
   async importApply(target: ImportTargetName, selection: ImportSelectionPayload): Promise<ImportPlanSnapshot> {
+    if (this.devMode && target === 'claude') throw new Error('Dev 模式不写入 Claude Code：Claude Code 只支持单一端点，写入会覆盖线上配置')
     const importer = this.importers[target]
     const plan = await importer.apply(
       { groups: selection.groups as never, modelIds: selection.modelIds, ...(selection.defaultModelId === undefined ? {} : { defaultModelId: selection.defaultModelId }), ...(selection.setAsDefault === undefined ? {} : { setAsDefault: selection.setAsDefault }) },
@@ -483,7 +508,7 @@ export class Services {
     const warnings: string[] = []
     let restored = content
     if (target === 'codex') {
-      const normalized = normalizeRestoredCodexModel(content, this.registry.list({ all: true }).map(model => model.id))
+      const normalized = normalizeRestoredCodexModel(content, this.registry.list({ all: true }).map(model => model.id), this.devMode ? 'ai-bobby-dev' : 'ai-bobby')
       restored = normalized.text
       warnings.push(...normalized.warnings)
     }
@@ -574,13 +599,14 @@ function redactSecrets(text: string): string {
     )
 }
 
-function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' | 'intl'; enabled: boolean; expiresAtMs: number; credits?: { total: number; unlimited?: true } }): AccountSnapshot {
+function accountSnapshot(account: { uid: string; nickname: string; realm: 'cn' | 'intl'; enabled: boolean; expiresAtMs: number; order?: number; credits?: { total: number; unlimited?: true } }): AccountSnapshot {
   return {
     uid: account.uid,
     nickname: account.nickname,
     realm: account.realm,
     enabled: account.enabled,
     expiresAtMs: account.expiresAtMs,
+    ...(account.order === undefined ? {} : { order: account.order }),
     ...(account.credits === undefined
       ? {}
       : { credits: account.credits.total, ...(account.credits.unlimited === true ? { unlimited: true } : {}) }),

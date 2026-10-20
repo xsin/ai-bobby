@@ -5,8 +5,12 @@ import { checkForUpdates, downloadUpdate, installUpdate, updateSource } from './
 import { openAlbumPage, playSongInNetease } from './music-app'
 import { Services } from './services'
 import { appVersion } from './version'
+import { DEV_PORT, PROD_PORT } from '../shared/dev'
 
 const isMac = process.platform === 'darwin'
+const DEV_MODE = process.env.AI_BOBBY_DEV === '1' || Boolean(process.env.ELECTRON_RENDERER_URL)
+const APP_NAME = DEV_MODE ? 'AI Bobby Dev' : 'AI Bobby'
+const DEFAULT_PORT = DEV_MODE ? DEV_PORT : PROD_PORT
 let mainWindow: BrowserWindow | undefined
 let tray: Tray | undefined
 let isQuitting = false
@@ -28,7 +32,7 @@ function createWindow(): BrowserWindow {
     minHeight: 640,
     show: false,
     backgroundColor: '#1b1b1d',
-    title: 'AI Bobby',
+    title: APP_NAME,
     titleBarStyle: isMac ? 'hiddenInset' : 'default',
     trafficLightPosition: isMac ? { x: 18, y: 15 } : undefined,
     webPreferences: {
@@ -87,10 +91,10 @@ function createTray(): void {
   const image = nativeImage.createFromPath(trayIconPath())
   if (isMac) image.setTemplateImage(true)
   tray = new Tray(image)
-  tray.setToolTip('AI Bobby')
+  tray.setToolTip(APP_NAME)
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { label: '显示 AI Bobby', click: showWindow },
+      { label: `显示 ${APP_NAME}`, click: showWindow },
       { type: 'separator' },
       {
         label: '刷新模型',
@@ -209,11 +213,18 @@ function registerIpc(): void {
     return services.login(provider)
   })
 
+  ipcMain.handle('account:reorder', async (_event, provider: 'workbuddy' | 'workbuddy-ai', uids: string[]) => {
+    if (!services) throw new Error('服务尚未启动')
+    return services.reorderAccounts(provider, uids)
+  })
+
   ipcMain.handle('app:get-info', () => ({
     version: appVersion(),
     platform: process.platform,
     arch: process.arch,
     packaged: app.isPackaged,
+    devMode: DEV_MODE,
+    defaultPort: DEFAULT_PORT,
     updateSource: updateSource(),
   }))
 
@@ -259,7 +270,11 @@ function registerIpc(): void {
   })
 }
 
-app.setName('AI Bobby')
+app.setName(APP_NAME)
+if (DEV_MODE) {
+  // Keep the developer instance completely separate from the installed app.
+  app.setPath('userData', join(app.getPath('appData'), 'AI Bobby Dev'))
+}
 
 const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
@@ -267,14 +282,16 @@ if (!gotLock) {
 } else {
   app.on('second-instance', showWindow)
   app.whenReady().then(() => {
-    services = new Services(() => mainWindow)
+    services = new Services(() => mainWindow, DEV_MODE)
     registerIpc()
     mainWindow = createWindow()
     createTray()
     void services.start().catch(error => console.error('[ai-bobby] services start failed', error))
 
-    setTimeout(() => void autoCheck(), 8_000)
-    setInterval(() => void autoCheck(), 6 * 60 * 60 * 1000)
+    if (!DEV_MODE) {
+      setTimeout(() => void autoCheck(), 8_000)
+      setInterval(() => void autoCheck(), 6 * 60 * 60 * 1000)
+    }
 
     app.on('activate', showWindow)
   })

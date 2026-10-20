@@ -55,9 +55,9 @@ export function AboutPage({ version, onPlay, onOpenAlbum, onOpenExternal }: Abou
       <section className="grid grid-cols-[minmax(220px,0.9fr)_minmax(0,1.4fr)] gap-8 border-b border-line px-1 py-6 max-lg:grid-cols-1 max-lg:gap-3">
         <div>
           <div className="font-mono text-[9px] font-semibold tracking-[0.1em] text-faint">THE PROJECT</div>
-          <h2 className="mt-1 text-[21px] font-medium leading-snug tracking-[-0.025em] text-text">{t("把三个来源，收进一个本机端点。")}</h2>
+          <h2 className="mt-1 text-[21px] font-medium leading-snug tracking-[-0.025em] text-text">{t("所有模型，一个本机端点。")}</h2>
         </div>
-        <p className="text-[12px] leading-7 text-muted-foreground">{t("OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。AI Bobby 不托管你的账号，也不替你做云上决策。")}</p>
+        <p className="text-[12px] leading-7 text-muted-foreground">{t("OpenCode、WorkBuddy 国内版、WorkBuddy AI 国际版、NVIDIA NIM，以及你已有的本地网关与官方 CLI；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。不限制来源数量，不托管你的账号。")}</p>
       </section>
 
       <section className="grid grid-cols-[minmax(0,0.9fr)_minmax(0,1.25fr)] gap-8 border-b border-line px-1 py-6 max-lg:grid-cols-1 max-lg:gap-4">

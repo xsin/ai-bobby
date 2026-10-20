@@ -34,9 +34,11 @@ function statusTextTone(tone: 'success' | 'warning' | 'danger' | 'neutral') {
 }
 
 function routeFor(id: string) {
-  if (id.startsWith('oc/')) return 'OpenCode'
-  if (id.startsWith('wb/')) return 'WorkBuddy'
-  if (id.startsWith('nv/')) return 'NVIDIA NIM'
+  const normalized = id.replace(/^dev-/, '')
+  if (normalized.startsWith('oc/')) return 'OpenCode'
+  if (normalized.startsWith('wb/')) return 'WorkBuddy'
+  if (normalized.startsWith('wbi/')) return 'WorkBuddy AI'
+  if (normalized.startsWith('nv/')) return 'NVIDIA NIM'
   return 'WorkBuddy AI'
 }
 

@@ -1,6 +1,6 @@
 {
   "name": "@ai-bobby/desktop",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "private": true,
   "description": "AI Bobby 桌面应用：Electron 主进程、托盘与控制面板",
   "main": "./out/main/index.js",

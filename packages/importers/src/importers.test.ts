@@ -256,3 +256,35 @@ describe('backup retention', () => {
     expect(restored.warnings).toHaveLength(1)
   })
 })
+
+describe('developer namespace', () => {
+  it('keeps production WorkBuddy entries while writing dev entries', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-dev-wb-'))
+    await mkdir(join(dir, '.workbuddy'), { recursive: true })
+    const path = join(dir, '.workbuddy', 'models.json')
+    await writeFile(path, JSON.stringify([{ id: 'wb/prod', name: 'Prod', aiBobbyOwner: 'ai-bobby-v1' }]))
+    const importer = new WorkBuddyImporter('workbuddy', dir, 'dev')
+    const devModel = { ...model('opencode', 'big-pickle', 'Big Pickle'), id: 'dev-oc/big-pickle', displayName: 'Dev.Big Pickle' } as ModelDescriptor
+    const devContext: ImportContext = { ...context(), models: [devModel] }
+    await importer.apply({ groups: ['opencode'], modelIds: ['dev-oc/big-pickle'] }, devContext)
+    const entries = JSON.parse(await readFile(path, 'utf8')) as Array<Record<string, unknown>>
+    expect(entries.some(entry => entry['id'] === 'wb/prod' && entry['aiBobbyOwner'] === 'ai-bobby-v1')).toBe(true)
+    expect(entries.some(entry => entry['id'] === 'dev-oc/big-pickle' && entry['aiBobbyOwner'] === 'ai-bobby-dev-v1')).toBe(true)
+  })
+
+  it('adds a dev Codex provider without replacing production', async () => {
+    dir = await mkdtemp(join(tmpdir(), 'ai-bobby-dev-codex-'))
+    await mkdir(join(dir, '.codex'), { recursive: true })
+    const path = join(dir, '.codex', 'config.toml')
+    await writeFile(path, '# >>> ai-bobby:start\n[model_providers.ai-bobby]\nname = "AI Bobby"\n# <<< ai-bobby:end\n')
+    await writeFile(join(dir, '.codex', 'models.json'), JSON.stringify({ models: [] }))
+    const importer = new CodexImporter(dir, 'dev')
+    const devModel = { ...model('workbuddy', 'hy3', 'Hy3'), id: 'dev-wb/hy3', displayName: 'Dev.Hy3' } as ModelDescriptor
+    const devContext: ImportContext = { ...context(), models: [devModel] }
+    await importer.apply({ groups: ['workbuddy'], modelIds: ['dev-wb/hy3'], defaultModelId: 'dev-wb/hy3', setAsDefault: true }, devContext)
+    const config = await readFile(path, 'utf8')
+    expect(config).toContain('[model_providers.ai-bobby]')
+    expect(config).toContain('[model_providers.ai-bobby-dev]')
+    expect(config).toContain('model_provider = "ai-bobby-dev"')
+  })
+})

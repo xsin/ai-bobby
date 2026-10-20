@@ -8,8 +8,13 @@ import type { ImportContext, ImportPlan, ImportSelection, ImportTarget, Importer
 export class DshImporter implements Importer {
   readonly target: ImportTarget = 'dsh'
   private path: string | undefined
+  private readonly providerId: string
+  private readonly apiKeyEnv: string
 
-  constructor(private readonly root = homedir()) {}
+  constructor(private readonly root = homedir(), namespace: 'prod' | 'dev' = 'prod') {
+    this.providerId = namespace === 'dev' ? 'ai-bobby-dev' : 'ai-bobby'
+    this.apiKeyEnv = namespace === 'dev' ? 'AI_BOBBY_DEV_API_KEY' : 'AI_BOBBY_API_KEY'
+  }
 
   async detect(): Promise<{ path: string; detected: boolean }> {
     const path = await this.findProfile()
@@ -32,8 +37,10 @@ export class DshImporter implements Importer {
     const entry = parsed.find(item => isObject(item) && item['id'] === 'llm-pi-ai')
     if (!isObject(entry) || !isObject(entry['config'])) return []
     const providers = entry['config']['providers']
-    if (!isObject(providers) || !isObject(providers['ai-bobby'])) return []
-    const models = providers['ai-bobby']['models']
+    if (!isObject(providers)) return []
+    const provider = providers[this.providerId]
+    if (!isObject(provider)) return []
+    const models = provider['models']
     return Array.isArray(models)
       ? models.flatMap(model => (isObject(model) && typeof model['id'] === 'string' ? [model['id']] : []))
       : []
@@ -42,7 +49,7 @@ export class DshImporter implements Importer {
   async plan(selection: ImportSelection, context: ImportContext): Promise<ImportPlan> {
     const path = await this.ensurePath()
     const before = await readText(path)
-    const { text, warnings } = render(before, selection, context)
+    const { text, warnings } = render(before, selection, context, this.providerId, this.apiKeyEnv)
     return planFor(this.target, path, before !== undefined, before, text, warnings, true)
   }
 
@@ -50,7 +57,7 @@ export class DshImporter implements Importer {
     const path = await this.ensurePath()
     return withLock(path, async () => {
       const before = await readText(path)
-      const { text, warnings, blocked } = render(before, selection, context)
+      const { text, warnings, blocked } = render(before, selection, context, this.providerId, this.apiKeyEnv)
       if (blocked) return planFor(this.target, path, before !== undefined, before, before ?? '', warnings, true)
       if (before === text) {
         await this.syncCredentialRef(context.apiKey, warnings)
@@ -101,15 +108,15 @@ export class DshImporter implements Importer {
           doc = parsed
         }
         const refs = isObject(doc['refs']) ? { ...(doc['refs'] as Record<string, unknown>) } : {}
-        if (refs['AI_BOBBY_API_KEY'] === apiKey) {
-          warnings.push('DSH 凭据存储已包含网关 Key；无需设置 AI_BOBBY_API_KEY 环境变量')
+        if (refs[this.apiKeyEnv] === apiKey) {
+          warnings.push(`DSH 凭据存储已包含网关 Key；无需设置 ${this.apiKeyEnv} 环境变量`)
           return
         }
-        refs['AI_BOBBY_API_KEY'] = apiKey
+        refs[this.apiKeyEnv] = apiKey
         doc['refs'] = refs
         if (before !== undefined) await backup(path)
         await atomicWrite(path, stringifyYaml(doc, { lineWidth: 0 }), 0o600)
-        warnings.push('已把网关 Key 写入 DSH 凭据存储（AI_BOBBY_API_KEY）；无需设置环境变量')
+        warnings.push(`已把网关 Key 写入 DSH 凭据存储（${this.apiKeyEnv}）；无需设置环境变量`)
       })
     } catch (error) {
       warnings.push(`写入 DSH 凭据存储失败：${error instanceof Error ? error.message : String(error)}；请在 DSH 设置中手动填入 API Key`)
@@ -145,6 +152,8 @@ function render(
   before: string | undefined,
   selection: ImportSelection,
   context: ImportContext,
+  providerId: string,
+  apiKeyEnv: string,
 ): { text: string; warnings: string[]; blocked?: boolean } {
   const warnings: string[] = ['DSH 补丁会重新序列化 YAML，原有注释可能丢失；写前会备份']
   let parsed: unknown
@@ -175,8 +184,8 @@ function render(
   })
   if (selected.length === 0) warnings.push('没有可导入的模型（分组未选或全部不可用）')
 
-  providers['ai-bobby'] = {
-    apiKeyEnv: 'AI_BOBBY_API_KEY',
+  providers[providerId] = {
+    apiKeyEnv,
     api: 'openai-completions',
     baseURL: `${normalizeEndpoint(context.endpoint)}/v1`,
     models: selected.map(model => ({
@@ -190,7 +199,7 @@ function render(
   if (selection.setAsDefault) {
     warnings.push('DSH 默认模型请在 agent-default-model 中切换；此处只写 provider')
   }
-  warnings.push('写入时会同步把网关 Key 写入 DSH 凭据存储（~/.dsh/.credentials.yaml），无需设置 AI_BOBBY_API_KEY 环境变量')
+  warnings.push(`写入时会同步把网关 Key 写入 DSH 凭据存储（~/.dsh/.credentials.yaml），无需设置 ${apiKeyEnv} 环境变量`)
   return { text: stringifyYaml(parsed, { lineWidth: 0 }), warnings }
 }
 

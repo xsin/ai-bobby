@@ -59,6 +59,8 @@ const APP_FALLBACK: AppInfo = {
   platform: 'darwin',
   arch: 'arm64',
   packaged: false,
+  devMode: false,
+  defaultPort: 46890,
   updateSource: 'https://xsin.github.io/ai-bobby/releases/latest/latest.json',
 }
 
@@ -147,6 +149,8 @@ function toDemoAccount(account: AccountSnapshot): DemoAccount {
       ? t('额度未知')
       : t('{n} 积分', { n: account.credits.toLocaleString('en-US') })
   return {
+    uid: account.uid,
+    ...(account.order === undefined ? {} : { order: account.order }),
     initials: (account.nickname || account.uid).slice(0, 1).toUpperCase(),
     name: account.nickname || account.uid.slice(0, 8),
     sub: t('{credits} · {state}', { credits, state: account.enabled ? t('启用') : t('禁用') }),
@@ -403,7 +407,7 @@ function AppInner() {
       next.opencode = {
         ...next.opencode,
         models: sortModels(groups.opencode.map(toDemoModel)),
-        statusText: status.gateway.state === 'ready' ? `运行中 · ${status.models.length} 个模型` : '网关未就绪',
+        statusText: status.gateway.state === 'ready' ? t('运行中 · {n} 个模型', { n: status.models.length }) : t('网关未就绪'),
         serviceSub: status.gateway.state === 'ready' ? t('网关 {port}', { port: status.gateway.port }) : status.gateway.error || t('网关未就绪'),
         feedback: groups.opencode.length > 0 ? t('目录已刷新：{n} 个 OpenCode 模型。', { n: groups.opencode.length }) : next.opencode.feedback,
       }
@@ -787,6 +791,7 @@ function AppInner() {
     toast.info('已打开更新源')
   }, [appInfo?.updateSource])
 
+  const devMode = appInfo?.devMode === true
   const available = source.models.filter(model => model.status === 'available').length
   const abnormal = source.models.length - available
 
@@ -794,9 +799,16 @@ function AppInner() {
     <div className="flex h-full min-h-0 flex-col bg-app text-text">
       <div className="app-drag relative flex h-[38px] shrink-0 items-center justify-between border-b border-line bg-titlebar px-4">
         <div className="w-[68px]" aria-hidden="true" />
-        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-semibold text-muted-foreground">AI Bobby</div>
-        <span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">{t('本地网关')}</span>
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[12px] font-semibold text-muted-foreground">AI Bobby{devMode ? ' Dev' : ''}</div>
+        <span className="flex items-center gap-1.5"><span className="rounded border border-line px-1.5 py-0.5 text-[10px] tracking-[0.04em] text-faint">{t('本地网关')}</span>{devMode ? <span className="rounded border border-warning/40 bg-warning-soft px-1.5 py-0.5 font-mono text-[9px] tracking-[0.04em] text-warning">DEV · {realStatus?.gateway.port ?? 46891}</span> : null}</span>
       </div>
+
+      {devMode ? (
+        <div className="flex flex-wrap items-center gap-2 border-b border-warning/20 bg-warning-soft/30 px-4 py-1.5 text-[10px] text-muted-foreground">
+          <strong className="font-mono text-[9px] tracking-[0.06em] text-warning">DEVELOPMENT BUILD</strong>
+          <span>{t('独立数据目录、API Key 与端口；导入使用 AI Bobby Dev，不覆盖线上配置。')}</span>
+        </div>
+      ) : null}
 
       <div className="app-no-drag flex min-h-0 flex-1">
         <Sidebar
@@ -806,6 +818,7 @@ function AppInner() {
           collapsed={sidebarCollapsed}
           gatewayRunning={realStatus?.gateway.state === 'ready'}
           port={realStatus?.gateway.port ?? 46890}
+          devMode={devMode}
           onToggle={() => setSidebarCollapsed(value => !value)}
           onNavigate={navigate}
         />
@@ -814,7 +827,7 @@ function AppInner() {
           <header className="flex h-[58px] shrink-0 items-center justify-between gap-3 border-b border-line bg-toolbar px-5">
             <div className="flex min-w-0 flex-col gap-px">
               <span className="font-mono text-[8px] font-semibold uppercase tracking-[0.12em] text-faint">{t(PAGE_META[page].section)}</span>
-              <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-text">{t(PAGE_META[page].title)}</span>
+              <span className="truncate text-[14px] font-semibold tracking-[-0.01em] text-text">{devMode && ['opencode','workbuddy','wbi','nvidia'].includes(page) ? `Dev.${t(PAGE_META[page].title)}` : t(PAGE_META[page].title)}</span>
             </div>
             <div className="flex shrink-0 items-center gap-2.5">
               <span className="hidden items-center gap-1.5 text-[10px] text-muted-foreground md:flex">
@@ -875,13 +888,26 @@ function AppInner() {
             <main className="min-h-0 flex-1 overflow-auto px-5 pt-4">
               <SourceHead
                 source={source}
+                devMode={devMode}
                 selectedCount={selectedSet.size}
                 probing={probing}
                 onAction={handleAction}
               />
 
               {accountRealm ? (
-                <AccountStrip source={source} accounts={accountsForSource} onAdd={() => setLoginOpen(true)} />
+                <AccountStrip
+                  source={source}
+                  accounts={accountsForSource}
+                  onAdd={() => setLoginOpen(true)}
+                  onReorder={async uids => {
+                    const provider = active === 'wbi' ? 'workbuddy-ai' : 'workbuddy'
+                    const status = await window.aiBobby?.reorderAccounts(provider, uids)
+                    if (status) {
+                      setRealStatus(status)
+                      applyStatus(status)
+                    }
+                  }}
+                />
               ) : null}
 
               {active === 'nvidia' ? (
@@ -1078,6 +1104,7 @@ function AppInner() {
           void loadHistory()
         }}
         codexModels={codexModels}
+        devMode={devMode}
         onApply={async payload => {
           const api = window.aiBobby
           if (!api) {

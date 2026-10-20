@@ -22,6 +22,8 @@ export interface WorkBuddyAccount {
   expiresAtMs: number
   enabled: boolean
   preferred?: boolean
+  /** Drag order in the UI; lower runs first. */
+  order?: number
   lastUsedAtMs?: number
   credits?: WorkBuddyCredits
 }
@@ -96,6 +98,19 @@ export class AccountStore {
     const account = accounts.find(item => item.realm === realm && item.uid === uid)
     if (account === undefined) return
     account.enabled = enabled
+    await this.save(accounts)
+  }
+
+  async reorder(realm: Realm, uids: readonly string[]): Promise<void> {
+    const accounts = await this.load()
+    const ordered = [...uids]
+    let cursor = 0
+    for (const account of accounts) {
+      if (account.realm !== realm) continue
+      const index = ordered.indexOf(account.uid)
+      account.order = index === -1 ? cursor++ : index
+      account.preferred = account.order === 0
+    }
     await this.save(accounts)
   }
 
