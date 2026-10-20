@@ -132,7 +132,7 @@ python3 -m http.server 8765 --bind 127.0.0.1
 
 视觉：
 
-- 标题栏 `DEV · 46891` 徽标 + 顶部 Development build 横幅；侧栏与模型前缀使用
+- 标题栏 `DEV · 46891` 徽标 + 顶部 Development build 横幅；导入面板**不在顶部放 Dev 提示**，只在每个可写客户端条目上加 `DEV` 标签（Claude Code 显示 `Dev 不写入`）；侧栏与模型前缀使用
   `Dev.OpenCode` / `Dev.WorkBuddy` / `Dev.OC.` / `dev-oc/...`。
 - WBI：维护中（0.2.4 起暂禁用）。
 - 托盘：目标 18×18 @1x / 36×36 @2x，裁掉 SVG 留白，与 WorkBuddy 视觉高度接近。

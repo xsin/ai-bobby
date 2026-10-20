@@ -930,7 +930,7 @@
         <label class="client-row${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}" data-client="${client.id}">
           <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="导入到 ${escapeHtml(client.name)}">
           <span class="client-main">
-            <span class="client-name">${escapeHtml(client.name)}<span class="client-status${client.note === '排除 WB 自身分组' || client.note === '排除 WBI 自身分组' ? ' warn' : ''}">${escapeHtml(note)}</span></span>
+            <span class="client-name">${escapeHtml(client.name)}${DEV && !disabled ? '<span class="client-status warn">DEV</span>' : ''}<span class="client-status${client.note === '排除 WB 自身分组' || client.note === '排除 WBI 自身分组' ? ' warn' : ''}">${escapeHtml(note)}</span></span>
             <span class="client-path">${escapeHtml(client.path)}</span>
           </span>
           <span class="client-status${disabled ? ' warn' : ''}">${escapeHtml(disabled ? (client.id === 'wbi' ? '维护中' : '不写入') : client.status)}</span>
@@ -1757,7 +1757,6 @@
     document.body.dataset.dev = '1'
     $('#dev-badge').hidden = false
     $('#dev-banner').hidden = false
-    $('#drawer-dev-banner').hidden = false
     $('#client-count').textContent = '4 个可写入 · 1 个引导'
     $('#endpoint').textContent = `http://127.0.0.1:${PORT}/v1`
     $('.sidebar-status code').textContent = String(PORT)
