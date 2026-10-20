@@ -1,6 +1,13 @@
 (() => {
   'use strict';
 
+  const DEV = new URLSearchParams(location.search).get('dev') === '1'
+  const PORT = DEV ? 46891 : 46890
+  const VERSION = DEV ? '0.2.5-dev' : '0.2.5'
+  const devLabel = value => DEV ? value.replace(/^(OC|WB|WBI|NV)\./, 'Dev.$1.') : value
+  const devSourceLabel = value => DEV ? `Dev.${value}` : value
+  const devId = value => DEV ? value.replace(/^(oc|wb|wbi|nv)\//, 'dev-$1/') : value
+
   // ---------------------------------------------------------------------------
   // Demo data — every number/name here is illustrative for the UI prototype.
   // ---------------------------------------------------------------------------
@@ -280,6 +287,11 @@
     toastTimer: null,
   };
 
+  // WBI is in maintenance in 0.2.5; Dev mode also avoids Claude Code (single endpoint).
+  state.clients.set('wbi', false)
+  state.groups.set('wbi', false)
+  if (DEV) state.clients.set('claude', false)
+
   // Mirrors the real startup scan: nothing is selected until the client
   // configs are read, then only the models they reference come back checked.
   for (const id of [
@@ -379,7 +391,7 @@
 
   function renderSourceHead() {
     const src = source();
-    $('#source-title').textContent = src.title;
+    $('#source-title').textContent = DEV ? `Dev.${src.title}` : src.title;
     $('#source-subtitle').textContent = src.subtitle;
     $('#list-meta-text').textContent = src.listMeta;
     $('#feedback-text').textContent = state.probingTab === state.tab
@@ -420,7 +432,7 @@
   function renderTabCounts() {
     for (const [key, src] of Object.entries(SOURCES)) {
       const node = $(`[data-count="${key}"]`);
-      if (node) node.textContent = `${state.selection[key].size}/${src.models.length}`;
+      if (node) node.textContent = key === 'wbi' ? '维护中' : `${state.selection[key].size}/${src.models.length}`;
     }
   }
 
@@ -447,7 +459,7 @@
     }
 
     if (isSource) {
-      setToolbar('模型来源', SOURCES[page].label);
+      setToolbar('模型来源', devSourceLabel(SOURCES[page].label));
       renderAll();
     } else if (page === 'overview') {
       setToolbar('总览', '概览');
@@ -470,7 +482,7 @@
     const pending = all.reduce((sum, src) => sum + src.models.filter(model => model.status === 'pending').length, 0);
     const totalModels = all.reduce((sum, src) => sum + src.models.length, 0);
     $('#overview-source-sub').textContent = `可用 ${available} / 待检测 ${pending}`;
-    $('#overview-gateway-sub').textContent = `127.0.0.1:46890 · ${totalModels} 个模型`;
+    $('#overview-gateway-sub').textContent = `127.0.0.1:${PORT} · ${totalModels} 个模型`;
 
     const cards = [
       { id: 'opencode', label: 'OpenCode', note: '免费模型池', src: SOURCES.opencode, meta: '无需登录 · 按价格字段筛免费模型' },
@@ -807,8 +819,9 @@
       return;
     }
     $('#account-strip').hidden = false;
-    $('#account-list').innerHTML = (src.accounts || []).map(account => `
-      <div class="account-chip${account.preferred ? ' preferred' : ''}${account.status === 'cooling' ? ' cooling' : ''}">
+    $('#account-list').innerHTML = (src.accounts || []).map((account, index) => `
+      <div class="account-chip${account.preferred ? ' preferred' : ''}${account.status === 'cooling' ? ' cooling' : ''}" draggable="true" data-account-index="${index}">
+        <span class="account-grip" aria-hidden="true">⋮⋮</span>
         <span class="avatar">${escapeHtml(account.initials)}</span>
         <span class="account-meta">
           <span class="account-name">${escapeHtml(account.name)}</span>
@@ -818,7 +831,7 @@
       </div>
     `).join('');
     $('#account-note').textContent = (src.accounts || []).length > 1
-      ? 'round-robin · 失败自动切换'
+      ? '拖动排序 · 第一位优先 · 失败自动切换'
       : '单账号 · 可继续添加';
   }
 
@@ -833,13 +846,13 @@
       const caps = model.caps.map((cap, index) => `<span class="cap${index === 0 ? ' strong' : ''}">${escapeHtml(cap)}</span>`).join('');
       rows.push(`
         <tr class="model-row${selected ? ' selected' : ''}" data-id="${escapeHtml(model.id)}">
-          <td class="check-cell"><input type="checkbox" ${selected ? 'checked' : ''} aria-label="导入 ${escapeHtml(model.display)}"></td>
+          <td class="check-cell"><input type="checkbox" ${selected ? 'checked' : ''} aria-label="导入 ${escapeHtml(devLabel(model.display))}"></td>
           <td>
             <div class="model-cell">
-              <button class="expander${expanded ? ' expanded' : ''}" type="button" aria-label="展开 ${escapeHtml(model.display)} 详情" aria-expanded="${expanded}">${ICONS.chevron}</button>
+              <button class="expander${expanded ? ' expanded' : ''}" type="button" aria-label="展开 ${escapeHtml(devLabel(model.display))} 详情" aria-expanded="${expanded}">${ICONS.chevron}</button>
               <span class="model-name">
-                <span class="model-display">${escapeHtml(model.display)}</span>
-                <span class="model-upstream">${escapeHtml(model.id)}</span>
+                <span class="model-display">${escapeHtml(devLabel(model.display))}</span>
+                <span class="model-upstream">${escapeHtml(devId(model.id))}</span>
               </span>
             </div>
           </td>
@@ -911,14 +924,16 @@
   function renderImportDrawer() {
     $('#client-list').innerHTML = CLIENTS.filter(client => client.mode !== 'guide').map(client => {
       const checked = state.clients.get(client.id);
+      const disabled = client.id === 'wbi' || (DEV && client.id === 'claude');
+      const note = disabled ? (client.id === 'wbi' ? '维护中' : 'Dev 不写入') : client.note;
       return `
-        <label class="client-row${checked ? ' checked' : ''}" data-client="${client.id}">
-          <input type="checkbox" ${checked ? 'checked' : ''} aria-label="导入到 ${escapeHtml(client.name)}">
+        <label class="client-row${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}" data-client="${client.id}">
+          <input type="checkbox" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''} aria-label="导入到 ${escapeHtml(client.name)}">
           <span class="client-main">
-            <span class="client-name">${escapeHtml(client.name)}<span class="client-status${client.note === '排除 WB 自身分组' || client.note === '排除 WBI 自身分组' ? ' warn' : ''}">${escapeHtml(client.note)}</span></span>
+            <span class="client-name">${escapeHtml(client.name)}<span class="client-status${client.note === '排除 WB 自身分组' || client.note === '排除 WBI 自身分组' ? ' warn' : ''}">${escapeHtml(note)}</span></span>
             <span class="client-path">${escapeHtml(client.path)}</span>
           </span>
-          <span class="client-status">${escapeHtml(client.status)}</span>
+          <span class="client-status${disabled ? ' warn' : ''}">${escapeHtml(disabled ? (client.id === 'wbi' ? '维护中' : '不写入') : client.status)}</span>
         </label>
       `;
     }).join('');
@@ -955,10 +970,11 @@
       { id: 'nv', label: 'NV', count: SOURCES.nvidia.models.filter(model => model.status === 'available').length },
     ].map(group => {
       const checked = state.groups.get(group.id);
+      const disabled = group.id === 'wbi';
       return `
-        <label class="group-chip${checked ? ' checked' : ''}">
-          <input type="checkbox" data-group="${group.id}" ${checked ? 'checked' : ''}>
-          ${group.label} <strong>${group.count}</strong>
+        <label class="group-chip${checked ? ' checked' : ''}${disabled ? ' disabled' : ''}">
+          <input type="checkbox" data-group="${group.id}" ${checked ? 'checked' : ''} ${disabled ? 'disabled' : ''}>
+          ${group.label}${disabled ? ' · 维护中' : ''} <strong>${group.count}</strong>
         </label>
       `;
     }).join('');
@@ -1059,7 +1075,8 @@
       }
       lines.push({ type: 'dim', text: '# 写入前会备份；只增删 aiBobbyOwner 标记的条目。' });
     }
-    $('#diff-preview').innerHTML = lines.map(line => {
+    const renderedLines = DEV ? lines.map(line => ({ ...line, text: line.text.replaceAll('AI Bobby', 'AI Bobby Dev').replaceAll('46890', '46891').replaceAll('ai-bobby:', 'ai-bobby-dev:').replaceAll('aiBobbyOwner = ai-bobby-v1', 'aiBobbyOwner = ai-bobby-dev-v1') })) : lines
+    $('#diff-preview').innerHTML = renderedLines.map(line => {
       const cls = line.type === 'add' ? 'add' : line.type === 'del' ? 'del' : 'dim';
       return `<span class="${cls}">${escapeHtml(line.text)}</span>`;
     }).join('\n');
@@ -1231,7 +1248,7 @@
     const banner = $('#update-banner');
     banner.hidden = false;
     if (state.update.status === 'downloading') {
-      $('#update-title').textContent = '正在下载 0.2.2';
+      $('#update-title').textContent = '正在下载 0.2.5';
       $('#update-sub').textContent = '42.6 MB · 正在下载并校验，完成后需要重启';
       $('#update-progress').hidden = false;
       $('#update-start').hidden = true;
@@ -1240,7 +1257,7 @@
     }
     if (state.update.status === 'ready') {
       $('#update-title').textContent = '更新已就绪';
-      $('#update-sub').textContent = '0.2.2 已下载并通过校验，重启后生效';
+      $('#update-sub').textContent = '0.2.5 已下载并通过校验，重启后生效';
       $('#update-progress').hidden = true;
       $('#update-start').hidden = false;
       $('#update-start').textContent = '立即重启';
@@ -1248,7 +1265,7 @@
       return;
     }
     state.update.status = 'available';
-    $('#update-title').textContent = '发现新版本 0.2.2';
+    $('#update-title').textContent = '发现新版本 0.2.5';
     $('#update-sub').textContent = '当前 0.2.1 · 42.6 MB · WorkBuddy 稳定性、历史记录与体验修复';
     $('#update-progress').hidden = true;
     $('#update-start').hidden = false;
@@ -1262,7 +1279,7 @@
 
   function startUpdate() {
     if (state.update.status === 'ready') {
-      showToast('原型：将重启并安装 0.2.2');
+      showToast('原型：将重启并安装 0.2.5');
       hideUpdate();
       return;
     }
@@ -1279,7 +1296,7 @@
         state.update.timer = null;
         state.update.status = 'ready';
         showUpdate();
-        showToast('0.2.2 已下载并通过校验，重启后生效');
+        showToast('0.2.5 已下载并通过校验，重启后生效');
       }
     }, 110);
   }
@@ -1530,7 +1547,7 @@
   });
 
   $('#settings-copy-endpoint').addEventListener('click', async () => {
-    const ok = await copyText('http://127.0.0.1:46890/v1');
+    const ok = await copyText(`http://127.0.0.1:${PORT}/v1`);
     showToast(ok ? '网关地址已复制' : '复制失败');
   });
   $('#settings-copy-key').addEventListener('click', async () => {
@@ -1539,7 +1556,7 @@
   });
   $('#settings-check-update').addEventListener('click', () => {
     showUpdate();
-    showToast('已检查更新：发现 0.2.2');
+    showToast('已检查更新：发现 0.2.5');
   });
   $('#update-later').addEventListener('click', hideUpdate);
   $('#update-start').addEventListener('click', startUpdate);
@@ -1698,7 +1715,60 @@
   // Initial theme: dark, matching the reference screenshot. Restore a saved choice if present.
   let savedTheme = 'dark';
   try { savedTheme = localStorage.getItem('ai-bobby-theme') || 'dark'; } catch {}
+  const wbiItem = document.querySelector('.side-item[data-page="wbi"]')
+  if (wbiItem) {
+    wbiItem.disabled = true
+    wbiItem.classList.add('disabled')
+    const count = wbiItem.querySelector('.side-count')
+    if (count) count.textContent = '维护中'
+  }
+
+  let dragAccountIndex = null
+  $('#account-list').addEventListener('dragstart', event => {
+    const chip = event.target.closest('.account-chip[data-account-index]')
+    if (!chip) return
+    dragAccountIndex = Number(chip.dataset.accountIndex)
+    chip.classList.add('dragging')
+    event.dataTransfer.effectAllowed = 'move'
+  })
+  $('#account-list').addEventListener('dragend', event => {
+    event.target.closest('.account-chip')?.classList.remove('dragging')
+  })
+  $('#account-list').addEventListener('dragover', event => {
+    if (dragAccountIndex === null) return
+    event.preventDefault()
+  })
+  $('#account-list').addEventListener('drop', event => {
+    const chip = event.target.closest('.account-chip[data-account-index]')
+    if (!chip || dragAccountIndex === null) return
+    event.preventDefault()
+    const to = Number(chip.dataset.accountIndex)
+    const accounts = source().accounts || []
+    const [moved] = accounts.splice(dragAccountIndex, 1)
+    if (moved) accounts.splice(to, 0, moved)
+    accounts.forEach((account, index) => { account.preferred = index === 0 })
+    dragAccountIndex = null
+    renderAccountStrip()
+    showToast('已调整账号优先级；第一位优先')
+  })
+
   const params = new URLSearchParams(location.search);
+  if (DEV) {
+    document.body.dataset.dev = '1'
+    $('#dev-badge').hidden = false
+    $('#dev-banner').hidden = false
+    $('#drawer-dev-banner').hidden = false
+    $('#client-count').textContent = '4 个可写入 · 1 个引导'
+    $('#endpoint').textContent = `http://127.0.0.1:${PORT}/v1`
+    $('.sidebar-status code').textContent = String(PORT)
+    $('.version').textContent = `AI Bobby ${VERSION}`
+    const settingsEndpoint = $('#settings-copy-endpoint')?.parentElement?.querySelector('code')
+    if (settingsEndpoint) settingsEndpoint.textContent = `http://127.0.0.1:${PORT}/v1`
+    $$('.side-item[data-page]').forEach(item => {
+      const label = item.querySelector('.side-label')
+      if (label && ['opencode', 'workbuddy', 'wbi', 'nvidia'].includes(item.dataset.page)) label.textContent = devSourceLabel(label.textContent)
+    })
+  }
   applyTheme(params.get('theme') || savedTheme);
 
   const initialTab = params.get('tab');

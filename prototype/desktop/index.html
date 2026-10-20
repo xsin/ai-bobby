@@ -18,7 +18,7 @@
           <span class="light maximize"></span>
         </div>
         <div class="window-title">AI Bobby</div>
-        <div class="titlebar-right"><span class="window-mode">本地网关</span></div>
+        <div class="titlebar-right"><span class="window-mode" id="window-mode">本地网关</span><span class="dev-badge" id="dev-badge" hidden>DEV · 46891</span></div>
       </div>
 
       <div class="app-shell" id="app-shell">
@@ -136,10 +136,10 @@
             </span>
             <div class="update-copy">
               <div class="update-title-row">
-                <strong id="update-title">发现新版本 0.2.2</strong>
+                <strong id="update-title">发现新版本 0.2.5</strong>
                 <span class="update-pill">NEW</span>
               </div>
-              <span id="update-sub">当前 0.2.3 · 43.1 MB · 安装路径、NVIDIA 与 VS Code / Cursor 接入</span>
+              <span id="update-sub">当前 0.2.4 · 43.1 MB · 安装路径、NVIDIA 与 VS Code / Cursor 接入</span>
               <div class="update-progress" id="update-progress" hidden><span id="update-bar"></span></div>
             </div>
             <div class="update-actions" id="update-actions">
@@ -147,6 +147,8 @@
               <button type="button" class="primary" id="update-start">立即更新</button>
             </div>
           </section>
+
+          <div class="dev-banner" id="dev-banner" hidden><strong>Development build</strong><span>独立数据目录、API Key 与端口 46891；导入使用「AI Bobby Dev」，不会覆盖线上配置。</span></div>
 
           <div class="content-shell">
             <main class="page overview-page" id="page-overview" hidden>
@@ -360,7 +362,7 @@
                 </div>
                 <div class="about-facts">
                   <div><span>PROJECT</span><strong>AI Bobby</strong></div>
-                  <div><span>VERSION</span><strong>0.2.3</strong></div>
+                  <div><span>VERSION</span><strong>0.2.5</strong></div>
                   <div><span>MODE</span><strong>Local-first</strong></div>
                 </div>
               </section>
@@ -368,9 +370,9 @@
               <section class="about-project">
                 <div>
                   <div class="eyebrow">THE PROJECT</div>
-                  <h2>把三个来源，收进一个本机端点。</h2>
+                  <h2>所有模型，一个本机端点。</h2>
                 </div>
-                <p>OpenCode 免费模型、WorkBuddy 国内版、WorkBuddy AI 国际版；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。AI Bobby 不托管你的账号，也不替你做云上决策。</p>
+                <p>OpenCode、WorkBuddy 国内版、WorkBuddy AI 国际版、NVIDIA NIM，以及你已有的本地网关与官方 CLI；Chat Completions、Responses、Anthropic Messages；一个 127.0.0.1 端点，一把 Key。不限制来源数量，不托管你的账号。</p>
               </section>
 
                             <section class="music-section" aria-labelledby="music-heading">
@@ -542,7 +544,7 @@
                 <div class="settings-row settings-update-row">
                   <div>
                     <h2>版本与更新</h2>
-                    <p>当前 v0.2.3；新版本先提示，不静默替换。</p>
+                    <p>当前 v0.2.4；新版本先提示，不静默替换。</p>
                     <p class="settings-update-source">更新源 <code>https://xsin.github.io/ai-bobby/releases/latest/latest.json</code></p>
                   </div>
                   <div class="settings-update-controls">
@@ -574,7 +576,7 @@
                 <span class="status-muted">Key</span> <code id="key-mask">sk-…f3a2</code>
                 <svg class="copy-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="7" y="7" width="9" height="9" rx="2"/><path d="M13 7V5.5A1.5 1.5 0 0 0 11.5 4h-6A1.5 1.5 0 0 0 4 5.5v6A1.5 1.5 0 0 0 5.5 13H7" stroke-linecap="round"/></svg>
               </button>
-              <span class="version">AI Bobby 0.2.3</span>
+              <span class="version">AI Bobby 0.2.5</span>
             </div>
           </footer>
         </div>
@@ -614,10 +616,12 @@
         <button class="icon-button close-drawer" id="close-import" type="button" aria-label="关闭导入抽屉">×</button>
       </div>
       <div class="drawer-body">
+        <div class="drawer-dev-banner" id="drawer-dev-banner" hidden>Dev 导入使用「AI Bobby Dev」provider / 标记；线上「AI Bobby」配置保持不变。Claude Code 只支持单一端点，Dev 模式不写入。</div>
+
         <section class="drawer-section">
           <div class="section-heading">
             <h3>客户端</h3>
-            <span id="client-count">6 个可写入 · 1 个引导</span>
+            <span id="client-count">5 个可写入 · 1 个引导</span>
           </div>
           <div class="client-list" id="client-list"></div>
           <div class="client-guide" id="client-guide"></div>

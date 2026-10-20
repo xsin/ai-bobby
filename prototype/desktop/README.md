@@ -1,6 +1,6 @@
 # Desktop prototype
 
-v0.2.2 界面改版的可点击设计稿，用于确认信息架构与交互，**不是生产实现**。
+v0.2.5 界面改版的可点击设计稿，用于确认信息架构与交互，**不是生产实现**。
 没有后端、不会写文件；模型、账号、额度、导入历史都是演示数据。
 
 ## 打开方式
@@ -108,3 +108,39 @@ python3 -m http.server 8765 --bind 127.0.0.1
 - 版本标识更新为 0.2.3；截图：`screenshot-nvidia.png`、`screenshot-nvidia-probing.png`、
   `screenshot-settings.png`、`screenshot-import.png`、`screenshot-cursor-guide.png`。
 - 调研记录见 [docs/research-v0.2.3.md](../../docs/research-v0.2.3.md)。
+
+### v0.2.5：本地开发版与线上版隔离
+
+**目标**：同一个开发者可以在同一台 Mac 上同时运行线上版与开发版，数据、端口、Key、导入配置互不影响。
+开发模式只给开发者使用，不是普通用户可见的设置项。
+
+**落地策略（建议）**
+
+- 触发：`pnpm dev` 或 `AI_BOBBY_DEV=1`；打包/安装版默认生产模式。
+- 身份：开发版 window title / bundle display name `AI Bobby Dev`；独立 `userData`（`~/Library/Application Support/AI Bobby Dev`），单实例锁互不冲突。
+- 网络：开发版固定/默认 `46891`，生产继续 `46890`；独立 API Key。
+- 来源前缀：`Dev.OC` / `Dev.WB` / `Dev.WBI` / `Dev.NV`（显示名）；模型 ID 用 `dev-oc/`、`dev-wb/` 等稳定前缀，避免与线上 `oc/`、`wb/` 冲突。
+- 导入命名空间：
+  - WorkBuddy：`aiBobbyOwner = ai-bobby-dev`，只增删 dev 条目；
+  - Codex：`[model_providers.ai-bobby-dev]`，块标记 `ai-bobby-dev`，不碰线上 `ai-bobby`；
+  - DSH：`providers.ai-bobby-dev`；
+  - VS Code：provider `AI Bobby Dev`；
+  - Claude Code：单端点，Dev 模式**不写入**，避免覆盖线上 `ANTHROPIC_*`；需要时用独立 `CLAUDE_CONFIG_DIR` 手动测试；
+  - Cursor：仅引导，不变。
+- 清理：开发版可提供“移除 Dev 导入”入口，只删 `ai-bobby-dev` 命名空间，不触碰线上。
+- 安全：开发版仍然只监听 loopback；不复用线上 API Key；日志/诊断标记 `dev`。
+
+视觉：
+
+- 标题栏 `DEV · 46891` 徽标 + 顶部 Development build 横幅；侧栏与模型前缀使用
+  `Dev.OpenCode` / `Dev.WorkBuddy` / `Dev.OC.` / `dev-oc/...`。
+- WBI：维护中（0.2.4 起暂禁用）。
+- 托盘：目标 18×18 @1x / 36×36 @2x，裁掉 SVG 留白，与 WorkBuddy 视觉高度接近。
+  ![Tray icon](assets/tray-icon-36.png)
+
+截图：`screenshot-dev-mode.png`、`screenshot-dev-import.png`、`screenshot-about.png`。
+
+
+- i18n：状态栏英文为 `Running · 10 models` / `Running · 2 accounts`，与模型数/账号数解耦；不再出现中文混排。
+
+- 多账号：账号条支持拖动排序，第一位即 `preferred`；拖动后顺序立即写入优先级，失败切换仍按 `round-robin + 冷却` 执行。
