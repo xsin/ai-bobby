@@ -21,7 +21,9 @@
    返回 `OK`（约 2.6s，约 22.9k input tokens）。这说明 CodeBuddy 可以作为 AI Bobby 的
    **第六个导入目标**，让 CodeBuddy 使用 AI Bobby 聚合的 OpenCode / WorkBuddy / NVIDIA 模型。
 
-2. **可以做官方模型桥（高可行，需真机验证）。**
+2. **可以做 CodeBuddy 官方模型桥（高可行，需真机验证），但不等于 WBI 桥。**
+   CodeBuddy 与 WorkBuddy 共享 agent 引擎，但是两个产品；CodeBuddy CLI 默认连
+   `www.codebuddy.ai`，WorkBuddy AI 连 `www.workbuddy.ai`，账号/套餐不保证互通。
    CodeBuddy Code 支持：
    - `--print --output-format stream-json`：非交互、可被父进程驱动；
    - `--acp`：Agent Client Protocol，stdio / streamable-http；
@@ -29,8 +31,9 @@
    - `@tencent-ai/agent-sdk`：官方 SDK，`query()` 可编程控制会话与工具权限。
 
    如果用户已在官方 CLI 登录（或提供官方 API Key），AI Bobby 可以把它当 provider，
-   由**官方 CLI 本身**发请求，而不是伪造 WorkBuddy 客户端头。它是目前最干净的
-   WorkBuddy AI `11-128` 解决路径：请求来自官方客户端，不是仿冒。
+   由**官方 CLI 本身**发请求，而不是伪造客户端头。这能稳定接入 **CodeBuddy 模型**；
+   CN 的 WorkBuddy 与 CodeBuddy 共享 `copilot.tencent.com`，可能共享账号/套餐；
+   **INTL 的 WorkBuddy AI 是独立后端，CodeBuddy CLI 不能直接当 WBI 桥。**
 
 3. **不建议把 CLI token 抽出来直接调 WBI。**
    这仍然是把官方凭据用于非官方请求，和 `workbuddy2api-hub` 的身份仿冒属于同一类风险。
@@ -60,6 +63,34 @@
 包体较大（安装约 102 个依赖，含 sandbox / PTY 原生二进制），对 Electron 打包有成本。
 
 ---
+
+## 2.1 WorkBuddy 与 CodeBuddy 的关系
+
+结论：**两个独立产品，共享同一套 agent 引擎/运行时；CLI 不是完全通用。**
+
+| 维度 | WorkBuddy | CodeBuddy |
+|---|---|---|
+| 品牌/产品 | WorkBuddy 桌面 AI 助手（CN / AI INTL） | 腾讯云 CodeBuddy 编码助手（IDE/CLI） |
+| INTL 后端 | `https://www.workbuddy.ai` | `https://www.codebuddy.ai`（CLI 默认 `product.json`） |
+| CN 后端 | `https://www.workbuddy.cn` / `https://copilot.tencent.com` | `https://copilot.tencent.com`（`product.internal.json`） |
+| 本地登录 | `CodeBuddyExtension/.../workbuddy-desktop[-ai].info` | `~/.codebuddy` 登录/API Key |
+| 运行时 | 包内包含 `apps/workbuddy-desktop`、`WorkBuddySandboxHelper` 等宿主代码 | `@tencent-ai/codebuddy-code` agent-cli |
+
+证据：
+- 本包 `dist-server/types/...` 多处引用 `apps/workbuddy-desktop`、`WorkBuddySandboxHelper`、
+  `workbuddy-server`，说明 WorkBuddy 桌面是 agent-cli 的宿主之一。
+- 包内有 `dist/codebuddy-lite-wb.mjs`，端点为 `https://www.workbuddy.cn` /
+  `copilot.tencent.com`，是 WorkBuddy CN 的 lite 构建。
+- `product.json` 的 CLI endpoint 是 `https://www.codebuddy.ai`；
+  `product.internal.json` 是 `https://copilot.tencent.com`。
+- 没有发现 CodeBuddy CLI 默认支持 `www.workbuddy.ai` 的产品配置。
+
+因此：
+- **CN**：WorkBuddy CN 与 CodeBuddy 共用 `copilot.tencent.com`，账号/套餐可能互通；
+  用 CodeBuddy CLI 访问 CN 模型有较高可行性，但仍需真实账号验证。
+- **INTL**：WBI（workbuddy.ai）与 CodeBuddy（codebuddy.ai）是不同产品后端；
+  CodeBuddy CLI **不能直接**当作 WBI 桥，除非官方提供账号互通/产品配置。
+- **通用的是引擎/入口，不是账号与服务**；不要向用户承诺“一个 CLI 通吃两个产品”。
 
 ## 3. CLI 能力
 
@@ -181,15 +212,22 @@ Authentication required. Please use /login command to sign in to your account
 
 ### 5.3 是否能解决 WBI 11-128？
 
-- **理论上可以，且不是伪造**：请求由官方 CLI 发出，带官方客户端身份；AI Bobby 只做进程/协议桥。
-- **尚未实测**：本机没有可用的 CodeBuddy 登录账号/API Key，无法完成真实 WBI 对话。
-- 需要验证：
-  1. 同一账号在官方 CLI 能正常对话；
-  2. AI Bobby 驱动 CLI 后，WBI 模型不再 11-128；
-  3. 连续多轮/工具调用/长上下文稳定；
-  4. 官方条款允许这种程序化使用（订阅登录 vs API Key 可能不同）。
+**不能直接下结论“能”。** 需要区分两个产品：
 
----
+- **CodeBuddy 模型**：由官方 CLI 发请求，属于官方客户端；AI Bobby 只做进程/协议桥，
+  不伪造头。这个方向可行，需真机验证。
+- **WorkBuddy AI（INTL）**：后端是 `www.workbuddy.ai`，CodeBuddy CLI 默认产品配置
+  是 `www.codebuddy.ai`，没有证据表明两者账号/套餐互通。**CodeBuddy CLI 不是
+  已验证的 WBI 桥**；不要把它宣传成 WBI 解决方案。
+- **WorkBuddy CN**：与 CodeBuddy 共用 `copilot.tencent.com`，理论上更可能共享账号；
+  仍需用真实账号测试。
+
+真正能确认的路径只有：
+1. 官方 WorkBuddy 客户端/未来官方 API；
+2. 官方明确允许 CodeBuddy CLI 使用 WBI 账号/套餐；
+3. 真实账号实测通过。
+
+在此之前，AI Bobby 对 WBI 的产品策略仍是：**不伪造、不绕过，明确提示需要官方客户端**。
 
 ## 6. 作为导入目标的可行性（已实测）
 
@@ -217,12 +255,13 @@ AI Bobby 新增 `CodeBuddyImporter`：
 - 检测 CLI 是否安装；未安装给官网链接，不强制。
 - 验收：CodeBuddy 选择 AI Bobby 模型并完成一次对话（已手工验证）。
 
-### P0：CodeBuddy 官方 Provider（先原型）
+### P0：CodeBuddy 官方 Provider（先做 CodeBuddy 模型，不承诺 WBI）
 
 - 新增 `codebuddy` provider（`cbc/` 前缀），检测外部 CLI + 登录状态。
 - 原型用 `--print --output-format stream-json`，映射文本/usage；
 - 稳定后切 ACP/SDK，禁工具、空 cwd、超时/取消。
-- 验收：WBI 模型在 AI Bobby 中可用，且不是伪造头；连续多轮稳定。
+- 验收：CodeBuddy 模型在 AI Bobby 中可用，且不是伪造头；连续多轮稳定。
+  WBI 是否可用需单独验证，不能作为该功能的验收前提。
 
 ### P1：CodeBuddy 登录引导 / 诊断
 
