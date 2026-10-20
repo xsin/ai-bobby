@@ -7,6 +7,7 @@
 > 需要人完成的事在 [human-sos.md](./human-sos.md)。
 
 - 最后更新：2026-10-20
+- **交互复用（永久）**：新增 tab panel、弹窗、抽屉、表格、空状态等交互前，先查 `prototype/desktop` 与 `apps/desktop/src/renderer/src/components` 是否已有实现；相同交互必须复用同一套结构/class，禁止凭感觉另起一套。
 - **开发隔离（永久）**：开发/验收不得占用或重启 `/Applications/AIMatrix/AI Bobby.app`。
   开发实例只用 `AI_BOBBY_DEV=1` + 端口 46891 + 独立数据目录（`AI Bobby Dev` 或临时目录）；
   安装包验证只用 `--install-dir` 临时路径/独立 App 名，不得覆盖线上安装。

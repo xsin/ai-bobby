@@ -1828,10 +1828,11 @@
   function renderSourceModal() {
     $('#source-choice-list').innerHTML = SOURCE_CHOICES.map(item => {
       const detected = item.id === 'hub' && hubDetected
+      const selected = item.id === sourceChoice
       return `
-      <button type="button" class="source-choice${item.id === sourceChoice ? ' active' : ''}" data-source-choice="${item.id}">
-        <span class="source-choice-main"><strong>${escapeHtml(item.name)}</strong><span>${escapeHtml(item.sub)}</span></span>
-        <span class="source-choice-badge ${detected || item.status === 'detected' ? 'detected' : item.risk === 'high' ? 'risk' : ''}">${detected || item.status === 'detected' ? '已检测' : item.risk === 'high' ? '高风险' : '外部'}</span>
+      <button type="button" class="restore-tab" role="tab" aria-selected="${selected}" data-source-choice="${item.id}">
+        <span class="source-tab-title"><strong>${escapeHtml(item.name)}</strong><span class="source-tab-badge ${detected || item.status === 'detected' ? 'detected' : item.risk === 'high' ? 'risk' : ''}">${detected || item.status === 'detected' ? '已检测' : item.risk === 'high' ? '高风险' : '外部'}</span></span>
+        <span>${escapeHtml(item.sub)}</span>
       </button>
     `}).join('')
     const item = SOURCE_CHOICES.find(choice => choice.id === sourceChoice) || SOURCE_CHOICES[0]

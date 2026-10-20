@@ -171,3 +171,8 @@ python3 -m http.server 8765 --bind 127.0.0.1
 | `screenshot-import-v03.png` | 导入抽屉新增 CodeBuddy Code |
 
 深链接：`?source=magpie`、`?source=hub`、`?source=hub&detected=1`、`?page=wbi`。
+
+### 设计复用约定
+
+- “添加外部来源”弹窗直接复用历史记录“恢复”弹窗的 `restore-tabs` / `restore-tab` / `restore-tabpanel` 交互与视觉：左侧竖向 tab、无分隔线、选中项与右侧面板同底色、左侧主色条。
+- 后续遇到 tab panel、抽屉、弹窗、表格、空状态等交互，先检查 `prototype/desktop` 与生产组件是否已有实现；不要另起一套。

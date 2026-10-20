@@ -2311,20 +2311,15 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .account-chip.dragging { opacity: 0.45; }
 .account-chip[draggable="true"] { cursor: grab; }
 
-/* v0.3 external sources */
+/* v0.3 external sources — reuse the restore modal's vertical tab pattern */
 .source-modal .modal-card { width: min(720px, calc(100vw - 32px)); }
-.source-modal-grid { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: 16px; padding: 0 20px 16px; }
-.source-choice-list { display: flex; flex-direction: column; gap: 6px; }
-.source-choice { display: flex; align-items: center; gap: 8px; width: 100%; padding: 9px 10px; border: 1px solid var(--line-soft); border-radius: 6px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
-.source-choice:hover { background: var(--hover); }
-.source-choice.active { border-color: color-mix(in srgb, var(--primary) 45%, transparent); background: var(--accent-soft); }
-.source-choice-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 1px; }
-.source-choice-main strong { font-size: 11px; }
-.source-choice-main span { color: var(--faint); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.source-choice-badge { flex: none; padding: 1px 5px; border-radius: 3px; background: var(--surface); color: var(--muted); font: 9px var(--mono); }
-.source-choice-badge.detected { background: var(--success-soft); color: var(--success); }
-.source-choice-badge.risk { background: var(--warning-soft); color: var(--warning); }
-.source-detail { min-width: 0; border: 1px solid var(--line-soft); border-radius: 6px; background: var(--surface); padding: 12px; }
+.source-tabs { grid-template-columns: 196px minmax(0, 1fr); }
+.source-tab-title { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.source-tab-title strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.restore-tab .source-tab-badge { flex: none; padding: 1px 4px; border-radius: 3px; background: var(--surface); color: var(--muted); font: 9px var(--mono); }
+.restore-tab .source-tab-badge.detected { background: var(--success-soft); color: var(--success); }
+.restore-tab .source-tab-badge.risk { background: var(--warning-soft); color: var(--warning); }
+.source-detail.restore-tabpanel { min-height: 218px; padding: 14px 16px; border: 0; border-radius: 0; background: var(--surface); }
 .source-detail h3 { font-size: 13px; font-weight: 650; }
 .source-detail p { margin-top: 4px; color: var(--muted); font-size: 10px; line-height: 1.6; }
 .source-detail .source-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
@@ -2374,3 +2369,4 @@ a.music-album-card .album-arrow { margin-left: auto; color: var(--accent); font-
 .connector-meta { flex: 1; color: var(--faint); font-family: var(--mono); font-size: 9px; }
 .connector-status { flex: none; color: var(--faint); font-size: 9px; }
 .connector-status.success { color: var(--success); }
+#source-confirm[disabled] { background: var(--surface-2) !important; border-color: var(--line) !important; color: var(--faint) !important; }

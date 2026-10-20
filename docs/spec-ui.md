@@ -432,3 +432,11 @@ shadcn/ui 组件内部使用 bg-background、text-foreground 等语义类。必�
 8. **检查 ProComponents 版本与 API 一致性**：确认 package.json 中的 ProComponents 版本，确保代码 API 与该版本匹配。
 9. **检查 shadcn CLI 命名**：文档和脚本中不应再出现 shadcn-ui 命令。
 10. **检查间距网格**：搜索 `p-[`、`m-[`、`gap-[` 等任意值；除 1px 描边、2px 光学内边距和资产尺寸外，改为 4px 倍数的标准步进。
+
+
+## 交互复用
+
+- 新增 tab panel、弹窗、抽屉、表格、空状态前，先检查 `prototype/desktop` 和生产组件是否已有实现。
+- 竖向 tab panel 统一复用历史记录“恢复”弹窗的 `restore-tabs` / `restore-tablist` / `restore-tab` / `restore-tabpanel`：
+  左侧无分隔线，选中 tab 与右侧面板同底色，左侧 2px 主色条；不要重新发明 tab 样式。
+- 相同交互的尺寸、间距、选中态、键盘/ARIA 行为必须一致；差异只允许来自内容，不允许来自实现者。
